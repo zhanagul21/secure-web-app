@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://ratio-some-plug-barriers.trycloudflare.com/api",
+  baseURL: "https://secure-web-app-x2nn.onrender.com/api",
 });
 
 export default API;
