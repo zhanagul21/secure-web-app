@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://brunswick-training-drives-powered.trycloudflare.com",
+  baseURL: "https://requirement-jokes-closed-most.trycloudflare.com",
+  timeout: 20000,
 });
 
 export default API;

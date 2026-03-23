@@ -61,9 +61,7 @@ const sendCode = async (req, res) => {
 
     await sendVerificationEmail(email, code);
 
-    res.json({
-      message: "Растау коды email-ға жіберілді",
-    });
+    res.json({ message: "Растау коды email-ға жіберілді" });
   } catch (error) {
     console.error("Send code error:", error);
     res.status(500).json({ message: "Код жіберу кезінде қате шықты" });
@@ -127,7 +125,7 @@ const completeRegister = async (req, res) => {
       return res.status(404).json({ message: "Алдымен код сұратыңыз" });
     }
 
-    if (!user.verification_code) {
+    if (!user.verification_code && user.is_verified !== true) {
       return res.status(400).json({ message: "Код расталмаған" });
     }
 
@@ -157,6 +155,8 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
+    console.log("LOGIN REQUEST EMAIL:", email);
+
     if (!email || !password) {
       return res.status(400).json({ message: "Email және пароль міндетті" });
     }
@@ -167,15 +167,31 @@ const login = async (req, res) => {
 
     const user = result.recordset[0];
 
+    console.log("FOUND USER:", !!user);
+
     if (!user) {
       return res.status(400).json({ message: "Қате email немесе пароль" });
+    }
+
+    console.log("USER VERIFIED:", user.is_verified);
+    console.log("HAS PASSWORD_HASH:", !!user.password_hash);
+    console.log("HAS PASSWORD:", !!user.password);
+
+    const storedHash = user.password_hash || user.password;
+
+    if (!storedHash) {
+      return res.status(500).json({
+        message: "Пайдаланушы паролі базаға дұрыс сақталмаған",
+      });
     }
 
     if (!user.is_verified) {
       return res.status(403).json({ message: "Аккаунт расталмаған" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    const isMatch = await bcrypt.compare(password, storedHash);
+
+    console.log("PASSWORD MATCH:", isMatch);
 
     if (!isMatch) {
       return res.status(400).json({ message: "Қате email немесе пароль" });
