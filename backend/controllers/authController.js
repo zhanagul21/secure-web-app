@@ -1,12 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
-const { sql } = require("../config/db");
+const { sql, connectDB } = require("../config/db");
 const { sendVerificationEmail } = require("../utils/sendEmail");
 
 // 1. Код жіберу
 const sendCode = async (req, res) => {
   try {
+    await connectDB();
+
     const { email } = req.body;
 
     if (!email) {
@@ -17,7 +19,10 @@ const sendCode = async (req, res) => {
       SELECT * FROM users WHERE email = ${email}
     `;
 
-    if (existing.recordset.length > 0 && existing.recordset[0].is_verified === true) {
+    if (
+      existing.recordset.length > 0 &&
+      existing.recordset[0].is_verified === true
+    ) {
       return res.status(400).json({ message: "Бұл email бұрын тіркелген" });
     }
 
@@ -33,8 +38,24 @@ const sendCode = async (req, res) => {
       `;
     } else {
       await sql.query`
-        INSERT INTO users (full_name, email, password_hash, role, is_verified, verification_code, code_expires_at)
-        VALUES (${""}, ${email}, ${""}, ${"user"}, ${false}, ${code}, ${expiresAt})
+        INSERT INTO users (
+          full_name,
+          email,
+          password_hash,
+          role,
+          is_verified,
+          verification_code,
+          code_expires_at
+        )
+        VALUES (
+          ${""},
+          ${email},
+          ${""},
+          ${"user"},
+          ${false},
+          ${code},
+          ${expiresAt}
+        )
       `;
     }
 
@@ -52,6 +73,8 @@ const sendCode = async (req, res) => {
 // 2. Кодты тексеру
 const verifyCode = async (req, res) => {
   try {
+    await connectDB();
+
     const { email, code } = req.body;
 
     if (!email || !code) {
@@ -86,6 +109,8 @@ const verifyCode = async (req, res) => {
 // 3. Тіркелуді аяқтау
 const completeRegister = async (req, res) => {
   try {
+    await connectDB();
+
     const { full_name, email, password } = req.body;
 
     if (!full_name || !email || !password) {
@@ -125,10 +150,16 @@ const completeRegister = async (req, res) => {
   }
 };
 
-// 4. Login - 2FA enabled болса, алдымен код сұратады
+// 4. Login
 const login = async (req, res) => {
   try {
+    await connectDB();
+
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email және пароль міндетті" });
+    }
 
     const result = await sql.query`
       SELECT * FROM users WHERE email = ${email}
@@ -196,6 +227,8 @@ const login = async (req, res) => {
 // 5. Login үшін 2FA растау
 const verifyLogin2FA = async (req, res) => {
   try {
+    await connectDB();
+
     const { email, token: twofaCode } = req.body;
 
     if (!email || !twofaCode) {

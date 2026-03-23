@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://consoles-veterans-indication-expires.trycloudflare.com",
+  baseURL: "https://brunswick-training-drives-powered.trycloudflare.com",
 });
 
 export default API;
