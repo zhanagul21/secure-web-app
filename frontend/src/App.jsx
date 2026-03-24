@@ -19,10 +19,10 @@ function App() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8fbff] via-white to-[#eef6ff] px-4 py-8 sm:px-6 sm:py-10">
+      <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center sm:mb-12">
-            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-white text-4xl shadow-[0_10px_40px_rgba(59,130,246,0.12)] ring-1 ring-sky-100">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-white text-4xl shadow-[0_10px_40px_rgba(59,130,246,0.10)] ring-1 ring-sky-100">
               🔐
             </div>
 
@@ -52,8 +52,8 @@ function App() {
               <Login setLoggedIn={setLoggedIn} />
             </div>
 
-            <div className="order-1 rounded-[32px] border border-sky-100 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8 lg:order-2">
-              <div className="mb-6 inline-flex rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+            <div className="order-1 rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8 lg:order-2">
+              <div className="mb-6 inline-flex rounded-full bg-sky-100 px-4 py-2 text-sm font-medium text-sky-700">
                 Secure Digital Workspace
               </div>
 
@@ -62,50 +62,41 @@ function App() {
                 <span className="block text-sky-600">заманауи веб-жүйе</span>
               </h2>
 
-              <p className="mt-4 text-slate-600 leading-7">
+              <p className="mt-4 leading-7 text-slate-600">
                 AuthGuard Locker — құжаттарды жүктеу, сақтау, қарау және қорғау
-                үшін жасалған дипломдық web app. Жүйеде аутентификация,
-                екі факторлы қорғаныс, әкімші панелі және әрекеттер журналы бар.
+                үшін жасалған дипломдық web app.
               </p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="rounded-2xl bg-sky-50 p-4">
                   <div className="text-2xl">🛡️</div>
-                  <h3 className="mt-3 font-semibold text-slate-800">
-                    Қауіпсіз кіру
-                  </h3>
+                  <h3 className="mt-3 font-semibold text-slate-800">Қауіпсіз кіру</h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    JWT және 2FA көмегімен аккаунтқа сенімді қолжетімділік.
+                    JWT және 2FA көмегімен сенімді аутентификация.
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="rounded-2xl bg-sky-50 p-4">
                   <div className="text-2xl">📄</div>
-                  <h3 className="mt-3 font-semibold text-slate-800">
-                    Құжаттарды басқару
-                  </h3>
+                  <h3 className="mt-3 font-semibold text-slate-800">Құжаттарды басқару</h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    Файл жүктеу, көру, сақтау және жүйе ішінде ашу мүмкіндігі.
+                    Файл жүктеу, көру, сақтау және ашу.
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="rounded-2xl bg-sky-50 p-4">
                   <div className="text-2xl">🔒</div>
-                  <h3 className="mt-3 font-semibold text-slate-800">
-                    AES шифрлау
-                  </h3>
+                  <h3 className="mt-3 font-semibold text-slate-800">AES шифрлау</h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    Маңызды құжаттар қосымша қорғаныспен сақталады.
+                    Маңызды құжаттар қорғалған түрде сақталады.
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="rounded-2xl bg-sky-50 p-4">
                   <div className="text-2xl">📊</div>
-                  <h3 className="mt-3 font-semibold text-slate-800">
-                    Activity Logs
-                  </h3>
+                  <h3 className="mt-3 font-semibold text-slate-800">Activity Logs</h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    Жүйедегі әрекеттерді бақылау және әкімшіге көрінуі.
+                    Жүйедегі әрекеттер журналға түседі.
                   </p>
                 </div>
               </div>
@@ -113,11 +104,9 @@ function App() {
               <div className="mt-8 text-center lg:text-left">
                 <button
                   onClick={() => setShowRegister(!showRegister)}
-                  className="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700"
+                  className="rounded-2xl bg-slate-700 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-slate-800"
                 >
-                  {showRegister
-                    ? "Тіркелу формасын жабу"
-                    : "Жаңа аккаунт ашу"}
+                  {showRegister ? "Тіркелу формасын жабу" : "Жаңа аккаунт ашу"}
                 </button>
               </div>
             </div>

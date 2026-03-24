@@ -127,12 +127,12 @@ function AddDocument({ setPage, setLoggedIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
+        <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-100">
                 ⬆️
               </div>
 
@@ -152,21 +152,21 @@ function AddDocument({ setPage, setLoggedIn }) {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setPage("documents")}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Құжаттарым
               </button>
 
               <button
                 onClick={() => setPage("dashboard")}
-                className="rounded-2xl bg-sky-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-sky-100 transition hover:bg-sky-700"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Dashboard
               </button>
 
               <button
                 onClick={logout}
-                className="rounded-2xl bg-rose-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-rose-100 transition hover:bg-rose-600"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Шығу
               </button>
@@ -174,7 +174,7 @@ function AddDocument({ setPage, setLoggedIn }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.05)] sm:p-6">
+        <div className="mt-6 rounded-[28px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
           <h3 className="text-lg font-bold text-slate-800">
             Қолдау көрсетілетін файлдар
           </h3>
@@ -184,7 +184,7 @@ function AddDocument({ setPage, setLoggedIn }) {
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+          <div className="rounded-[32px] border border-sky-100 bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-slate-800">
               Құжат жүктеу формасы
             </h2>
@@ -195,7 +195,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                   Құжат атауы
                 </label>
                 <input
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                  className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                   placeholder="Мысалы: Паспорт көшірмесі"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -207,7 +207,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                   Категория
                 </label>
                 <input
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                  className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                   placeholder="Мысалы: Жеке құжат"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -219,7 +219,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                   Сипаттама
                 </label>
                 <textarea
-                  className="min-h-[130px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                  className="min-h-[130px] w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                   placeholder="Қысқаша түсініктеме"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -238,8 +238,8 @@ function AddDocument({ setPage, setLoggedIn }) {
                   onDragLeave={handleDrag}
                   className={`block w-full cursor-pointer rounded-[24px] border-2 border-dashed p-8 text-center transition ${
                     dragActive
-                      ? "border-sky-500 bg-sky-50"
-                      : "border-slate-300 bg-slate-50"
+                      ? "border-sky-300 bg-sky-100"
+                      : "border-sky-100 bg-sky-50"
                   }`}
                 >
                   <input
@@ -263,7 +263,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                 </label>
 
                 {file && (
-                  <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="mt-3 rounded-2xl border border-sky-100 bg-sky-50 p-4">
                     <p className="break-all font-medium text-slate-800">
                       {file.name}
                     </p>
@@ -278,39 +278,39 @@ function AddDocument({ setPage, setLoggedIn }) {
               </div>
 
               {message && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700">
+                <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4 text-slate-700">
                   {message}
                 </div>
               )}
 
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-sky-600 py-3 font-semibold text-white transition hover:bg-sky-700"
+                className="w-full rounded-2xl bg-slate-700 py-3 font-semibold text-white transition hover:bg-slate-800"
               >
                 Құжат жүктеу
               </button>
             </form>
           </div>
 
-          <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+          <div className="rounded-[32px] border border-sky-100 bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-slate-800">
               Алдын ала қарау
             </h2>
 
             {!file ? (
-              <div className="mt-6 flex h-[420px] items-center justify-center rounded-[28px] border border-dashed border-slate-300 bg-slate-50 text-center text-slate-500">
+              <div className="mt-6 flex h-[420px] items-center justify-center rounded-[28px] border border-dashed border-sky-100 bg-sky-50 text-center text-slate-500">
                 Файл таңдалғаннан кейін preview осы жерде көрінеді
               </div>
             ) : (
               <div className="mt-6 space-y-4">
-                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-5">
                   <p className="mb-1 text-sm text-slate-500">Файл атауы</p>
                   <p className="break-all font-semibold text-slate-900">
                     {file.name}
                   </p>
                 </div>
 
-                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-5">
                   <p className="mb-1 text-sm text-slate-500">Түрі</p>
                   <p className="font-semibold text-slate-900">
                     {getFileTypeLabel()}
@@ -318,7 +318,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                 </div>
 
                 {previewUrl ? (
-                  <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50 p-3">
+                  <div className="overflow-hidden rounded-[24px] border border-sky-100 bg-sky-50 p-3">
                     <img
                       src={previewUrl}
                       alt="preview"
@@ -326,7 +326,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-[260px] items-center justify-center rounded-[24px] border border-slate-200 bg-slate-50 p-6 text-center text-slate-500">
+                  <div className="flex h-[260px] items-center justify-center rounded-[24px] border border-sky-100 bg-sky-50 p-6 text-center text-slate-500">
                     Бұл файл түріне визуалды preview жоқ, бірақ жүктеуге дайын.
                   </div>
                 )}

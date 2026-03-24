@@ -46,7 +46,7 @@ function Login({ setLoggedIn }) {
     <div className="w-full">
       <div className="overflow-hidden rounded-[32px] border border-sky-100 bg-white p-7 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:p-9">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-100">
             🔐
           </div>
 
@@ -69,7 +69,7 @@ function Login({ setLoggedIn }) {
               placeholder="Мысалы: user@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
             />
           </div>
 
@@ -82,7 +82,7 @@ function Login({ setLoggedIn }) {
               placeholder="Парольді енгізіңіз"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
             />
           </div>
 
@@ -95,24 +95,24 @@ function Login({ setLoggedIn }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-sky-600 py-4 text-lg font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? "Тексерілуде..." : "Кіру"}
           </button>
         </form>
 
         <div className="mt-8 grid grid-cols-3 gap-3 text-center">
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
             <div className="text-2xl">🛡️</div>
             <p className="mt-2 text-xs text-slate-600">JWT қорғаныс</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
             <div className="text-2xl">🔑</div>
             <p className="mt-2 text-xs text-slate-600">2FA қауіпсіздік</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+          <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
             <div className="text-2xl">📁</div>
             <p className="mt-2 text-xs text-slate-600">AES шифрлау</p>
           </div>

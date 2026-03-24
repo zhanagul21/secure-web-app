@@ -9,6 +9,10 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tempUserEmail");
+    localStorage.removeItem("tempUserRole");
+    localStorage.removeItem("tempUserId");
     setLoggedIn(false);
   };
 
@@ -117,89 +121,99 @@ function AdminPanel({ setPage, setLoggedIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <nav className="bg-slate-950 text-white px-6 md:px-8 py-4 flex flex-col md:flex-row gap-4 md:gap-0 items-start md:items-center justify-between shadow-lg">
-        <div>
-          <h1 className="text-2xl font-bold">AUTHGUARD LOCKER</h1>
-          <p className="text-slate-300 text-sm">Әкімшілік панель</p>
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-black text-slate-800">
+                AUTHGUARD LOCKER
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">Әкімшілік панель</p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setPage("dashboard")}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Dashboard
+              </button>
+
+              <button
+                onClick={() => setPage("logs")}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Әрекет тарихы
+              </button>
+
+              <button
+                onClick={logout}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Шығу
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => setPage("dashboard")}
-            className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-xl"
-          >
-            Dashboard
-          </button>
-
-          <button
-            onClick={() => setPage("logs")}
-            className="bg-slate-800 hover:bg-slate-900 px-4 py-2 rounded-xl"
-          >
-            Әрекет тарихы
-          </button>
-
-          <button
-            onClick={logout}
-            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl"
-          >
-            Шығу
-          </button>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="mb-6">
+        <div className="mt-6 mb-6">
           <h2 className="text-3xl font-bold text-slate-900">Admin Panel</h2>
-          <p className="text-slate-600 mt-1">
+          <p className="mt-1 text-slate-600">
             Қолданушыларды қарау, іздеу, рөл беру және өшіру
           </p>
         </div>
 
         {message && (
-          <div className="bg-white border rounded-2xl p-4 mb-6 text-red-600">
+          <div className="mb-6 rounded-2xl border border-sky-100 bg-white p-4 text-slate-700 shadow-sm">
             {message}
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-3xl shadow-md p-6">
-            <p className="text-sm text-slate-500 mb-2">Барлық қолданушылар</p>
+        <div className="mb-6 grid gap-6 md:grid-cols-3">
+          <div className="rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+            <p className="mb-2 text-sm text-slate-500">Барлық қолданушылар</p>
             <p className="text-3xl font-bold text-slate-900">{roleStats.total}</p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-md p-6">
-            <p className="text-sm text-slate-500 mb-2">Admin қолданушылар</p>
+          <div className="rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+            <p className="mb-2 text-sm text-slate-500">Admin қолданушылар</p>
             <p className="text-3xl font-bold text-fuchsia-600">
               {roleStats.admins}
             </p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-md p-6">
-            <p className="text-sm text-slate-500 mb-2">Қарапайым қолданушылар</p>
-            <p className="text-3xl font-bold text-blue-600">
+          <div className="rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+            <p className="mb-2 text-sm text-slate-500">
+              Қарапайым қолданушылар
+            </p>
+            <p className="text-3xl font-bold text-sky-600">
               {roleStats.regularUsers}
             </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-md p-6 mb-6">
-          <div className="grid md:grid-cols-3 gap-4">
+        <div className="mb-6 rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
-              <label className="block mb-2 font-medium">Іздеу</label>
+              <label className="mb-2 block font-medium text-slate-700">
+                Іздеу
+              </label>
               <input
                 type="text"
                 placeholder="ID, аты-жөні немесе email бойынша іздеу"
-                className="w-full border rounded-xl p-3"
+                className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">Рөл</label>
+              <label className="mb-2 block font-medium text-slate-700">
+                Рөл
+              </label>
               <select
-                className="w-full border rounded-xl p-3"
+                className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
@@ -211,23 +225,25 @@ function AdminPanel({ setPage, setLoggedIn }) {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-md p-6">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <h3 className="text-2xl font-bold">Барлық қолданушылар</h3>
+        <div className="rounded-[32px] border border-sky-100 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <h3 className="text-2xl font-bold text-slate-800">
+              Барлық қолданушылар
+            </h3>
             <span className="text-sm text-slate-500">
               Нәтиже: {filteredUsers.length}
             </span>
           </div>
 
           {filteredUsers.length === 0 ? (
-            <div className="text-center py-10 text-slate-500">
+            <div className="rounded-2xl bg-sky-50 py-10 text-center text-slate-500">
               Қолданушылар табылмады.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px]">
                 <thead>
-                  <tr className="border-b text-left text-slate-500">
+                  <tr className="border-b border-sky-100 text-left text-slate-500">
                     <th className="p-3 font-medium">ID</th>
                     <th className="p-3 font-medium">Аты-жөні</th>
                     <th className="p-3 font-medium">Email</th>
@@ -239,20 +255,23 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
                 <tbody>
                   {filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b hover:bg-slate-50">
+                    <tr
+                      key={user.id}
+                      className="border-b border-sky-50 hover:bg-sky-50"
+                    >
                       <td className="p-3 text-slate-900">{user.id}</td>
 
                       <td className="p-3 text-slate-900">
                         {user.full_name || "-"}
                       </td>
 
-                      <td className="p-3 text-slate-700 break-all">
+                      <td className="break-all p-3 text-slate-700">
                         {user.email || "-"}
                       </td>
 
                       <td className="p-3">
                         <span
-                          className={`text-xs px-3 py-1 rounded-full ${getRoleBadgeClass(
+                          className={`rounded-full px-3 py-1 text-xs ${getRoleBadgeClass(
                             user.role
                           )}`}
                         >
@@ -271,7 +290,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
                           {user.role !== "admin" && (
                             <button
                               onClick={() => makeAdmin(user.id, user.full_name)}
-                              className="bg-fuchsia-600 text-white px-3 py-2 rounded-xl hover:bg-fuchsia-700"
+                              className="rounded-xl bg-slate-700 px-3 py-2 text-white transition hover:bg-slate-800"
                             >
                               Admin ету
                             </button>
@@ -279,7 +298,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
                           <button
                             onClick={() => deleteUser(user.id, user.full_name)}
-                            className="bg-red-500 text-white px-3 py-2 rounded-xl hover:bg-red-600"
+                            className="rounded-xl bg-slate-700 px-3 py-2 text-white transition hover:bg-slate-800"
                           >
                             Өшіру
                           </button>

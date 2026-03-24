@@ -165,12 +165,12 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-sky-100 bg-white/90 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
+        <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-100">
                 🔐
               </div>
 
@@ -191,28 +191,28 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setPage("documents")}
-                className="rounded-2xl bg-sky-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-sky-100 transition hover:bg-sky-700"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Құжаттар
               </button>
 
               <button
                 onClick={() => setPage("addDocument")}
-                className="rounded-2xl bg-emerald-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-emerald-100 transition hover:bg-emerald-600"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Құжат қосу
               </button>
 
               <button
                 onClick={() => setPage("logs")}
-                className="rounded-2xl bg-amber-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-amber-100 transition hover:bg-amber-600"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Әрекет тарихы
               </button>
 
               <button
                 onClick={() => setPage("profile")}
-                className="rounded-2xl bg-indigo-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-indigo-100 transition hover:bg-indigo-600"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Профиль
               </button>
@@ -220,7 +220,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
               {user?.role === "admin" && (
                 <button
                   onClick={() => setPage("admin")}
-                  className="rounded-2xl bg-fuchsia-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-fuchsia-100 transition hover:bg-fuchsia-700"
+                  className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
                 >
                   Admin
                 </button>
@@ -228,7 +228,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
 
               <button
                 onClick={logout}
-                className="rounded-2xl bg-rose-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-rose-100 transition hover:bg-rose-600"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Шығу
               </button>
@@ -237,13 +237,13 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
         </div>
 
         {message && (
-          <div className="mt-6 rounded-3xl border border-rose-100 bg-rose-50 px-5 py-4 text-rose-700 shadow-sm">
+          <div className="mt-6 rounded-3xl border border-sky-100 bg-white px-5 py-4 text-slate-700 shadow-sm">
             {message}
           </div>
         )}
 
         {user && (
-          <div className="mt-6 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+          <div className="mt-6 rounded-[32px] border border-sky-100 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">
@@ -254,32 +254,32 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
                 </p>
               </div>
 
-              <div className="rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+              <div className="rounded-full bg-sky-100 px-4 py-2 text-sm font-medium text-sky-700">
                 {user.role || "user"}
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
                 <p className="mb-1 text-sm text-slate-500">ID</p>
                 <p className="font-semibold text-slate-900">{user.id}</p>
               </div>
 
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
                 <p className="mb-1 text-sm text-slate-500">Аты-жөні</p>
                 <p className="font-semibold text-slate-900">
                   {user.full_name || "-"}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
                 <p className="mb-1 text-sm text-slate-500">Email</p>
                 <p className="break-all font-semibold text-slate-900">
                   {user.email || "-"}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
                 <p className="mb-1 text-sm text-slate-500">Рөлі</p>
                 <p className="font-semibold uppercase text-slate-900">
                   {user.role || "-"}
@@ -290,7 +290,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
         )}
 
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
+          <div className="rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
             <p className="text-sm font-medium text-slate-500">Барлық құжаттар</p>
             <p className="mt-3 text-3xl font-black text-slate-800">
               {stats.totalDocuments}
@@ -298,33 +298,45 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
             <p className="mt-2 text-sm text-slate-500">Жүйедегі файлдар саны</p>
           </div>
 
-          <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
-            <p className="text-sm font-medium text-slate-500">Қаралған құжаттар</p>
-            <p className="mt-3 text-3xl font-black text-sky-600">
+          <div className="rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-slate-500">
+              Қаралған құжаттар
+            </p>
+            <p className="mt-3 text-3xl font-black text-slate-800">
               {stats.totalViews}
             </p>
-            <p className="mt-2 text-sm text-slate-500">Viewer арқылы ашылғандар</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Viewer арқылы ашылғандар
+            </p>
           </div>
 
-          <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
-            <p className="text-sm font-medium text-slate-500">Жүктелген құжаттар</p>
-            <p className="mt-3 text-3xl font-black text-emerald-600">
+          <div className="rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-slate-500">
+              Жүктелген құжаттар
+            </p>
+            <p className="mt-3 text-3xl font-black text-slate-800">
               {stats.totalDownloads}
             </p>
-            <p className="mt-2 text-sm text-slate-500">Download жасалған файлдар</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Download жасалған файлдар
+            </p>
           </div>
 
-          <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)]">
-            <p className="text-sm font-medium text-slate-500">Өшірілген құжаттар</p>
-            <p className="mt-3 text-3xl font-black text-rose-600">
+          <div className="rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+            <p className="text-sm font-medium text-slate-500">
+              Өшірілген құжаттар
+            </p>
+            <p className="mt-3 text-3xl font-black text-slate-800">
               {stats.totalDeletes}
             </p>
-            <p className="mt-2 text-sm text-slate-500">Жүйеден жойылған файлдар</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Жүйеден жойылған файлдар
+            </p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-2">
-          <div className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+          <div className="rounded-[32px] border border-sky-100 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">
@@ -344,7 +356,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
             </div>
 
             {recentDocuments.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+              <div className="rounded-2xl border border-dashed border-sky-100 bg-sky-50 px-4 py-8 text-center">
                 <div className="text-4xl">📂</div>
                 <p className="mt-3 font-semibold text-slate-700">
                   Әзірге құжаттар жоқ
@@ -358,7 +370,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
                 {recentDocuments.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-4 rounded-2xl border border-sky-100 bg-sky-50 p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex min-w-0 items-start gap-3">
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
@@ -392,7 +404,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
                         setSelectedDocumentId(doc.id);
                         setPage("viewer");
                       }}
-                      className="shrink-0 rounded-xl bg-sky-600 px-4 py-2.5 font-semibold text-white transition hover:bg-sky-700"
+                      className="shrink-0 rounded-xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
                     >
                       Ашу
                     </button>
@@ -402,7 +414,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
             )}
           </div>
 
-          <div className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+          <div className="rounded-[32px] border border-sky-100 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">
@@ -422,7 +434,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
             </div>
 
             {recentLogs.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+              <div className="rounded-2xl border border-dashed border-sky-100 bg-sky-50 px-4 py-8 text-center">
                 <div className="text-4xl">🕘</div>
                 <p className="mt-3 font-semibold text-slate-700">
                   Әзірге әрекет тарихы жоқ
@@ -433,7 +445,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
                 {recentLogs.map((log) => (
                   <div
                     key={log.id}
-                    className="rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                    className="rounded-2xl border border-sky-100 bg-sky-50 p-4"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
@@ -445,7 +457,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
                         </p>
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+                      <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-sky-100">
                         {log.action_type}
                       </span>
                     </div>
@@ -462,9 +474,11 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+        <div className="mt-6 rounded-[32px] border border-sky-100 bg-white p-6 shadow-sm">
           <div className="mb-5">
-            <h3 className="text-xl font-bold text-slate-800">Жылдам әрекеттер</h3>
+            <h3 className="text-xl font-bold text-slate-800">
+              Жылдам әрекеттер
+            </h3>
             <p className="mt-1 text-sm text-slate-500">
               Негізгі бөлімдерге тез өту
             </p>
@@ -473,7 +487,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <button
               onClick={() => setPage("addDocument")}
-              className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-left transition hover:bg-emerald-100"
+              className="rounded-2xl border border-sky-100 bg-sky-50 p-5 text-left transition hover:bg-sky-100"
             >
               <div className="mb-3 text-2xl">📤</div>
               <h4 className="font-semibold text-slate-900">Құжат жүктеу</h4>
@@ -484,7 +498,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
 
             <button
               onClick={() => setPage("documents")}
-              className="rounded-2xl border border-sky-200 bg-sky-50 p-5 text-left transition hover:bg-sky-100"
+              className="rounded-2xl border border-sky-100 bg-sky-50 p-5 text-left transition hover:bg-sky-100"
             >
               <div className="mb-3 text-2xl">📁</div>
               <h4 className="font-semibold text-slate-900">Менің құжаттарым</h4>
@@ -495,7 +509,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
 
             <button
               onClick={() => setPage("logs")}
-              className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-left transition hover:bg-amber-100"
+              className="rounded-2xl border border-sky-100 bg-sky-50 p-5 text-left transition hover:bg-sky-100"
             >
               <div className="mb-3 text-2xl">🕘</div>
               <h4 className="font-semibold text-slate-900">Әрекет тарихы</h4>
@@ -506,7 +520,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
 
             <button
               onClick={() => setPage("profile")}
-              className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-left transition hover:bg-indigo-100"
+              className="rounded-2xl border border-sky-100 bg-sky-50 p-5 text-left transition hover:bg-sky-100"
             >
               <div className="mb-3 text-2xl">👤</div>
               <h4 className="font-semibold text-slate-900">Профиль</h4>

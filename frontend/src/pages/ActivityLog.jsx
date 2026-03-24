@@ -9,6 +9,10 @@ function ActivityLog({ setPage, setLoggedIn }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tempUserEmail");
+    localStorage.removeItem("tempUserRole");
+    localStorage.removeItem("tempUserId");
     setLoggedIn(false);
   };
 
@@ -79,11 +83,11 @@ function ActivityLog({ setPage, setLoggedIn }) {
       case "DOCUMENT_ADD":
         return "bg-emerald-100 text-emerald-700";
       case "DOCUMENT_VIEW":
-        return "bg-blue-100 text-blue-700";
+        return "bg-sky-100 text-sky-700";
       case "DOCUMENT_DOWNLOAD":
         return "bg-cyan-100 text-cyan-700";
       case "DOCUMENT_DELETE":
-        return "bg-red-100 text-red-700";
+        return "bg-rose-100 text-rose-700";
       case "LOGIN":
         return "bg-violet-100 text-violet-700";
       case "REGISTER":
@@ -117,62 +121,73 @@ function ActivityLog({ setPage, setLoggedIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <nav className="bg-slate-950 text-white px-6 md:px-8 py-4 flex flex-col md:flex-row gap-4 md:gap-0 items-start md:items-center justify-between shadow-lg">
-        <div>
-          <h1 className="text-2xl font-bold">AUTHGUARD LOCKER</h1>
-          <p className="text-slate-300 text-sm">Әрекет тарихы</p>
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-black text-slate-800">
+                AUTHGUARD LOCKER
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">Әрекет тарихы</p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setPage("dashboard")}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Dashboard
+              </button>
+
+              <button
+                onClick={() => setPage("documents")}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Құжаттар
+              </button>
+
+              <button
+                onClick={logout}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Шығу
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => setPage("dashboard")}
-            className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-xl"
-          >
-            Dashboard
-          </button>
-
-          <button
-            onClick={() => setPage("documents")}
-            className="bg-slate-800 hover:bg-slate-900 px-4 py-2 rounded-xl"
-          >
-            Құжаттар
-          </button>
-
-          <button
-            onClick={logout}
-            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl"
-          >
-            Шығу
-          </button>
-        </div>
-      </nav>
-
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="bg-white rounded-3xl shadow-md p-5 mb-6">
-          <h3 className="text-lg font-semibold mb-2">Журнал түрлері</h3>
-          <p className="text-slate-600">
-            Құжат қосу, ашу, жүктеу, өшіру және қауіпсіздікке қатысты әрекеттер сақталады.
+        <div className="mt-6 rounded-[28px] border border-sky-100 bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-800">
+            Журнал түрлері
+          </h3>
+          <p className="mt-2 text-slate-600">
+            Құжат қосу, ашу, жүктеу, өшіру және қауіпсіздікке қатысты әрекеттер
+            сақталады.
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-md p-6 mb-6">
-          <div className="grid md:grid-cols-3 gap-4">
+        <div className="mt-6 rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
-              <label className="block mb-2 font-medium">Іздеу</label>
+              <label className="mb-2 block font-medium text-slate-700">
+                Іздеу
+              </label>
               <input
                 type="text"
                 placeholder="Әрекет түрі немесе сипаттамасы бойынша іздеу"
-                className="w-full border rounded-xl p-3"
+                className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">Әрекет түрі</label>
+              <label className="mb-2 block font-medium text-slate-700">
+                Әрекет түрі
+              </label>
               <select
-                className="w-full border rounded-xl p-3"
+                className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                 value={actionFilter}
                 onChange={(e) => setActionFilter(e.target.value)}
               >
@@ -188,21 +203,23 @@ function ActivityLog({ setPage, setLoggedIn }) {
         </div>
 
         {message && (
-          <div className="mb-4 bg-white border rounded-xl p-4 text-slate-700">
+          <div className="mt-6 rounded-2xl border border-sky-100 bg-white p-4 text-slate-700 shadow-sm">
             {message}
           </div>
         )}
 
-        <div className="bg-white rounded-3xl shadow-md p-6">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <h2 className="text-2xl font-bold">Қауіпсіздік және әрекет журналы</h2>
+        <div className="mt-6 rounded-[32px] border border-sky-100 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <h2 className="text-2xl font-bold text-slate-800">
+              Қауіпсіздік және әрекет журналы
+            </h2>
             <span className="text-sm text-slate-500">
               Барлығы: {filteredLogs.length}
             </span>
           </div>
 
           {filteredLogs.length === 0 ? (
-            <div className="text-center py-10 text-slate-500">
+            <div className="rounded-2xl bg-sky-50 py-10 text-center text-slate-500">
               Әзірге әрекет тарихы табылмады.
             </div>
           ) : (
@@ -210,20 +227,22 @@ function ActivityLog({ setPage, setLoggedIn }) {
               {filteredLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="border rounded-2xl bg-slate-50 p-5 hover:shadow-sm transition"
+                  className="rounded-2xl border border-sky-100 bg-sky-50 p-5 transition hover:shadow-sm"
                 >
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
                     <div className="flex items-start gap-4">
-                      <div className="text-2xl mt-1">{getActionIcon(log.action_type)}</div>
+                      <div className="mt-1 text-2xl">
+                        {getActionIcon(log.action_type)}
+                      </div>
 
                       <div>
-                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <div className="mb-2 flex flex-wrap items-center gap-3">
                           <h3 className="font-semibold text-slate-900">
                             {getActionLabel(log.action_type)}
                           </h3>
 
                           <span
-                            className={`text-xs px-3 py-1 rounded-full ${getActionBadgeClass(
+                            className={`rounded-full px-3 py-1 text-xs ${getActionBadgeClass(
                               log.action_type
                             )}`}
                           >
