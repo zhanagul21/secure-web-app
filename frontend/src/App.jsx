@@ -19,24 +19,29 @@ function App() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 p-6">
-        <div className="max-w-5xl mx-auto pt-10">
-          <div className="text-center text-white mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-wide">
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#0f172a_0%,_#020617_45%,_#000814_100%)] px-6 py-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-cyan-500/15 text-4xl shadow-2xl ring-1 ring-white/10">
+              🔒
+            </div>
+
+            <h1 className="text-5xl md:text-6xl font-black tracking-wide text-white">
               AUTHGUARD LOCKER
             </h1>
-            <p className="mt-3 text-slate-300 text-lg">
-              Қауіпсіз құжат сақтау және басқару жүйесі
+
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+              Қауіпсіз құжат сақтау, басқару және шифрлау жүйесі
             </p>
           </div>
 
-          <div className="max-w-xl mx-auto">
+          <div className="mx-auto max-w-2xl">
             <Login setLoggedIn={setLoggedIn} />
 
-            <div className="mt-6 text-center">
+            <div className="mt-8 text-center">
               <button
                 onClick={() => setShowRegister(!showRegister)}
-                className="text-cyan-300 hover:text-cyan-200 underline"
+                className="text-lg font-medium text-cyan-300 underline underline-offset-4 hover:text-cyan-200"
               >
                 {showRegister
                   ? "Тіркелу формасын жабу"
@@ -45,7 +50,7 @@ function App() {
             </div>
 
             {showRegister && (
-              <div className="mt-6">
+              <div className="mt-8">
                 <Register />
               </div>
             )}
