@@ -29,7 +29,6 @@ function Login({ setLoggedIn }) {
         localStorage.setItem("tempUserRole", res.data.tempUser.role || "user");
         localStorage.setItem("tempUserId", res.data.tempUser.id);
         setMessage("2FA кодын енгізу қажет");
-        window.location.reload();
         return;
       }
 
@@ -45,27 +44,27 @@ function Login({ setLoggedIn }) {
 
   return (
     <div className="w-full">
-      <div className="relative overflow-hidden rounded-[32px] border border-white/15 bg-white/10 backdrop-blur-xl shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-indigo-600/10" />
+      <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-white to-indigo-50" />
 
         <div className="relative p-8 md:p-10">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-500/20 text-3xl shadow-lg">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 text-3xl shadow-sm">
               🔐
             </div>
 
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
+            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
               Жүйеге кіру
             </h2>
 
-            <p className="mt-3 text-slate-200">
+            <p className="mt-3 text-slate-600">
               Қауіпсіз құжат сақтау жүйесіне кіру үшін аккаунтыңызды пайдаланыңыз
             </p>
           </div>
 
           <form onSubmit={loginUser} className="space-y-5">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-100">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Email
               </label>
               <input
@@ -73,12 +72,12 @@ function Login({ setLoggedIn }) {
                 placeholder="Мысалы: user@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border border-white/20 bg-white/90 px-5 py-4 text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/15"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-100">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Пароль
               </label>
               <input
@@ -86,12 +85,12 @@ function Login({ setLoggedIn }) {
                 placeholder="Парольді енгізіңіз"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-2xl border border-white/20 bg-white/90 px-5 py-4 text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/15"
               />
             </div>
 
             {message && (
-              <div className="rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-sm text-slate-800">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
                 {message}
               </div>
             )}
@@ -99,26 +98,26 @@ function Login({ setLoggedIn }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-cyan-500 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full rounded-2xl bg-indigo-600 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? "Тексерілуде..." : "Кіру"}
             </button>
           </form>
 
           <div className="mt-8 grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="text-2xl">🛡️</div>
-              <p className="mt-2 text-xs text-slate-200">JWT қорғаныс</p>
+              <p className="mt-2 text-xs text-slate-600">JWT қорғаныс</p>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="text-2xl">🔑</div>
-              <p className="mt-2 text-xs text-slate-200">2FA қауіпсіздік</p>
+              <p className="mt-2 text-xs text-slate-600">2FA қауіпсіздік</p>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="text-2xl">📁</div>
-              <p className="mt-2 text-xs text-slate-200">AES шифрлау</p>
+              <p className="mt-2 text-xs text-slate-600">AES шифрлау</p>
             </div>
           </div>
         </div>

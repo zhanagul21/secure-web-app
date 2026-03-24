@@ -19,18 +19,18 @@ function App() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#0f172a_0%,_#020617_45%,_#000814_100%)] px-6 py-10">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 px-6 py-10">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-cyan-500/15 text-4xl shadow-2xl ring-1 ring-white/10">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-indigo-100 text-4xl shadow-lg ring-1 ring-indigo-200">
               🔒
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-black tracking-wide text-white">
+            <h1 className="text-5xl font-black tracking-wide text-slate-900 md:text-6xl">
               AUTHGUARD LOCKER
             </h1>
 
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
               Қауіпсіз құжат сақтау, басқару және шифрлау жүйесі
             </p>
           </div>
@@ -41,7 +41,7 @@ function App() {
             <div className="mt-8 text-center">
               <button
                 onClick={() => setShowRegister(!showRegister)}
-                className="text-lg font-medium text-cyan-300 underline underline-offset-4 hover:text-cyan-200"
+                className="text-lg font-medium text-indigo-600 underline underline-offset-4 hover:text-indigo-700"
               >
                 {showRegister
                   ? "Тіркелу формасын жабу"

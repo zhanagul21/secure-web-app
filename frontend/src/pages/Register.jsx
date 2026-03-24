@@ -3,42 +3,66 @@ import API from "../services/api";
 
 function Register() {
   const [step, setStep] = useState(1);
-
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
-
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const sendCode = async (e) => {
     e.preventDefault();
+    setMessage("");
+
+    if (!email) {
+      setMessage("Email енгізіңіз");
+      return;
+    }
 
     try {
+      setLoading(true);
       const res = await API.post("/auth/send-code", { email });
-      setMessage(res.data.message || "Растау коды email-ға жіберілді");
+      setMessage(res.data.message || "Код жіберілді");
       setStep(2);
     } catch (error) {
-      setMessage(error.response?.data?.message || "Қате шықты");
+      setMessage(error.response?.data?.message || "Код жіберу кезінде қате");
+    } finally {
+      setLoading(false);
     }
   };
 
   const verifyCode = async (e) => {
     e.preventDefault();
+    setMessage("");
+
+    if (!email || !code) {
+      setMessage("Email мен кодты енгізіңіз");
+      return;
+    }
 
     try {
+      setLoading(true);
       const res = await API.post("/auth/verify-code", { email, code });
       setMessage(res.data.message || "Код расталды");
       setStep(3);
     } catch (error) {
       setMessage(error.response?.data?.message || "Код қате");
+    } finally {
+      setLoading(false);
     }
   };
 
   const completeRegister = async (e) => {
     e.preventDefault();
+    setMessage("");
+
+    if (!fullName || !email || !password) {
+      setMessage("Барлық өрістерді толтырыңыз");
+      return;
+    }
 
     try {
+      setLoading(true);
       const res = await API.post("/auth/complete-register", {
         full_name: fullName,
         email,
@@ -46,100 +70,193 @@ function Register() {
       });
 
       setMessage(res.data.message || "Тіркелу сәтті аяқталды");
-
       setStep(1);
+      setFullName("");
       setEmail("");
       setCode("");
-      setFullName("");
       setPassword("");
     } catch (error) {
       setMessage(error.response?.data?.message || "Тіркелу қатесі");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl p-8">
-      <h2 className="text-2xl font-bold mb-6 text-slate-900">Тіркелу</h2>
+    <div className="w-full">
+      <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-sky-50" />
 
-      <div className="flex gap-2 mb-6">
-        <div
-          className={`h-2 flex-1 rounded ${
-            step >= 1 ? "bg-cyan-600" : "bg-slate-200"
-          }`}
-        ></div>
-        <div
-          className={`h-2 flex-1 rounded ${
-            step >= 2 ? "bg-cyan-600" : "bg-slate-200"
-          }`}
-        ></div>
-        <div
-          className={`h-2 flex-1 rounded ${
-            step >= 3 ? "bg-cyan-600" : "bg-slate-200"
-          }`}
-        ></div>
-      </div>
+        <div className="relative p-8 md:p-10">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm">
+              ✨
+            </div>
 
-      {step === 1 && (
-        <form onSubmit={sendCode} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email енгізіңіз"
-            className="w-full p-3 border rounded-xl"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            <h2 className="text-3xl font-bold text-slate-900 md:text-4xl">
+              Тіркелу
+            </h2>
 
-          <button className="w-full bg-cyan-600 text-white p-3 rounded-xl hover:bg-cyan-700">
-            Код жіберу
-          </button>
-        </form>
-      )}
+            <p className="mt-3 text-slate-600">
+              Жаңа аккаунт жасау үшін төмендегі қадамдарды орындаңыз
+            </p>
+          </div>
 
-      {step === 2 && (
-        <form onSubmit={verifyCode} className="space-y-4">
-          <input
-            type="text"
-            placeholder="6 таңбалы код"
-            className="w-full p-3 border rounded-xl"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
+          <div className="mb-8 flex items-center gap-3">
+            <div className="flex-1">
+              <div
+                className={`h-2 rounded-full ${
+                  step >= 1 ? "bg-indigo-500" : "bg-slate-200"
+                }`}
+              />
+            </div>
+            <div className="flex-1">
+              <div
+                className={`h-2 rounded-full ${
+                  step >= 2 ? "bg-indigo-500" : "bg-slate-200"
+                }`}
+              />
+            </div>
+            <div className="flex-1">
+              <div
+                className={`h-2 rounded-full ${
+                  step >= 3 ? "bg-indigo-500" : "bg-slate-200"
+                }`}
+              />
+            </div>
+          </div>
 
-          <button className="w-full bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700">
-            Кодты растау
-          </button>
-        </form>
-      )}
+          {step === 1 && (
+            <form onSubmit={sendCode} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="Email адресіңіз"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/15"
+                />
+              </div>
 
-      {step === 3 && (
-        <form onSubmit={completeRegister} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Аты-жөні"
-            className="w-full p-3 border rounded-xl"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
+              {message && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+                  {message}
+                </div>
+              )}
 
-          <input
-            type="password"
-            placeholder="Пароль ойлап табыңыз"
-            className="w-full p-3 border rounded-xl"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-sky-500 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {loading ? "Жіберілуде..." : "Код жіберу"}
+              </button>
+            </form>
+          )}
 
-          <button className="w-full bg-emerald-500 text-white p-3 rounded-xl hover:bg-emerald-600">
-            Тіркелуді аяқтау
-          </button>
-        </form>
-      )}
+          {step === 2 && (
+            <form onSubmit={verifyCode} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  disabled
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-5 py-4 text-slate-500 outline-none"
+                />
+              </div>
 
-      {message && (
-        <div className="mt-5 bg-slate-100 border rounded-xl p-3 text-slate-700 text-sm">
-          {message}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Растау коды
+                </label>
+                <input
+                  type="text"
+                  placeholder="6 таңбалы код"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/15"
+                />
+              </div>
+
+              {message && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-indigo-600 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {loading ? "Тексерілуде..." : "Кодты растау"}
+              </button>
+            </form>
+          )}
+
+          {step === 3 && (
+            <form onSubmit={completeRegister} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Аты-жөні
+                </label>
+                <input
+                  type="text"
+                  placeholder="Толық аты-жөніңіз"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/15"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  disabled
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-5 py-4 text-slate-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Пароль
+                </label>
+                <input
+                  type="password"
+                  placeholder="Құпиясөз жасаңыз"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/15"
+                />
+              </div>
+
+              {message && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-emerald-500 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {loading ? "Аяқталуда..." : "Тіркелуді аяқтау"}
+              </button>
+            </form>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
