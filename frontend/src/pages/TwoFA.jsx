@@ -40,7 +40,6 @@ function TwoFA({ setPage, setLoggedIn }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-blue-200 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
-
         <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
@@ -63,40 +62,91 @@ function TwoFA({ setPage, setLoggedIn }) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button onClick={() => setPage("dashboard")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Басты бет</button>
-              <button onClick={() => setPage("profile")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Профиль</button>
-              <button onClick={logout} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Шығу</button>
+              <button
+                onClick={() => setPage("dashboard")}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Басты бет
+              </button>
+              <button
+                onClick={() => setPage("profile")}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Профиль
+              </button>
+              <button
+                onClick={logout}
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Шығу
+              </button>
             </div>
           </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur">
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold text-slate-800">QR код</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Authenticator қолданбасымен сканерлеңіз
+              </p>
+            </div>
 
-          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow">
-            <h2 className="font-bold mb-3">QR код</h2>
-            {qr ? <img src={qr} className="mx-auto w-52"/> : "Жүктелуде..."}
+            <div className="flex min-h-[360px] items-center justify-center rounded-[28px] bg-gradient-to-br from-sky-50 to-blue-50 p-6 ring-1 ring-sky-100">
+              {qr ? (
+                <img
+                  src={qr}
+                  alt="2FA QR"
+                  className="w-56 rounded-2xl bg-white p-3 shadow-sm"
+                />
+              ) : (
+                <p className="text-slate-500">Жүктелуде...</p>
+              )}
+            </div>
           </div>
 
-          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow">
-            <h2 className="font-bold mb-3">Код енгізу</h2>
+          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur">
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold text-slate-800">Код енгізу</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Қолданбадағы 6 таңбалы кодты енгізіңіз
+              </p>
+            </div>
 
-            <input
-              value={code}
-              onChange={(e)=>setCode(e.target.value)}
-              className="w-full p-3 rounded-xl border"
-              placeholder="123456"
-            />
+            <div className="rounded-[28px] bg-gradient-to-br from-sky-50 to-blue-50 p-5 ring-1 ring-sky-100">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Бір реттік код
+              </label>
 
-            <button
-              onClick={verify}
-              className="w-full mt-3 bg-slate-700 text-white py-3 rounded-xl"
-            >
-              Растау
-            </button>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+                placeholder="123456"
+              />
 
-            {message && <p className="mt-3">{message}</p>}
+              <button
+                onClick={verify}
+                className="mt-4 w-full rounded-2xl bg-slate-700 py-3 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Растау
+              </button>
+
+              {message && (
+                <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                  {message}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-sky-50 p-4">
+              <p className="text-sm text-slate-600">
+                2FA қосылғаннан кейін аккаунтқа кіру кезінде қосымша қауіпсіздік
+                коды сұралады.
+              </p>
+            </div>
           </div>
-
         </div>
       </div>
     </div>
