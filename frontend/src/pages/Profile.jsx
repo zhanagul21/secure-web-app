@@ -31,101 +31,71 @@ function Profile({ setLoggedIn, setPage }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-blue-200 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
-        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
+
+        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-sm backdrop-blur sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl">
                 👤
               </div>
 
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
+                <p className="text-sm font-semibold text-sky-700">
                   AuthGuard Locker
                 </p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
+
+                <h1 className="text-2xl font-bold text-slate-800">
                   Профиль
                 </h1>
-                <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
-                  Жеке деректер, қауіпсіздік және құжаттарға жылдам қолжетімділік
+
+                <p className="text-sm text-slate-600">
+                  Аккаунт мәліметтері
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setPage("dashboard")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Басты бет
-              </button>
-              <button
-                onClick={() => setPage("documents")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Құжаттар
-              </button>
-              <button
-                onClick={() => setPage("2fa")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                2FA
-              </button>
-              <button
-                onClick={logout}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Шығу
-              </button>
+            <div className="flex gap-3 flex-wrap">
+              <button onClick={()=>setPage("dashboard")} className="bg-slate-700 text-white px-4 py-2 rounded-xl">Басты бет</button>
+              <button onClick={()=>setPage("documents")} className="bg-slate-700 text-white px-4 py-2 rounded-xl">Құжаттар</button>
+              <button onClick={()=>setPage("2fa")} className="bg-slate-700 text-white px-4 py-2 rounded-xl">2FA</button>
+              <button onClick={logout} className="bg-slate-700 text-white px-4 py-2 rounded-xl">Шығу</button>
             </div>
+
           </div>
         </div>
 
-        {message && (
-          <div className="rounded-2xl border border-rose-100 bg-white/95 p-4 text-rose-700 shadow-sm">
-            {message}
-          </div>
-        )}
+        {message && <div className="bg-white p-4 rounded-xl">{message}</div>}
 
         {user && (
           <>
-            <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8">
-              <div className="mb-6 flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">Ақпарат</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Аккаунт туралы негізгі мәліметтер
-                  </p>
-                </div>
+            <div className="bg-white p-6 rounded-3xl shadow">
+              <h2 className="text-xl font-bold mb-4">Ақпарат</h2>
 
-                <span className="rounded-full bg-sky-100 px-4 py-2 text-sm font-semibold text-sky-700">
-                  Secure Profile
-                </span>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card label="ID" value={user.id} />
-                <Card label="Аты" value={user.full_name} />
-                <Card label="Email" value={user.email} />
-                <Card label="Role" value={user.role} />
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card label="ID" value={user.id}/>
+                <Card label="Аты" value={user.full_name}/>
+                <Card label="Email" value={user.email}/>
+                <Card label="Role" value={user.role}/>
               </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="bg-white p-6 rounded-3xl shadow grid md:grid-cols-2 gap-4">
+
               <ActionCard
                 title="2FA қауіпсіздік"
-                desc="Google Authenticator арқылы қосымша қорғауды басқару"
-                onClick={() => setPage("2fa")}
-                icon="🔐"
+                desc="Қосымша қорғау"
+                onClick={()=>setPage("2fa")}
               />
 
               <ActionCard
                 title="Құжаттар"
-                desc="Жүктелген файлдарды қарау, басқару және жүктеу"
-                onClick={() => setPage("documents")}
-                icon="📂"
+                desc="Файлдарды басқару"
+                onClick={()=>setPage("documents")}
               />
+
             </div>
           </>
         )}
@@ -134,30 +104,24 @@ function Profile({ setLoggedIn, setPage }) {
   );
 }
 
-function Card({ label, value }) {
+function Card({label,value}) {
   return (
-    <div className="rounded-[24px] border border-sky-100 bg-gradient-to-br from-sky-50 to-blue-50 p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 break-words text-lg font-bold text-slate-800">
-        {value || "-"}
-      </p>
+    <div className="bg-sky-50 p-4 rounded-xl">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className="font-bold text-slate-800">{value}</p>
     </div>
   );
 }
 
-function ActionCard({ title, desc, onClick, icon }) {
+function ActionCard({title,desc,onClick}) {
   return (
-    <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-2xl ring-1 ring-sky-100">
-        {icon}
-      </div>
-
-      <h3 className="mt-5 text-xl font-bold text-slate-800">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
+    <div className="bg-sky-50 p-5 rounded-xl">
+      <h3 className="font-bold">{title}</h3>
+      <p className="text-sm text-slate-600">{desc}</p>
 
       <button
         onClick={onClick}
-        className="mt-6 rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+        className="mt-3 bg-slate-700 text-white px-4 py-2 rounded-xl"
       >
         Ашу
       </button>
