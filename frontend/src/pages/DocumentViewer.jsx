@@ -95,7 +95,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   }, [documentId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -105,7 +105,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-sky-700">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
                   AuthGuard Locker
                 </p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
@@ -120,21 +120,21 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setPage("documents")}
-                className="rounded-2xl bg-sky-600 px-4 py-2.5 font-semibold text-white shadow-lg shadow-sky-100 transition hover:bg-sky-700"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Құжаттар
               </button>
 
               <button
                 onClick={handleDownload}
-                className="rounded-2xl bg-emerald-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-emerald-100 transition hover:bg-emerald-600"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Жүктеу
               </button>
 
               <button
                 onClick={logout}
-                className="rounded-2xl bg-rose-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-rose-100 transition hover:bg-rose-600"
+                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Шығу
               </button>
@@ -143,7 +143,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
-          <div className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)] backdrop-blur">
             <h2 className="text-xl font-bold text-slate-800">
               Құжат туралы
             </h2>
@@ -152,21 +152,21 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
             </p>
 
             <div className="mt-6 space-y-4">
-              <div className="rounded-2xl bg-slate-50 p-4">
+              <div className="rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 p-4 ring-1 ring-sky-100">
                 <p className="text-sm text-slate-500">Файл түрі</p>
                 <p className="mt-1 font-semibold text-slate-800">
                   {mimeType ? getFileTypeLabel() : "-"}
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-slate-50 p-4">
+              <div className="rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 p-4 ring-1 ring-sky-100">
                 <p className="text-sm text-slate-500">MIME type</p>
                 <p className="mt-1 break-all text-sm font-medium text-slate-700">
                   {mimeType || "-"}
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-slate-50 p-4">
+              <div className="rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 p-4 ring-1 ring-sky-100">
                 <p className="text-sm text-slate-500">Күйі</p>
                 <p className="mt-1 font-semibold text-slate-800">
                   {loading ? "Жүктелуде..." : message ? "Қате" : "Дайын"}
@@ -175,22 +175,22 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
 
               <button
                 onClick={handleDownload}
-                className="w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold text-white transition hover:bg-emerald-600"
+                className="w-full rounded-2xl bg-slate-700 px-4 py-3 font-semibold text-white transition hover:bg-slate-800"
               >
                 Файлды жүктеу
               </button>
 
               <button
                 onClick={() => setPage("documents")}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 font-semibold text-slate-700 transition hover:bg-sky-50"
               >
                 Құжаттар тізіміне оралу
               </button>
             </div>
           </div>
 
-          <div className="rounded-[32px] border border-slate-100 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.05)] sm:p-6">
-            <div className="mb-5 flex items-center justify-between gap-4">
+          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.05)] backdrop-blur sm:p-6">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold text-slate-800 sm:text-2xl">
                   Preview
@@ -200,13 +200,13 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
                 </p>
               </div>
 
-              <span className="rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+              <span className="w-fit rounded-full bg-sky-100 px-4 py-2 text-sm font-semibold text-sky-700">
                 Secure Viewer
               </span>
             </div>
 
             {loading && (
-              <div className="flex min-h-[600px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-slate-600">
+              <div className="flex min-h-[600px] items-center justify-center rounded-3xl border border-dashed border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 text-slate-600">
                 Құжат жүктелуде...
               </div>
             )}
@@ -223,16 +223,16 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
                 title="PDF Viewer"
                 width="100%"
                 height="900px"
-                className="rounded-3xl border border-slate-200 bg-white"
+                className="rounded-3xl border border-sky-200 bg-white"
               />
             )}
 
             {!loading && !message && mimeType?.startsWith("image/") && (
-              <div className="flex min-h-[700px] items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex min-h-[700px] items-center justify-center rounded-3xl border border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 p-4">
                 <img
                   src={fileUrl}
                   alt="document preview"
-                  className="max-h-[900px] w-auto rounded-2xl bg-white object-contain"
+                  className="max-h-[900px] w-auto rounded-2xl bg-white object-contain shadow-sm"
                 />
               </div>
             )}
@@ -243,7 +243,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
                 title="Text Viewer"
                 width="100%"
                 height="900px"
-                className="rounded-3xl border border-slate-200 bg-white"
+                className="rounded-3xl border border-sky-200 bg-white"
               />
             )}
 
@@ -252,7 +252,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
               mimeType !== "application/pdf" &&
               !mimeType?.startsWith("image/") &&
               !mimeType?.startsWith("text/plain") && (
-                <div className="flex min-h-[500px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                <div className="flex min-h-[500px] flex-col items-center justify-center rounded-3xl border border-dashed border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 p-8 text-center">
                   <div className="text-5xl">📁</div>
                   <h3 className="mt-4 text-xl font-bold text-slate-800">
                     Бұл файл түріне inline preview жоқ
@@ -262,7 +262,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
                   </p>
                   <button
                     onClick={handleDownload}
-                    className="mt-5 rounded-2xl bg-emerald-500 px-5 py-3 font-semibold text-white transition hover:bg-emerald-600"
+                    className="mt-5 rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
                   >
                     Файлды жүктеу
                   </button>

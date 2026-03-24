@@ -84,9 +84,9 @@ function Register() {
 
   return (
     <div className="w-full">
-      <div className="overflow-hidden rounded-[32px] border border-sky-100 bg-white p-7 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:p-9">
+      <div className="overflow-hidden rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-[0_20px_60px_rgba(2,132,199,0.15)] sm:p-9">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-100">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
             ✨
           </div>
 
@@ -94,13 +94,13 @@ function Register() {
             Тіркелу
           </h2>
 
-          <p className="mt-3 text-slate-600">
+          <p className="mt-3 text-slate-700">
             Жаңа аккаунт жасау үшін төмендегі қадамдарды орындаңыз
           </p>
         </div>
 
         <div className="mb-8">
-          <div className="mb-3 flex items-center justify-between text-xs font-medium text-slate-500">
+          <div className="mb-3 flex items-center justify-between text-xs font-medium text-slate-600">
             <span>1. Email</span>
             <span>2. Код</span>
             <span>3. Аяқтау</span>
@@ -108,13 +108,13 @@ function Register() {
 
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <div className={`h-2 rounded-full ${step >= 1 ? "bg-sky-400" : "bg-sky-100"}`} />
+              <div className={`h-2 rounded-full ${step >= 1 ? "bg-sky-500" : "bg-sky-200"}`} />
             </div>
             <div className="flex-1">
-              <div className={`h-2 rounded-full ${step >= 2 ? "bg-sky-400" : "bg-sky-100"}`} />
+              <div className={`h-2 rounded-full ${step >= 2 ? "bg-sky-500" : "bg-sky-200"}`} />
             </div>
             <div className="flex-1">
-              <div className={`h-2 rounded-full ${step >= 3 ? "bg-sky-400" : "bg-sky-100"}`} />
+              <div className={`h-2 rounded-full ${step >= 3 ? "bg-sky-500" : "bg-sky-200"}`} />
             </div>
           </div>
         </div>
@@ -126,11 +126,11 @@ function Register() {
               placeholder="Email адресіңіз"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
             />
 
             {message && (
-              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-slate-700">
+              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
                 {message}
               </div>
             )}
@@ -151,7 +151,7 @@ function Register() {
               type="email"
               value={email}
               disabled
-              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-500 outline-none"
+              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-500 outline-none"
             />
 
             <input
@@ -159,11 +159,11 @@ function Register() {
               placeholder="6 таңбалы код"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
             />
 
             {message && (
-              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-slate-700">
+              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
                 {message}
               </div>
             )}
@@ -185,14 +185,14 @@ function Register() {
               placeholder="Толық аты-жөніңіз"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
             />
 
             <input
               type="email"
               value={email}
               disabled
-              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-500 outline-none"
+              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-500 outline-none"
             />
 
             <input
@@ -200,11 +200,11 @@ function Register() {
               placeholder="Құпиясөз жасаңыз"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
             />
 
             {message && (
-              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-slate-700">
+              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
                 {message}
               </div>
             )}

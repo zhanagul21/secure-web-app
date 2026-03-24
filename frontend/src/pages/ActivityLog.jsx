@@ -121,73 +121,47 @@ function ActivityLog({ setPage, setLoggedIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-sky-300 via-sky-200 to-sky-400">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="rounded-[32px] border border-sky-200 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.10)] sm:p-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-2xl font-black text-slate-800">
-                AUTHGUARD LOCKER
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">Әрекет тарихы</p>
+              <h1 className="text-2xl font-black text-slate-800">AUTHGUARD LOCKER</h1>
+              <p className="mt-1 text-sm text-slate-600">Әрекет тарихы</p>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setPage("dashboard")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Dashboard
-              </button>
-
-              <button
-                onClick={() => setPage("documents")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Құжаттар
-              </button>
-
-              <button
-                onClick={logout}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Шығу
-              </button>
+              <button onClick={() => setPage("dashboard")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">Dashboard</button>
+              <button onClick={() => setPage("documents")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">Құжаттар</button>
+              <button onClick={logout} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">Шығу</button>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] border border-sky-100 bg-white p-5 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-800">
-            Журнал түрлері
-          </h3>
-          <p className="mt-2 text-slate-600">
-            Құжат қосу, ашу, жүктеу, өшіру және қауіпсіздікке қатысты әрекеттер
-            сақталады.
+        <div className="mt-6 rounded-[28px] border border-sky-200 bg-white/95 p-5 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-800">Журнал түрлері</h3>
+          <p className="mt-2 text-slate-700">
+            Құжат қосу, ашу, жүктеу, өшіру және қауіпсіздікке қатысты әрекеттер сақталады.
           </p>
         </div>
 
-        <div className="mt-6 rounded-[28px] border border-sky-100 bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-[28px] border border-sky-200 bg-white/95 p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
-              <label className="mb-2 block font-medium text-slate-700">
-                Іздеу
-              </label>
+              <label className="mb-2 block font-medium text-slate-700">Іздеу</label>
               <input
                 type="text"
                 placeholder="Әрекет түрі немесе сипаттамасы бойынша іздеу"
-                className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                className="w-full rounded-2xl border border-sky-200 bg-sky-100 p-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="mb-2 block font-medium text-slate-700">
-                Әрекет түрі
-              </label>
+              <label className="mb-2 block font-medium text-slate-700">Әрекет түрі</label>
               <select
-                className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                className="w-full rounded-2xl border border-sky-200 bg-sky-100 p-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                 value={actionFilter}
                 onChange={(e) => setActionFilter(e.target.value)}
               >
@@ -203,23 +177,19 @@ function ActivityLog({ setPage, setLoggedIn }) {
         </div>
 
         {message && (
-          <div className="mt-6 rounded-2xl border border-sky-100 bg-white p-4 text-slate-700 shadow-sm">
+          <div className="mt-6 rounded-2xl border border-sky-200 bg-white/95 p-4 text-slate-700 shadow-sm">
             {message}
           </div>
         )}
 
-        <div className="mt-6 rounded-[32px] border border-sky-100 bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-[32px] border border-sky-200 bg-white/95 p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-bold text-slate-800">
-              Қауіпсіздік және әрекет журналы
-            </h2>
-            <span className="text-sm text-slate-500">
-              Барлығы: {filteredLogs.length}
-            </span>
+            <h2 className="text-2xl font-bold text-slate-800">Қауіпсіздік және әрекет журналы</h2>
+            <span className="text-sm text-slate-600">Барлығы: {filteredLogs.length}</span>
           </div>
 
           {filteredLogs.length === 0 ? (
-            <div className="rounded-2xl bg-sky-50 py-10 text-center text-slate-500">
+            <div className="rounded-2xl bg-sky-100 py-10 text-center text-slate-600">
               Әзірге әрекет тарихы табылмады.
             </div>
           ) : (
@@ -227,13 +197,11 @@ function ActivityLog({ setPage, setLoggedIn }) {
               {filteredLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="rounded-2xl border border-sky-100 bg-sky-50 p-5 transition hover:shadow-sm"
+                  className="rounded-2xl border border-sky-200 bg-sky-100 p-5 transition hover:shadow-sm"
                 >
                   <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
                     <div className="flex items-start gap-4">
-                      <div className="mt-1 text-2xl">
-                        {getActionIcon(log.action_type)}
-                      </div>
+                      <div className="mt-1 text-2xl">{getActionIcon(log.action_type)}</div>
 
                       <div>
                         <div className="mb-2 flex flex-wrap items-center gap-3">
@@ -256,10 +224,8 @@ function ActivityLog({ setPage, setLoggedIn }) {
                       </div>
                     </div>
 
-                    <div className="text-sm text-slate-500 md:text-right">
-                      {log.created_at
-                        ? new Date(log.created_at).toLocaleString()
-                        : "-"}
+                    <div className="text-sm text-slate-600 md:text-right">
+                      {log.created_at ? new Date(log.created_at).toLocaleString() : "-"}
                     </div>
                   </div>
                 </div>

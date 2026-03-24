@@ -127,12 +127,12 @@ function AddDocument({ setPage, setLoggedIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-sky-300 via-sky-200 to-sky-400">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="rounded-[32px] border border-sky-200 bg-white/90 p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-100">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
                 ⬆️
               </div>
 
@@ -143,7 +143,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
                   Жаңа құжат қосу
                 </h1>
-                <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
+                <p className="mt-2 text-sm leading-6 text-slate-700 sm:text-base">
                   Құжатты жүктеу, сипаттама қосу және жүйеге сақтау бөлімі
                 </p>
               </div>
@@ -174,17 +174,17 @@ function AddDocument({ setPage, setLoggedIn }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="mt-6 rounded-[28px] border border-sky-200 bg-white/90 p-5 shadow-sm sm:p-6">
           <h3 className="text-lg font-bold text-slate-800">
             Қолдау көрсетілетін файлдар
           </h3>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-slate-700">
             PDF, PNG, JPG, JPEG, DOC, DOCX, PPT, PPTX, TXT
           </p>
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[32px] border border-sky-100 bg-white p-8 shadow-sm">
+          <div className="rounded-[32px] border border-sky-200 bg-white/90 p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-slate-800">
               Құжат жүктеу формасы
             </h2>
@@ -195,7 +195,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                   Құжат атауы
                 </label>
                 <input
-                  className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                   placeholder="Мысалы: Паспорт көшірмесі"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -207,7 +207,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                   Категория
                 </label>
                 <input
-                  className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                   placeholder="Мысалы: Жеке құжат"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -219,7 +219,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                   Сипаттама
                 </label>
                 <textarea
-                  className="min-h-[130px] w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  className="min-h-[130px] w-full rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                   placeholder="Қысқаша түсініктеме"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -238,8 +238,8 @@ function AddDocument({ setPage, setLoggedIn }) {
                   onDragLeave={handleDrag}
                   className={`block w-full cursor-pointer rounded-[24px] border-2 border-dashed p-8 text-center transition ${
                     dragActive
-                      ? "border-sky-300 bg-sky-100"
-                      : "border-sky-100 bg-sky-50"
+                      ? "border-sky-400 bg-sky-200"
+                      : "border-sky-200 bg-sky-100"
                   }`}
                 >
                   <input
@@ -253,24 +253,24 @@ function AddDocument({ setPage, setLoggedIn }) {
                     <p className="text-lg font-semibold text-slate-800">
                       Файлды осы жерге тастаңыз
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-700">
                       немесе басып файл таңдаңыз
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-600">
                       PDF, PNG, JPG, DOC, DOCX, PPT, PPTX, TXT
                     </p>
                   </div>
                 </label>
 
                 {file && (
-                  <div className="mt-3 rounded-2xl border border-sky-100 bg-sky-50 p-4">
+                  <div className="mt-3 rounded-2xl border border-sky-200 bg-sky-100 p-4">
                     <p className="break-all font-medium text-slate-800">
                       {file.name}
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-700">
                       {getFileTypeLabel()}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-600">
                       {(file.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
@@ -278,7 +278,7 @@ function AddDocument({ setPage, setLoggedIn }) {
               </div>
 
               {message && (
-                <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4 text-slate-700">
+                <div className="rounded-2xl border border-sky-200 bg-sky-100 p-4 text-slate-700">
                   {message}
                 </div>
               )}
@@ -292,33 +292,33 @@ function AddDocument({ setPage, setLoggedIn }) {
             </form>
           </div>
 
-          <div className="rounded-[32px] border border-sky-100 bg-white p-8 shadow-sm">
+          <div className="rounded-[32px] border border-sky-200 bg-white/90 p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-slate-800">
               Алдын ала қарау
             </h2>
 
             {!file ? (
-              <div className="mt-6 flex h-[420px] items-center justify-center rounded-[28px] border border-dashed border-sky-100 bg-sky-50 text-center text-slate-500">
+              <div className="mt-6 flex h-[420px] items-center justify-center rounded-[28px] border border-dashed border-sky-200 bg-sky-100 text-center text-slate-700">
                 Файл таңдалғаннан кейін preview осы жерде көрінеді
               </div>
             ) : (
               <div className="mt-6 space-y-4">
-                <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-5">
-                  <p className="mb-1 text-sm text-slate-500">Файл атауы</p>
+                <div className="rounded-[24px] border border-sky-200 bg-sky-100 p-5">
+                  <p className="mb-1 text-sm text-slate-600">Файл атауы</p>
                   <p className="break-all font-semibold text-slate-900">
                     {file.name}
                   </p>
                 </div>
 
-                <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-5">
-                  <p className="mb-1 text-sm text-slate-500">Түрі</p>
+                <div className="rounded-[24px] border border-sky-200 bg-sky-100 p-5">
+                  <p className="mb-1 text-sm text-slate-600">Түрі</p>
                   <p className="font-semibold text-slate-900">
                     {getFileTypeLabel()}
                   </p>
                 </div>
 
                 {previewUrl ? (
-                  <div className="overflow-hidden rounded-[24px] border border-sky-100 bg-sky-50 p-3">
+                  <div className="overflow-hidden rounded-[24px] border border-sky-200 bg-sky-100 p-3">
                     <img
                       src={previewUrl}
                       alt="preview"
@@ -326,7 +326,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-[260px] items-center justify-center rounded-[24px] border border-sky-100 bg-sky-50 p-6 text-center text-slate-500">
+                  <div className="flex h-[260px] items-center justify-center rounded-[24px] border border-sky-200 bg-sky-100 p-6 text-center text-slate-700">
                     Бұл файл түріне визуалды preview жоқ, бірақ жүктеуге дайын.
                   </div>
                 )}
