@@ -1,7 +1,7 @@
 import { useState } from "react";
 import API from "../services/api";
 
-function Register() {
+function Register({ onClose }) {
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -85,18 +85,28 @@ function Register() {
   return (
     <div className="w-full">
       <div className="overflow-hidden rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-[0_20px_60px_rgba(2,132,199,0.15)] sm:p-9">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
-            ✨
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div className="w-full text-center sm:text-left">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200 sm:mx-0">
+              ✨
+            </div>
+
+            <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">
+              Тіркелу
+            </h2>
+
+            <p className="mt-3 text-slate-700">
+              Жаңа аккаунт жасау үшін төмендегі қадамдарды орындаңыз
+            </p>
           </div>
 
-          <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">
-            Тіркелу
-          </h2>
-
-          <p className="mt-3 text-slate-700">
-            Жаңа аккаунт жасау үшін төмендегі қадамдарды орындаңыз
-          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-2xl border border-sky-200 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:bg-sky-50"
+          >
+            Жабу
+          </button>
         </div>
 
         <div className="mb-8">
@@ -108,13 +118,25 @@ function Register() {
 
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <div className={`h-2 rounded-full ${step >= 1 ? "bg-sky-500" : "bg-sky-200"}`} />
+              <div
+                className={`h-2 rounded-full ${
+                  step >= 1 ? "bg-sky-500" : "bg-sky-200"
+                }`}
+              />
             </div>
             <div className="flex-1">
-              <div className={`h-2 rounded-full ${step >= 2 ? "bg-sky-500" : "bg-sky-200"}`} />
+              <div
+                className={`h-2 rounded-full ${
+                  step >= 2 ? "bg-sky-500" : "bg-sky-200"
+                }`}
+              />
             </div>
             <div className="flex-1">
-              <div className={`h-2 rounded-full ${step >= 3 ? "bg-sky-500" : "bg-sky-200"}`} />
+              <div
+                className={`h-2 rounded-full ${
+                  step >= 3 ? "bg-sky-500" : "bg-sky-200"
+                }`}
+              />
             </div>
           </div>
         </div>
@@ -135,13 +157,23 @@ function Register() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
-            >
-              {loading ? "Жіберілуде..." : "Код жіберу"}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 transition hover:bg-sky-50"
+              >
+                Артқа
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
+              >
+                {loading ? "Жіберілуде..." : "Код жіберу"}
+              </button>
+            </div>
           </form>
         )}
 
@@ -168,13 +200,23 @@ function Register() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
-            >
-              {loading ? "Тексерілуде..." : "Кодты растау"}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 transition hover:bg-sky-50"
+              >
+                Артқа
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
+              >
+                {loading ? "Тексерілуде..." : "Кодты растау"}
+              </button>
+            </div>
           </form>
         )}
 
@@ -209,13 +251,23 @@ function Register() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
-            >
-              {loading ? "Аяқталуда..." : "Тіркелуді аяқтау"}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="w-full rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 transition hover:bg-sky-50"
+              >
+                Артқа
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
+              >
+                {loading ? "Аяқталуда..." : "Тіркелуді аяқтау"}
+              </button>
+            </div>
           </form>
         )}
       </div>

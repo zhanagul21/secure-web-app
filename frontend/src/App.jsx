@@ -64,7 +64,7 @@ function App() {
 
               <p className="mt-4 leading-7 text-slate-700">
                 AuthGuard Locker — құжаттарды жүктеу, сақтау, қарау және қорғау
-                үшін жасалған дипломдық web app.
+                үшін арналған web app.
               </p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
