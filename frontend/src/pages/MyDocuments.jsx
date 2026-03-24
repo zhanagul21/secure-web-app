@@ -9,6 +9,10 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tempUserEmail");
+    localStorage.removeItem("tempUserRole");
+    localStorage.removeItem("tempUserId");
     setLoggedIn(false);
   };
 
@@ -152,62 +156,83 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <nav className="bg-slate-950 text-white px-6 md:px-8 py-4 flex flex-col md:flex-row gap-4 md:gap-0 items-start md:items-center justify-between shadow-lg">
-        <div>
-          <h1 className="text-2xl font-bold">AUTHGUARD LOCKER</h1>
-          <p className="text-slate-300 text-sm">Менің құжаттарым</p>
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
+                📁
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-sky-700">
+                  AuthGuard Locker
+                </p>
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
+                  Менің құжаттарым
+                </h1>
+                <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
+                  Құжаттарды іздеу, қарау, жүктеу және өшіру бөлімі
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setPage("dashboard")}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Dashboard
+              </button>
+
+              <button
+                onClick={() => setPage("addDocument")}
+                className="rounded-2xl bg-emerald-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-emerald-100 transition hover:bg-emerald-600"
+              >
+                Жаңа құжат
+              </button>
+
+              <button
+                onClick={logout}
+                className="rounded-2xl bg-rose-500 px-4 py-2.5 font-semibold text-white shadow-lg shadow-rose-100 transition hover:bg-rose-600"
+              >
+                Шығу
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => setPage("dashboard")}
-            className="bg-slate-800 hover:bg-slate-900 px-4 py-2 rounded-xl"
-          >
-            Dashboard
-          </button>
-
-          <button
-            onClick={() => setPage("addDocument")}
-            className="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-xl"
-          >
-            Жаңа құжат
-          </button>
-
-          <button
-            onClick={logout}
-            className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-xl"
-          >
-            Шығу
-          </button>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="bg-white rounded-3xl shadow-md p-5 mb-6">
-          <h3 className="text-lg font-semibold mb-2">Қолдау көрсетілетін файлдар</h3>
-          <p className="text-slate-600">
+        <div className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.05)] sm:p-6">
+          <h3 className="text-lg font-bold text-slate-800">
+            Қолдау көрсетілетін файлдар
+          </h3>
+          <p className="mt-2 text-slate-600">
             PDF, PNG, JPG, JPEG, DOC, DOCX, PPT, PPTX, TXT
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-md p-6 mb-6">
-          <div className="grid md:grid-cols-3 gap-4">
+        <div className="mt-6 rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.05)] sm:p-6">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
-              <label className="block mb-2 font-medium">Іздеу</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Іздеу
+              </label>
               <input
                 type="text"
                 placeholder="Құжат атауы, категория, сипаттама немесе файл аты бойынша іздеу"
-                className="w-full border rounded-xl p-3"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">Категория</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Категория
+              </label>
               <select
-                className="w-full border rounded-xl p-3"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
@@ -223,63 +248,75 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
         </div>
 
         {message && (
-          <div className="mb-4 bg-white border rounded-xl p-4 text-slate-700">
+          <div className="mt-6 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-4 text-rose-700 shadow-sm">
             {message}
           </div>
         )}
 
         {filteredDocuments.length === 0 ? (
-          <div className="bg-white rounded-3xl shadow-md p-10 text-center text-slate-600">
-            <h2 className="text-2xl font-semibold mb-3">Құжаттар табылмады</h2>
-            <p className="mb-5">Іздеу нәтижесі бос немесе жүйеде әлі құжат жоқ.</p>
+          <div className="mt-6 rounded-[32px] border border-slate-100 bg-white p-10 text-center shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+            <div className="text-5xl">📂</div>
+            <h2 className="mt-4 text-2xl font-semibold text-slate-800">
+              Құжаттар табылмады
+            </h2>
+            <p className="mt-2 text-slate-600">
+              Іздеу нәтижесі бос немесе жүйеде әлі құжат жоқ.
+            </p>
             <button
               onClick={() => setPage("addDocument")}
-              className="bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700"
+              className="mt-5 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700"
             >
               Құжат қосу
             </button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {filteredDocuments.map((doc) => (
-              <div key={doc.id} className="bg-white rounded-3xl shadow-md p-6">
-                <div className="flex items-start justify-between gap-3 mb-4">
+              <div
+                key={doc.id}
+                className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.05)] transition hover:-translate-y-1"
+              >
+                <div className="mb-4 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <span className="text-3xl">{getFileIcon(doc.mime_type)}</span>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-2xl ring-1 ring-sky-100">
+                      {getFileIcon(doc.mime_type)}
+                    </div>
 
-                    <div>
-                      <h3 className="text-xl font-semibold text-slate-900">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-xl font-semibold text-slate-900">
                         {doc.title}
                       </h3>
-                      <p className="text-sm text-slate-500 mt-1">{doc.category}</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {doc.category || "Категория жоқ"}
+                      </p>
                     </div>
                   </div>
 
-                  <span className="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
+                  <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
                     {getFileTypeLabel(doc.mime_type, doc.original_name)}
                   </span>
                 </div>
 
-                <p className="text-slate-700 mb-4 min-h-[48px]">
+                <p className="mb-4 min-h-[48px] text-slate-700">
                   {doc.description || "Сипаттама жоқ"}
                 </p>
 
-                <div className="bg-slate-50 rounded-2xl p-4 mb-4 border">
+                <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-sm text-slate-500">Құрылған уақыты</p>
-                  <p className="text-sm text-slate-800 mt-1">
+                  <p className="mt-1 text-sm text-slate-800">
                     {doc.created_at
                       ? new Date(doc.created_at).toLocaleString()
                       : "-"}
                   </p>
 
                   {doc.original_name && (
-                    <p className="text-sm text-slate-500 mt-2 break-all">
+                    <p className="mt-2 break-all text-sm text-slate-500">
                       Файл: {doc.original_name}
                     </p>
                   )}
 
                   {doc.file_size > 0 && (
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="mt-1 text-xs text-slate-400">
                       Өлшемі: {(doc.file_size / 1024).toFixed(1)} KB
                     </p>
                   )}
@@ -293,26 +330,26 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
                           setSelectedDocumentId(doc.id);
                           setPage("viewer");
                         }}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
+                        className="rounded-xl bg-sky-600 px-4 py-2 font-semibold text-white transition hover:bg-sky-700"
                       >
                         Ашу
                       </button>
 
                       <button
                         onClick={() => downloadDoc(doc.id, doc.original_name)}
-                        className="bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700"
+                        className="rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-white transition hover:bg-emerald-600"
                       >
                         Жүктеу
                       </button>
                     </>
                   ) : (
-                    <span className="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl">
+                    <span className="rounded-xl bg-slate-200 px-4 py-2 text-slate-700">
                       Файл жоқ
                     </span>
                   )}
 
                   <button
-                    className="bg-red-500 text-white px-4 py-2 rounded-xl hover:bg-red-600"
+                    className="rounded-xl bg-rose-500 px-4 py-2 font-semibold text-white transition hover:bg-rose-600"
                     onClick={() => deleteDoc(doc.id)}
                   >
                     Өшіру

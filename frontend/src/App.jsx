@@ -19,42 +19,115 @@ function App() {
 
   if (!loggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50 px-6 py-10">
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fbff] via-white to-[#eef6ff] px-4 py-8 sm:px-6 sm:py-10">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center">
-            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-indigo-100 text-4xl shadow-lg ring-1 ring-indigo-200">
-              🔒
+          <div className="mb-10 text-center sm:mb-12">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-white text-4xl shadow-[0_10px_40px_rgba(59,130,246,0.12)] ring-1 ring-sky-100">
+              🔐
             </div>
 
-            <h1 className="text-5xl font-black tracking-wide text-slate-900 md:text-6xl">
+            <h1 className="text-4xl font-black tracking-tight text-slate-800 sm:text-5xl md:text-6xl">
               AUTHGUARD LOCKER
             </h1>
 
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
+            <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
               Қауіпсіз құжат сақтау, басқару және шифрлау жүйесі
             </p>
+
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm">
+              <span className="rounded-full border border-sky-100 bg-white px-4 py-2 text-slate-600 shadow-sm">
+                JWT Authentication
+              </span>
+              <span className="rounded-full border border-sky-100 bg-white px-4 py-2 text-slate-600 shadow-sm">
+                2FA Protection
+              </span>
+              <span className="rounded-full border border-sky-100 bg-white px-4 py-2 text-slate-600 shadow-sm">
+                AES Encryption
+              </span>
+            </div>
           </div>
 
-          <div className="mx-auto max-w-2xl">
-            <Login setLoggedIn={setLoggedIn} />
-
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => setShowRegister(!showRegister)}
-                className="text-lg font-medium text-indigo-600 underline underline-offset-4 hover:text-indigo-700"
-              >
-                {showRegister
-                  ? "Тіркелу формасын жабу"
-                  : "Мен жүйеге тіркелмегенмін"}
-              </button>
+          <div className="grid items-start gap-8 lg:grid-cols-2">
+            <div className="order-2 lg:order-1">
+              <Login setLoggedIn={setLoggedIn} />
             </div>
 
-            {showRegister && (
-              <div className="mt-8">
-                <Register />
+            <div className="order-1 rounded-[32px] border border-sky-100 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-8 lg:order-2">
+              <div className="mb-6 inline-flex rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+                Secure Digital Workspace
               </div>
-            )}
+
+              <h2 className="text-3xl font-bold leading-tight text-slate-800 sm:text-4xl">
+                Құжаттарыңызды қауіпсіз сақтайтын
+                <span className="block text-sky-600">заманауи веб-жүйе</span>
+              </h2>
+
+              <p className="mt-4 text-slate-600 leading-7">
+                AuthGuard Locker — құжаттарды жүктеу, сақтау, қарау және қорғау
+                үшін жасалған дипломдық web app. Жүйеде аутентификация,
+                екі факторлы қорғаныс, әкімші панелі және әрекеттер журналы бар.
+              </p>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-2xl">🛡️</div>
+                  <h3 className="mt-3 font-semibold text-slate-800">
+                    Қауіпсіз кіру
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    JWT және 2FA көмегімен аккаунтқа сенімді қолжетімділік.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-2xl">📄</div>
+                  <h3 className="mt-3 font-semibold text-slate-800">
+                    Құжаттарды басқару
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Файл жүктеу, көру, сақтау және жүйе ішінде ашу мүмкіндігі.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-2xl">🔒</div>
+                  <h3 className="mt-3 font-semibold text-slate-800">
+                    AES шифрлау
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Маңызды құжаттар қосымша қорғаныспен сақталады.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="text-2xl">📊</div>
+                  <h3 className="mt-3 font-semibold text-slate-800">
+                    Activity Logs
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Жүйедегі әрекеттерді бақылау және әкімшіге көрінуі.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 text-center lg:text-left">
+                <button
+                  onClick={() => setShowRegister(!showRegister)}
+                  className="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700"
+                >
+                  {showRegister
+                    ? "Тіркелу формасын жабу"
+                    : "Жаңа аккаунт ашу"}
+                </button>
+              </div>
+            </div>
           </div>
+
+          {showRegister && (
+            <div className="mx-auto mt-8 max-w-2xl">
+              <Register />
+            </div>
+          )}
         </div>
       </div>
     );
