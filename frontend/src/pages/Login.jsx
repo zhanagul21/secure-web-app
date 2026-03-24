@@ -53,7 +53,7 @@ function Login({ setLoggedIn }) {
   <img
     src={logo}
     alt="AuthGuard Locker"
-    className="h-16 md:h-20 object-contain"
+    className="h-16 md:h-24 object-contain"
   />
 </div>
 
