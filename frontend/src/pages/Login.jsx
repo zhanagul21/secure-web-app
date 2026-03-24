@@ -78,12 +78,8 @@ function Login({ setLoggedIn }) {
           <div className="w-full">
             <div className="overflow-hidden rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-[0_20px_60px_rgba(2,132,199,0.15)] sm:p-9">
               <div className="mb-8 text-center">
-               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-sky-200">
-  <img
-    src={logo}
-    alt="AuthGuard Locker"
-    className="h-10 w-auto object-contain"
-  />
+<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
+  🔐
 </div>
 
                 <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">
