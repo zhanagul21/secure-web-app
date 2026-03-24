@@ -131,7 +131,7 @@ function ActivityLog({ setPage, setLoggedIn }) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button onClick={() => setPage("dashboard")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">Dashboard</button>
+              <button onClick={() => setPage("dashboard")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">Басты бет</button>
               <button onClick={() => setPage("documents")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">Құжаттар</button>
               <button onClick={logout} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800">Шығу</button>
             </div>

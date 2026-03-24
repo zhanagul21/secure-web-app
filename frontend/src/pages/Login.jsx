@@ -1,3 +1,4 @@
+import logo from "../assets/logo.png";
 import { useState } from "react";
 import API from "../services/api";
 import Register from "./Register";

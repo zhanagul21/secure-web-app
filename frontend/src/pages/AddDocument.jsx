@@ -161,7 +161,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                 onClick={() => setPage("dashboard")}
                 className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
-                Dashboard
+                Басты бет
               </button>
 
               <button

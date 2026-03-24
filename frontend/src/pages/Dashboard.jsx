@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
+import logo from "../assets/logo.png";
 
 function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
   const [user, setUser] = useState(null);
@@ -170,8 +171,12 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
         <div className="rounded-[32px] border border-sky-200 bg-white/90 p-5 shadow-[0_16px_40px_rgba(2,132,199,0.15)] sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
-                🔐
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm ring-1 ring-sky-200 sm:h-20 sm:w-20">
+                <img
+                  src={logo}
+                  alt="AuthGuard Locker"
+                  className="h-10 w-auto object-contain sm:h-12"
+                />
               </div>
 
               <div>
@@ -180,7 +185,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
                   {user?.full_name ? `, ${user.full_name}` : ""}
                 </p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
-                  AuthGuard Locker Dashboard
+                  AuthGuard Locker Басты беті
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700 sm:text-base">
                   Құжаттар, белсенділік және аккаунт бойынша қысқаша ақпарат
