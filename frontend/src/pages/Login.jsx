@@ -49,9 +49,13 @@ function Login({ setLoggedIn }) {
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-black tracking-tight text-slate-800 sm:text-5xl">
-            AUTHGUARD LOCKER
-          </h1>
+         <div className="flex flex-col items-center">
+  <img
+    src={logo}
+    alt="AuthGuard Locker"
+    className="h-16 md:h-20 object-contain"
+  />
+</div>
 
           <p className="mt-3 text-sm text-slate-600 sm:text-base">
             Қауіпсіз құжат сақтау, басқару және шифрлау жүйесі
@@ -74,9 +78,13 @@ function Login({ setLoggedIn }) {
           <div className="w-full">
             <div className="overflow-hidden rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-[0_20px_60px_rgba(2,132,199,0.15)] sm:p-9">
               <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
-                  🔐
-                </div>
+               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-sky-200">
+  <img
+    src={logo}
+    alt="AuthGuard Locker"
+    className="h-10 w-auto object-contain"
+  />
+</div>
 
                 <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">
                   Жүйеге кіру
