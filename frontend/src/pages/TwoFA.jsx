@@ -24,7 +24,8 @@ function TwoFA({ setPage, setLoggedIn }) {
   const verify = async () => {
     const token = localStorage.getItem("token");
 
-    await API.post("/user/2fa/verify",
+    await API.post(
+      "/user/2fa/verify",
       { token: code },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -32,33 +33,51 @@ function TwoFA({ setPage, setLoggedIn }) {
     setMessage("2FA қосылды");
   };
 
-  useEffect(()=>{ loadQR(); },[]);
+  useEffect(() => {
+    loadQR();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-blue-200 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-blue-200 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl space-y-6">
 
-        <div className="bg-white p-5 rounded-3xl shadow flex justify-between flex-wrap gap-3">
-          <h1 className="font-bold text-xl">2FA</h1>
+        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
+                🔐
+              </div>
 
-          <div className="flex gap-3">
-            <button onClick={()=>setPage("dashboard")} className="bg-slate-700 text-white px-4 py-2 rounded-xl">Dashboard</button>
-            <button onClick={()=>setPage("profile")} className="bg-slate-700 text-white px-4 py-2 rounded-xl">Profile</button>
-            <button onClick={logout} className="bg-slate-700 text-white px-4 py-2 rounded-xl">Шығу</button>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
+                  AuthGuard Locker
+                </p>
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
+                  2FA Қауіпсіздік
+                </h1>
+                <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
+                  Google Authenticator арқылы аккаунтыңызға қосымша қорғаныс
+                  қосыңыз
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button onClick={() => setPage("dashboard")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Басты бет</button>
+              <button onClick={() => setPage("profile")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Профиль</button>
+              <button onClick={logout} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Шығу</button>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow grid md:grid-cols-2 gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
 
-          <div className="bg-sky-50 p-6 rounded-xl text-center">
+          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow">
             <h2 className="font-bold mb-3">QR код</h2>
-
-            {qr ? (
-              <img src={qr} className="mx-auto w-52"/>
-            ) : "Жүктелуде..."}
+            {qr ? <img src={qr} className="mx-auto w-52"/> : "Жүктелуде..."}
           </div>
 
-          <div className="bg-sky-50 p-6 rounded-xl">
+          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow">
             <h2 className="font-bold mb-3">Код енгізу</h2>
 
             <input
