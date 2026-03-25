@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://boxes-hitting-respective-looksmart.trycloudflare.com/api",
-  timeout: 20000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
 });
 
 export default API;
