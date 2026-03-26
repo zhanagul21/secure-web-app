@@ -18,7 +18,7 @@ function App() {
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
   if (!loggedIn) {
-    return <Login setLoggedIn={setLoggedIn} />;
+    return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;
   }
 
   if (page === "dashboard") {

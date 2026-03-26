@@ -3,7 +3,7 @@ import { useState } from "react";
 import API from "../services/api";
 import Register from "./Register";
 
-function Login({ setLoggedIn }) {
+function Login({ setLoggedIn, setPage }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -12,6 +12,9 @@ function Login({ setLoggedIn }) {
 
   const loginUser = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
+
     setMessage("");
 
     if (!email || !password) {
@@ -23,23 +26,36 @@ function Login({ setLoggedIn }) {
       setLoading(true);
 
       const res = await API.post("/auth/login", {
-        email,
+        email: email.trim(),
         password,
       });
 
-      if (res.data.requires2fa) {
-        localStorage.setItem("tempUserEmail", res.data.tempUser.email);
-        localStorage.setItem("tempUserRole", res.data.tempUser.role || "user");
-        localStorage.setItem("tempUserId", res.data.tempUser.id);
+      if (res.data?.requires2fa) {
+        localStorage.setItem("tempUserEmail", res.data?.tempUser?.email || email);
+        localStorage.setItem("tempUserRole", res.data?.tempUser?.role || "user");
+        localStorage.setItem("tempUserId", String(res.data?.tempUser?.id || ""));
+
         setMessage("2FA кодын енгізу қажет");
+
+        if (setPage) {
+          setTimeout(() => {
+            setPage("2fa");
+          }, 500);
+        }
+
+        return;
+      }
+
+      if (!res.data?.token) {
+        setMessage("Серверден дұрыс жауап келмеді");
         return;
       }
 
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("user", JSON.stringify(res.data.user || {}));
       setLoggedIn(true);
     } catch (error) {
-      setMessage(error.response?.data?.message || "Кіру қатесі");
+      setMessage(error?.response?.data?.message || "Кіру қатесі");
     } finally {
       setLoading(false);
     }
@@ -49,13 +65,13 @@ function Login({ setLoggedIn }) {
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 text-center">
-         <div className="flex flex-col items-center">
-  <img
-    src={logo}
-    alt="AuthGuard Locker"
-    className="h-16 md:h-24 object-contain"
-  />
-</div>
+          <div className="flex flex-col items-center">
+            <img
+              src={logo}
+              alt="AuthGuard Locker"
+              className="h-16 object-contain md:h-24"
+            />
+          </div>
 
           <p className="mt-3 text-sm text-slate-600 sm:text-base">
             Қауіпсіз құжат сақтау, басқару және шифрлау жүйесі
@@ -78,9 +94,9 @@ function Login({ setLoggedIn }) {
           <div className="w-full">
             <div className="overflow-hidden rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-[0_20px_60px_rgba(2,132,199,0.15)] sm:p-9">
               <div className="mb-8 text-center">
-<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
-  🔐
-</div>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
+                  🔐
+                </div>
 
                 <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">
                   Жүйеге кіру
@@ -101,7 +117,8 @@ function Login({ setLoggedIn }) {
                     placeholder="Мысалы: user@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
+                    disabled={loading}
+                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200 disabled:opacity-70"
                   />
                 </div>
 
@@ -114,7 +131,8 @@ function Login({ setLoggedIn }) {
                     placeholder="Парольді енгізіңіз"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
+                    disabled={loading}
+                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200 disabled:opacity-70"
                   />
                 </div>
 
