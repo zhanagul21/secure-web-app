@@ -101,7 +101,19 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         }
       );
 
-      setShareUrl(res.data.shareUrl);
+      const backendShareUrl = res.data.shareUrl;
+
+      if (backendShareUrl) {
+        setShareUrl(backendShareUrl);
+      } else if (res.data.token) {
+        const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
+        const finalShareUrl = `${frontendUrl}/shared/${res.data.token}`;
+        setShareUrl(finalShareUrl);
+      } else {
+        setShareMessage("Ссылка жасалмады");
+        return;
+      }
+
       setShareMessage("Ссылка дайын");
     } catch (error) {
       console.log("SHARE ERROR:", error);

@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import MyDocuments from "./pages/MyDocuments";
@@ -34,6 +33,10 @@ function App() {
   if (path.startsWith("/shared/")) {
     const token = path.split("/shared/")[1];
     return <SharedDocument token={token} />;
+  }
+
+  if (page === "2fa") {
+    return <TwoFA setPage={setPage} setLoggedIn={setLoggedIn} />;
   }
 
   if (!loggedIn) {
@@ -74,10 +77,6 @@ function App() {
 
   if (page === "admin") {
     return <AdminPanel setPage={setPage} setLoggedIn={setLoggedIn} />;
-  }
-
-  if (page === "2fa") {
-    return <TwoFA setPage={setPage} setLoggedIn={setLoggedIn} />;
   }
 
   if (page === "viewer") {
