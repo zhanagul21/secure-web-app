@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -10,12 +10,31 @@ import ActivityLog from "./pages/ActivityLog";
 import AdminPanel from "./pages/AdminPanel";
 import TwoFA from "./pages/TwoFA";
 import DocumentViewer from "./pages/DocumentViewer";
+import SharedDocument from "./pages/SharedDocument";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
   const [page, setPage] = useState("dashboard");
-  const [showRegister, setShowRegister] = useState(false);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+
+  useEffect(() => {
+    const path = window.location.pathname;
+
+    if (path.startsWith("/shared/")) {
+      return;
+    }
+
+    if (!localStorage.getItem("token")) {
+      setLoggedIn(false);
+    }
+  }, []);
+
+  const path = window.location.pathname;
+
+  if (path.startsWith("/shared/")) {
+    const token = path.split("/shared/")[1];
+    return <SharedDocument token={token} />;
+  }
 
   if (!loggedIn) {
     return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;

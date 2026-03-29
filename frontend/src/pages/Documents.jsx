@@ -93,7 +93,7 @@ function Documents() {
                   >
                     Жүктеу
                   </a>
-
+  
                   <button
                     className="inline-flex items-center justify-center rounded-2xl border border-sky-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-sky-50"
                     type="button"

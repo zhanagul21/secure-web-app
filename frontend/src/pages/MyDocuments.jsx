@@ -80,6 +80,37 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
     }
   };
 
+  const shareDocument = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await API.post(
+        `/documents/share/${id}`,
+        { hours: 1 },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const shareUrl = res.data.shareUrl;
+
+      if (!shareUrl) {
+        setMessage("Ссылка жасалмады");
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+      alert(`Ссылка көшірілді:\n\n${shareUrl}\n\nУақыты: 1 сағат`);
+    } catch (error) {
+      console.error("SHARE ERROR:", error);
+      setMessage(
+        error.response?.data?.message || "Ссылка жасау кезінде қате шықты"
+      );
+    }
+  };
+
   useEffect(() => {
     getDocuments();
   }, []);
@@ -173,7 +204,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
                   Менің құжаттарым
                 </h1>
                 <p className="mt-2 text-sm leading-6 text-slate-700 sm:text-base">
-                  Құжаттарды іздеу, қарау, жүктеу және өшіру бөлімі
+                  Құжаттарды іздеу, қарау, жүктеу, бөлісу және өшіру бөлімі
                 </p>
               </div>
             </div>
@@ -341,6 +372,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
                       >
                         Жүктеу
                       </button>
+                    
                     </>
                   ) : (
                     <span className="rounded-xl bg-sky-100 px-4 py-2 text-slate-700">

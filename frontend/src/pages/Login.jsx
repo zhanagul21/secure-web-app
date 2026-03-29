@@ -12,9 +12,6 @@ function Login({ setLoggedIn, setPage }) {
 
   const loginUser = async (e) => {
     e.preventDefault();
-
-    if (loading) return;
-
     setMessage("");
 
     if (!email || !password) {
@@ -26,36 +23,25 @@ function Login({ setLoggedIn, setPage }) {
       setLoading(true);
 
       const res = await API.post("/auth/login", {
-        email: email.trim(),
+        email,
         password,
       });
 
-      if (res.data?.requires2fa) {
-        localStorage.setItem("tempUserEmail", res.data?.tempUser?.email || email);
-        localStorage.setItem("tempUserRole", res.data?.tempUser?.role || "user");
-        localStorage.setItem("tempUserId", String(res.data?.tempUser?.id || ""));
+      if (res.data.requires2fa) {
+        localStorage.setItem("tempUserEmail", res.data.tempUser.email);
+        localStorage.setItem("tempUserRole", res.data.tempUser.role || "user");
+        localStorage.setItem("tempUserId", res.data.tempUser.id);
 
         setMessage("2FA кодын енгізу қажет");
-
-        if (setPage) {
-          setTimeout(() => {
-            setPage("2fa");
-          }, 500);
-        }
-
-        return;
-      }
-
-      if (!res.data?.token) {
-        setMessage("Серверден дұрыс жауап келмеді");
+        setPage("2fa");
         return;
       }
 
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user || {}));
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       setLoggedIn(true);
     } catch (error) {
-      setMessage(error?.response?.data?.message || "Кіру қатесі");
+      setMessage(error.response?.data?.message || "Кіру қатесі");
     } finally {
       setLoading(false);
     }
@@ -117,8 +103,7 @@ function Login({ setLoggedIn, setPage }) {
                     placeholder="Мысалы: user@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
-                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200 disabled:opacity-70"
+                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                   />
                 </div>
 
@@ -131,8 +116,7 @@ function Login({ setLoggedIn, setPage }) {
                     placeholder="Парольді енгізіңіз"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={loading}
-                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200 disabled:opacity-70"
+                    className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                   />
                 </div>
 

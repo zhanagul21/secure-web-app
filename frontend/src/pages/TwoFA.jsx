@@ -1,151 +1,198 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import API from "../services/api";
 
 function TwoFA({ setPage, setLoggedIn }) {
-  const [qr, setQr] = useState("");
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setLoggedIn(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [qrImage, setQrImage] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const verify2FA = async (e) => {
+    e.preventDefault();
+    setMessage("");
+
+    const email = localStorage.getItem("tempUserEmail");
+
+    if (!email) {
+      setMessage("Уақытша email табылмады. Қайта кіріңіз.");
+      return;
+    }
+
+    if (!code) {
+      setMessage("2FA кодын енгізіңіз");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await API.post("/auth/login-2fa", {
+        email,
+        token: code,
+      });
+
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      localStorage.removeItem("tempUserEmail");
+      localStorage.removeItem("tempUserRole");
+      localStorage.removeItem("tempUserId");
+
+      setLoggedIn(true);
+      setPage("dashboard");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "2FA тексеру қатесі");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadQR = async () => {
-    const token = localStorage.getItem("token");
+  const reset2FA = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setQrImage("");
 
-    const res = await API.get("/user/2fa/setup", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    if (!resetEmail || !resetPassword) {
+      setMessage("Email мен парольді толтырыңыз");
+      return;
+    }
 
-    setQr(res.data.qr);
+    try {
+      setResetLoading(true);
+
+      const qrRes = await API.post("/user/2fa/reset-login", {
+        email: resetEmail,
+        password: resetPassword,
+      });
+
+      setQrImage(qrRes.data.qr);
+      setMessage("Жаңа QR код дайын. Оны Google Authenticator-ға сканерлеңіз.");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "QR қайта алу қатесі");
+    } finally {
+      setResetLoading(false);
+    }
   };
 
-  const verify = async () => {
-    const token = localStorage.getItem("token");
-
-    await API.post(
-      "/user/2fa/verify",
-      { token: code },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    setMessage("2FA қосылды");
+  const goBack = () => {
+    localStorage.removeItem("tempUserEmail");
+    localStorage.removeItem("tempUserRole");
+    localStorage.removeItem("tempUserId");
+    setPage("dashboard");
+    window.location.reload();
   };
-
-  useEffect(() => {
-    loadQR();
-  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-blue-200 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:p-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
-                🔐
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
-                  AuthGuard Locker
-                </p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
-                  2FA Қауіпсіздік
-                </h1>
-                <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
-                  Google Authenticator арқылы аккаунтыңызға қосымша қорғаныс
-                  қосыңыз
-                </p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-[0_20px_60px_rgba(2,132,199,0.15)] sm:p-9">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
+              🔑
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setPage("dashboard")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Басты бет
-              </button>
-              <button
-                onClick={() => setPage("profile")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Профиль
-              </button>
-              <button
-                onClick={logout}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
-              >
-                Шығу
-              </button>
-            </div>
-          </div>
-        </div>
+            <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">
+              2FA растау
+            </h2>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur">
-            <div className="mb-5">
-              <h2 className="text-2xl font-bold text-slate-800">QR код</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Authenticator қолданбасымен сканерлеңіз
-              </p>
-            </div>
-
-            <div className="flex min-h-[360px] items-center justify-center rounded-[28px] bg-gradient-to-br from-sky-50 to-blue-50 p-6 ring-1 ring-sky-100">
-              {qr ? (
-                <img
-                  src={qr}
-                  alt="2FA QR"
-                  className="w-56 rounded-2xl bg-white p-3 shadow-sm"
-                />
-              ) : (
-                <p className="text-slate-500">Жүктелуде...</p>
-              )}
-            </div>
+            <p className="mt-3 text-slate-700">
+              Google Authenticator ішіндегі 6 таңбалы кодты енгізіңіз
+            </p>
           </div>
 
-          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur">
-            <div className="mb-5">
-              <h2 className="text-2xl font-bold text-slate-800">Код енгізу</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Қолданбадағы 6 таңбалы кодты енгізіңіз
-              </p>
-            </div>
-
-            <div className="rounded-[28px] bg-gradient-to-br from-sky-50 to-blue-50 p-5 ring-1 ring-sky-100">
+          <form onSubmit={verify2FA} className="space-y-5">
+            <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
-                Бір реттік код
+                2FA коды
               </label>
-
               <input
+                type="text"
+                placeholder="123456"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-                placeholder="123456"
+                className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-center text-xl tracking-[0.3em] text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
+                maxLength={6}
               />
+            </div>
 
+            {message && (
+              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
+                {message}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
-                onClick={verify}
-                className="mt-4 w-full rounded-2xl bg-slate-700 py-3 font-semibold text-white transition hover:bg-slate-800"
+                type="submit"
+                disabled={loading}
+                className="flex-1 rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Растау
+                {loading ? "Тексерілуде..." : "Растау"}
               </button>
 
-              {message && (
-                <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                  {message}
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={goBack}
+                className="flex-1 rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 shadow-sm transition hover:bg-sky-50"
+              >
+                Артқа
+              </button>
             </div>
+          </form>
 
-            <div className="mt-5 rounded-2xl bg-sky-50 p-4">
-              <p className="text-sm text-slate-600">
-                2FA қосылғаннан кейін аккаунтқа кіру кезінде қосымша қауіпсіздік
-                коды сұралады.
-              </p>
-            </div>
+          <div className="mt-8 border-t border-sky-200 pt-8">
+            <button
+              onClick={() => setShowReset(!showReset)}
+              className="w-full rounded-2xl border border-sky-200 bg-sky-100 py-4 text-lg font-semibold text-slate-800 shadow-sm transition hover:bg-sky-200"
+            >
+              {showReset ? "QR қайта алу бөлімін жабу" : "QR қайта алу / Қайта баптау"}
+            </button>
+
+            {showReset && (
+              <form onSubmit={reset2FA} className="mt-6 space-y-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
+                />
+
+                <input
+                  type="password"
+                  placeholder="Пароль"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
+                />
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {resetLoading ? "Жүктелуде..." : "Жаңа QR алу"}
+                </button>
+
+                {qrImage && (
+                  <div className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-6 text-center">
+                    <p className="mb-4 font-medium text-slate-700">
+                      Осы QR кодты Google Authenticator-мен сканерлеңіз:
+                    </p>
+                    <img
+                      src={qrImage}
+                      alt="2FA QR"
+                      className="mx-auto w-64 rounded-2xl border border-sky-200 bg-white p-3 shadow"
+                    />
+                  </div>
+                )}
+              </form>
+            )}
           </div>
         </div>
       </div>
