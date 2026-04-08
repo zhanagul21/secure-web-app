@@ -28,9 +28,7 @@ function Login({ setLoggedIn, setPage }) {
       });
 
       if (res.data.requires2fa) {
-        localStorage.setItem("tempUserEmail", res.data.tempUser.email);
-        localStorage.setItem("tempUserRole", res.data.tempUser.role || "user");
-        localStorage.setItem("tempUserId", res.data.tempUser.id);
+        localStorage.setItem("tempUserEmail", res.data.email);
 
         setMessage("2FA кодын енгізу қажет");
         setPage("2fa");
@@ -40,6 +38,7 @@ function Login({ setLoggedIn, setPage }) {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setLoggedIn(true);
+      setPage("dashboard");
     } catch (error) {
       setMessage(error.response?.data?.message || "Кіру қатесі");
     } finally {
