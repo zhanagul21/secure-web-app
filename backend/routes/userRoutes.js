@@ -4,6 +4,7 @@ const { verifyToken } = require("../middleware/authMiddleware");
 const { sql } = require("../config/db");
 const speakeasy = require("speakeasy");
 const QRCode = require("qrcode");
+const bcrypt = require("bcryptjs");
 
 // Профиль
 router.get("/profile", verifyToken, async (req, res) => {
@@ -168,13 +169,72 @@ router.post("/2fa/verify", verifyToken, async (req, res) => {
 
     await sql.query`
       INSERT INTO activity_logs (user_id, action_type, action_details)
-      VALUES (${req.user.id}, '2FA_ENABLE', ${'Екі факторлы аутентификация қосылды'})
+      VALUES (${req.user.id}, '2FA_ENABLE', ${"Екі факторлы аутентификация қосылды"})
     `;
 
     res.json({ message: "2FA сәтті қосылды" });
   } catch (error) {
     console.error("2FA VERIFY ERROR:", error);
     res.status(500).json({ message: "2FA растау кезінде қате шықты" });
+  }
+});
+
+// Login кезінде QR қайта алу
+router.post("/2fa/reset-login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email мен пароль міндетті" });
+    }
+
+    const result = await sql.query`
+      SELECT * FROM users
+      WHERE email = ${email}
+    `;
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "Пайдаланушы табылмады" });
+    }
+
+    const user = result.recordset[0];
+    const storedHash = user.password_hash || user.password;
+
+    if (!storedHash) {
+      return res.status(500).json({
+        message: "Пайдаланушы паролі базаға дұрыс сақталмаған",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, storedHash);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Қате пароль" });
+    }
+
+    const secret = speakeasy.generateSecret({
+      name: `AuthGuardLocker (${user.email})`,
+      issuer: "AuthGuardLocker",
+      length: 20,
+    });
+
+    const qr = await QRCode.toDataURL(secret.otpauth_url);
+
+    await sql.query`
+      UPDATE users
+      SET twofa_secret = ${secret.base32},
+          twofa_enabled = 0
+      WHERE id = ${user.id}
+    `;
+
+    res.json({
+      qr,
+      secret: secret.base32,
+      message: "Жаңа QR код дайын",
+    });
+  } catch (error) {
+    console.error("2FA RESET LOGIN ERROR:", error);
+    res.status(500).json({ message: "QR қайта алу кезінде қате шықты" });
   }
 });
 

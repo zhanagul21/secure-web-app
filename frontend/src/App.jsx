@@ -12,20 +12,17 @@ import DocumentViewer from "./pages/DocumentViewer";
 import SharedDocument from "./pages/SharedDocument";
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [loggedIn, setLoggedIn] = useState(false);
   const [page, setPage] = useState("dashboard");
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
   useEffect(() => {
     const path = window.location.pathname;
 
-    if (path.startsWith("/shared/")) {
-      return;
-    }
+    if (path.startsWith("/shared/")) return;
 
-    if (!localStorage.getItem("token")) {
-      setLoggedIn(false);
-    }
+    const token = localStorage.getItem("token");
+    setLoggedIn(!!token);
   }, []);
 
   const path = window.location.pathname;
