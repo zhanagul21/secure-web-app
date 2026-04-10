@@ -12,7 +12,7 @@ import DocumentViewer from "./pages/DocumentViewer";
 import SharedDocument from "./pages/SharedDocument";
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
   const [page, setPage] = useState("dashboard");
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
@@ -24,6 +24,17 @@ function App() {
     const token = localStorage.getItem("token");
     setLoggedIn(!!token);
   }, []);
+
+  const logoutEverywhere = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tempUserEmail");
+    localStorage.removeItem("tempUserRole");
+    localStorage.removeItem("tempUserId");
+    setLoggedIn(false);
+    setPage("dashboard");
+    setSelectedDocumentId(null);
+  };
 
   const path = window.location.pathname;
 
@@ -46,12 +57,19 @@ function App() {
         setLoggedIn={setLoggedIn}
         setPage={setPage}
         setSelectedDocumentId={setSelectedDocumentId}
+        logoutEverywhere={logoutEverywhere}
       />
     );
   }
 
   if (page === "profile") {
-    return <Profile setLoggedIn={setLoggedIn} setPage={setPage} />;
+    return (
+      <Profile
+        setLoggedIn={setLoggedIn}
+        setPage={setPage}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
 
   if (page === "documents") {
@@ -60,20 +78,39 @@ function App() {
         setPage={setPage}
         setLoggedIn={setLoggedIn}
         setSelectedDocumentId={setSelectedDocumentId}
+        logoutEverywhere={logoutEverywhere}
       />
     );
   }
 
   if (page === "addDocument") {
-    return <AddDocument setPage={setPage} setLoggedIn={setLoggedIn} />;
+    return (
+      <AddDocument
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
 
   if (page === "logs") {
-    return <ActivityLog setPage={setPage} setLoggedIn={setLoggedIn} />;
+    return (
+      <ActivityLog
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
 
   if (page === "admin") {
-    return <AdminPanel setPage={setPage} setLoggedIn={setLoggedIn} />;
+    return (
+      <AdminPanel
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
 
   if (page === "viewer") {
@@ -82,6 +119,7 @@ function App() {
         documentId={selectedDocumentId}
         setPage={setPage}
         setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
       />
     );
   }

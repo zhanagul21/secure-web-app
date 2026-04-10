@@ -18,14 +18,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
 
   const getDocuments = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.get("/documents/my", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await API.get("/documents/my");
       setDocuments(res.data.documents || []);
       setMessage("");
     } catch (error) {
@@ -38,14 +31,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
     if (!ok) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      await API.delete(`/documents/delete/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      await API.delete(`/documents/delete/${id}`);
       getDocuments();
     } catch (error) {
       setMessage("Құжатты өшіру кезінде қате шықты");
@@ -54,13 +40,8 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
 
   const downloadDoc = async (id, fileName) => {
     try {
-      const token = localStorage.getItem("token");
-
       const response = await API.get(`/documents/download/${id}`, {
         responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const blob = new Blob([response.data]);
@@ -82,17 +63,9 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
 
   const shareDocument = async (id) => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.post(
-        `/documents/share/${id}`,
-        { hours: 1 },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await API.post(`/documents/share/${id}`, {
+        durationMinutes: 60,
+      });
 
       const shareUrl = res.data.shareUrl;
 
@@ -372,7 +345,13 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
                       >
                         Жүктеу
                       </button>
-                    
+
+                      <button
+                        onClick={() => shareDocument(doc.id)}
+                        className="rounded-xl bg-slate-700 px-4 py-2 font-semibold text-white transition hover:bg-slate-800"
+                      >
+                        Бөлісу
+                      </button>
                     </>
                   ) : (
                     <span className="rounded-xl bg-sky-100 px-4 py-2 text-slate-700">

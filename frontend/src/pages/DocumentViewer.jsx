@@ -30,13 +30,8 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         return;
       }
 
-      const token = localStorage.getItem("token");
-
       const res = await API.get(`/documents/view/${documentId}`, {
         responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const contentType =
@@ -47,23 +42,19 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
 
       setMimeType(contentType);
       setFileUrl(url);
+      setMessage("");
       setLoading(false);
     } catch (error) {
       console.log("VIEW ERROR:", error);
-      setMessage("Файл ашылмады");
+      setMessage(error.response?.data?.message || "Файл ашылмады");
       setLoading(false);
     }
   };
 
   const handleDownload = async () => {
     try {
-      const token = localStorage.getItem("token");
-
       const res = await API.get(`/documents/download/${documentId}`, {
         responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       const blob = new Blob([res.data]);
@@ -89,26 +80,14 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
       setShareMessage("");
       setShareUrl("");
 
-      const token = localStorage.getItem("token");
-
-      const res = await API.post(
-        `/documents/share/${documentId}`,
-        { durationMinutes },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await API.post(`/documents/share/${documentId}`, {
+        durationMinutes,
+      });
 
       const backendShareUrl = res.data.shareUrl;
 
       if (backendShareUrl) {
         setShareUrl(backendShareUrl);
-      } else if (res.data.token) {
-        const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
-        const finalShareUrl = `${frontendUrl}/shared/${res.data.token}`;
-        setShareUrl(finalShareUrl);
       } else {
         setShareMessage("Ссылка жасалмады");
         return;

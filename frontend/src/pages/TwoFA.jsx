@@ -6,12 +6,6 @@ function TwoFA({ setPage, setLoggedIn }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [showReset, setShowReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetPassword, setResetPassword] = useState("");
-  const [qrImage, setQrImage] = useState("");
-  const [resetLoading, setResetLoading] = useState(false);
-
   const verify2FA = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -23,7 +17,7 @@ function TwoFA({ setPage, setLoggedIn }) {
       return;
     }
 
-    if (!code) {
+    if (!code.trim()) {
       setMessage("2FA кодын енгізіңіз");
       return;
     }
@@ -31,17 +25,14 @@ function TwoFA({ setPage, setLoggedIn }) {
     try {
       setLoading(true);
 
-      const res = await API.post("/auth/login-2fa", {
+      const res = await API.post("/auth/verify-2fa", {
         email,
-        token: code,
+        token: code.trim(),
       });
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-
       localStorage.removeItem("tempUserEmail");
-      localStorage.removeItem("tempUserRole");
-      localStorage.removeItem("tempUserId");
 
       setLoggedIn(true);
       setPage("dashboard");
@@ -52,37 +43,8 @@ function TwoFA({ setPage, setLoggedIn }) {
     }
   };
 
-  const reset2FA = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    setQrImage("");
-
-    if (!resetEmail || !resetPassword) {
-      setMessage("Email мен парольді толтырыңыз");
-      return;
-    }
-
-    try {
-      setResetLoading(true);
-
-      const qrRes = await API.post("/user/2fa/reset-login", {
-        email: resetEmail,
-        password: resetPassword,
-      });
-
-      setQrImage(qrRes.data.qr);
-      setMessage("Жаңа QR код дайын. Оны Google Authenticator-ға сканерлеңіз.");
-    } catch (error) {
-      setMessage(error.response?.data?.message || "QR қайта алу қатесі");
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
   const goBack = () => {
     localStorage.removeItem("tempUserEmail");
-    localStorage.removeItem("tempUserRole");
-    localStorage.removeItem("tempUserId");
     setPage("dashboard");
     window.location.reload();
   };
@@ -115,8 +77,8 @@ function TwoFA({ setPage, setLoggedIn }) {
                 placeholder="123456"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-center text-xl tracking-[0.3em] text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
                 maxLength={6}
+                className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-center text-xl tracking-[0.3em] text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
               />
             </div>
 
@@ -144,56 +106,6 @@ function TwoFA({ setPage, setLoggedIn }) {
               </button>
             </div>
           </form>
-
-          <div className="mt-8 border-t border-sky-200 pt-8">
-            <button
-              onClick={() => setShowReset(!showReset)}
-              className="w-full rounded-2xl border border-sky-200 bg-sky-100 py-4 text-lg font-semibold text-slate-800 shadow-sm transition hover:bg-sky-200"
-            >
-              {showReset ? "QR қайта алу бөлімін жабу" : "QR қайта алу / Қайта баптау"}
-            </button>
-
-            {showReset && (
-              <form onSubmit={reset2FA} className="mt-6 space-y-4">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
-                />
-
-                <input
-                  type="password"
-                  placeholder="Пароль"
-                  value={resetPassword}
-                  onChange={(e) => setResetPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
-                />
-
-                <button
-                  type="submit"
-                  disabled={resetLoading}
-                  className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {resetLoading ? "Жүктелуде..." : "Жаңа QR алу"}
-                </button>
-
-                {qrImage && (
-                  <div className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-6 text-center">
-                    <p className="mb-4 font-medium text-slate-700">
-                      Осы QR кодты Google Authenticator-мен сканерлеңіз:
-                    </p>
-                    <img
-                      src={qrImage}
-                      alt="2FA QR"
-                      className="mx-auto w-64 rounded-2xl border border-sky-200 bg-white p-3 shadow"
-                    />
-                  </div>
-                )}
-              </form>
-            )}
-          </div>
         </div>
       </div>
     </div>

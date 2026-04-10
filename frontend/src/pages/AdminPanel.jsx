@@ -18,14 +18,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
   const getUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.get("/user/all-users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await API.get("/user/all-users");
       setUsers(res.data.users || []);
       setMessage("");
     } catch (error) {
@@ -41,14 +34,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
     if (!ok) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      await API.delete(`/user/delete/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      await API.delete(`/user/delete/${id}`);
       getUsers();
     } catch (error) {
       console.error("DELETE USER ERROR:", error);
@@ -63,18 +49,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
     if (!ok) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      await API.put(
-        `/user/make-admin/${id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      await API.put(`/user/make-admin/${id}`, {});
       getUsers();
     } catch (error) {
       console.error("MAKE ADMIN ERROR:", error);

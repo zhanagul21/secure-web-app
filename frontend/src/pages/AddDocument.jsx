@@ -80,8 +80,6 @@ function AddDocument({ setPage, setLoggedIn }) {
     }
 
     try {
-      const token = localStorage.getItem("token");
-
       const formData = new FormData();
       formData.append("title", title);
       formData.append("category", category);
@@ -90,7 +88,7 @@ function AddDocument({ setPage, setLoggedIn }) {
 
       const res = await API.post("/documents/add", formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -246,7 +244,7 @@ function AddDocument({ setPage, setLoggedIn }) {
                     type="file"
                     accept=".pdf,png,jpg,jpeg,doc,docx,ppt,pptx,txt"
                     className="hidden"
-                    onChange={(e) => onFileChange(e.target.files[0])}
+                    onChange={(e) => onFileChange(e.target.files?.[0])}
                   />
 
                   <div className="space-y-2">

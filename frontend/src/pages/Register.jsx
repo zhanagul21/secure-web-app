@@ -9,6 +9,7 @@ function Register({ onClose }) {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [codeVerified, setCodeVerified] = useState(false);
 
   const sendCode = async (e) => {
     e.preventDefault();
@@ -44,6 +45,7 @@ function Register({ onClose }) {
       setLoading(true);
       const res = await API.post("/auth/verify-code", { email, code });
       setMessage(res.data.message || "Код расталды");
+      setCodeVerified(true);
       setStep(3);
     } catch (error) {
       setMessage(error.response?.data?.message || "Код қате");
@@ -61,20 +63,30 @@ function Register({ onClose }) {
       return;
     }
 
+    if (!codeVerified) {
+      setMessage("Алдымен кодты растаңыз");
+      return;
+    }
+
     try {
       setLoading(true);
-      const res = await API.post("/auth/complete-register", {
+      const res = await API.post("/auth/register", {
         full_name: fullName,
         email,
         password,
       });
 
       setMessage(res.data.message || "Тіркелу сәтті аяқталды");
-      setStep(1);
-      setFullName("");
-      setEmail("");
-      setCode("");
-      setPassword("");
+
+      setTimeout(() => {
+        setStep(1);
+        setFullName("");
+        setEmail("");
+        setCode("");
+        setPassword("");
+        setCodeVerified(false);
+        onClose?.();
+      }, 1200);
     } catch (error) {
       setMessage(error.response?.data?.message || "Тіркелу қатесі");
     } finally {
@@ -116,105 +128,92 @@ function Register({ onClose }) {
             <span>3. Аяқтау</span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <div
-                className={`h-2 rounded-full ${
-                  step >= 1 ? "bg-sky-500" : "bg-sky-200"
-                }`}
-              />
-            </div>
-            <div className="flex-1">
-              <div
-                className={`h-2 rounded-full ${
-                  step >= 2 ? "bg-sky-500" : "bg-sky-200"
-                }`}
-              />
-            </div>
-            <div className="flex-1">
-              <div
-                className={`h-2 rounded-full ${
-                  step >= 3 ? "bg-sky-500" : "bg-sky-200"
-                }`}
-              />
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div
+              className={`h-2 rounded-full ${
+                step >= 1 ? "bg-sky-500" : "bg-slate-200"
+              }`}
+            />
+            <div
+              className={`h-2 rounded-full ${
+                step >= 2 ? "bg-sky-500" : "bg-slate-200"
+              }`}
+            />
+            <div
+              className={`h-2 rounded-full ${
+                step >= 3 ? "bg-sky-500" : "bg-slate-200"
+              }`}
+            />
           </div>
         </div>
 
         {step === 1 && (
           <form onSubmit={sendCode} className="space-y-5">
-            <input
-              type="email"
-              placeholder="Email адресіңіз"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
-            />
-
-            {message && (
-              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
-                {message}
-              </div>
-            )}
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 transition hover:bg-sky-50"
-              >
-                Артқа
-              </button>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
-              >
-                {loading ? "Жіберілуде..." : "Код жіберу"}
-              </button>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="example@gmail.com"
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              />
             </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Жіберілуде..." : "Код жіберу"}
+            </button>
           </form>
         )}
 
         {step === 2 && (
           <form onSubmit={verifyCode} className="space-y-5">
-            <input
-              type="email"
-              value={email}
-              disabled
-              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-500 outline-none"
-            />
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              />
+            </div>
 
-            <input
-              type="text"
-              placeholder="6 таңбалы код"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
-            />
-
-            {message && (
-              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
-                {message}
-              </div>
-            )}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Растау коды
+              </label>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="6 таңбалы код"
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              />
+            </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="w-full rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 transition hover:bg-sky-50"
+                type="submit"
+                disabled={loading}
+                className="flex-1 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Артқа
+                {loading ? "Тексерілуде..." : "Кодты растау"}
               </button>
 
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
+                type="button"
+                onClick={() => setStep(1)}
+                className="rounded-2xl border border-sky-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-sky-50"
               >
-                {loading ? "Тексерілуде..." : "Кодты растау"}
+                Артқа
               </button>
             </div>
           </form>
@@ -222,53 +221,68 @@ function Register({ onClose }) {
 
         {step === 3 && (
           <form onSubmit={completeRegister} className="space-y-5">
-            <input
-              type="text"
-              placeholder="Толық аты-жөніңіз"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
-            />
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Аты-жөні
+              </label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Аты-жөніңіз"
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              />
+            </div>
 
-            <input
-              type="email"
-              value={email}
-              disabled
-              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-500 outline-none"
-            />
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                readOnly
+                className="w-full rounded-2xl border border-sky-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none"
+              />
+            </div>
 
-            <input
-              type="password"
-              placeholder="Құпиясөз жасаңыз"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
-            />
-
-            {message && (
-              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
-                {message}
-              </div>
-            )}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Құпия сөз
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Кемінде 6 таңба"
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
+              />
+            </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="w-full rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 transition hover:bg-sky-50"
+                type="submit"
+                disabled={loading}
+                className="flex-1 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Артқа
+                {loading ? "Тіркелуде..." : "Тіркелу"}
               </button>
 
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
+                type="button"
+                onClick={() => setStep(2)}
+                className="rounded-2xl border border-sky-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-sky-50"
               >
-                {loading ? "Аяқталуда..." : "Тіркелуді аяқтау"}
+                Артқа
               </button>
             </div>
           </form>
+        )}
+
+        {message && (
+          <div className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-700">
+            {message}
+          </div>
         )}
       </div>
     </div>

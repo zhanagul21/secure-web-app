@@ -19,14 +19,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
 
   const getProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.get("/user/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await API.get("/user/profile");
       setUser(res.data.user);
     } catch (error) {
       console.error("GET PROFILE ERROR:", error);
@@ -36,14 +29,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
 
   const getDocuments = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.get("/documents/my", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await API.get("/documents/my");
       setDocuments(res.data.documents || []);
     } catch (error) {
       console.error("GET DOCUMENTS ERROR:", error);
@@ -53,14 +39,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
 
   const getLogs = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await API.get("/logs/my", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await API.get("/logs/my");
       setLogs(res.data.logs || []);
     } catch (error) {
       console.error("GET LOGS ERROR:", error);
@@ -153,6 +132,14 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
         return "Құжат жүктелді";
       case "DOCUMENT_DELETE":
         return "Құжат өшірілді";
+      case "DOCUMENT_SHARE":
+        return "Сілтеме жасалды";
+      case "LOGIN":
+        return "Жүйеге кіру";
+      case "REGISTER":
+        return "Тіркелу";
+      case "PASSWORD_RESET":
+        return "Пароль жаңартылды";
       default:
         return actionType || "Әрекет";
     }
@@ -186,7 +173,6 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
                 </p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
                   AuthGuard Locker
-                  Басты беті
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700 sm:text-base">
                   Құжаттар, белсенділік және аккаунт бойынша қысқаша ақпарат
