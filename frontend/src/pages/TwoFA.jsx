@@ -25,7 +25,7 @@ function TwoFA({ setPage, setLoggedIn }) {
     try {
       setLoading(true);
 
-      const res = await API.post("/auth/verify-2fa", {
+      const res = await API.post("/auth/login-2fa", {
         email,
         token: code.trim(),
       });

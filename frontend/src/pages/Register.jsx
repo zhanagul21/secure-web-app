@@ -70,7 +70,7 @@ function Register({ onClose }) {
 
     try {
       setLoading(true);
-      const res = await API.post("/auth/register", {
+      const res = await API.post("/auth/complete-register", {
         full_name: fullName,
         email,
         password,

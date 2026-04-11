@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  baseURL: "https://authguard-backend-7mbc.onrender.com/api",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -10,15 +10,12 @@ const API = axios.create({
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
-
-API.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject(error)
-);
 
 export default API;
