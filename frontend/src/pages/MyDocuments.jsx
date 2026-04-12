@@ -112,24 +112,20 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
   const getFileTypeLabel = (mimeType, name) => {
     if (mimeType === "application/pdf") return "PDF";
     if (mimeType?.startsWith("image/")) return "Сурет";
-
     if (
       mimeType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
       return "DOCX";
     }
-
     if (mimeType === "application/msword") return "DOC";
     if (mimeType === "application/vnd.ms-powerpoint") return "PPT";
-
     if (
       mimeType ===
       "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     ) {
       return "PPTX";
     }
-
     if (mimeType === "text/plain") return "TXT";
     if (name) return "Құжат";
     return "Файл жоқ";
@@ -138,7 +134,6 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
   const getFileIcon = (mimeType) => {
     if (mimeType === "application/pdf") return "📄";
     if (mimeType?.startsWith("image/")) return "🖼️";
-
     if (
       mimeType === "application/msword" ||
       mimeType ===
@@ -146,7 +141,6 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
     ) {
       return "📝";
     }
-
     if (
       mimeType === "application/vnd.ms-powerpoint" ||
       mimeType ===
@@ -154,7 +148,6 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
     ) {
       return "📊";
     }
-
     if (mimeType === "text/plain") return "📃";
     return "📁";
   };
@@ -327,7 +320,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  {doc.secret_content ? (
+                  {doc.filename ? (
                     <>
                       <button
                         onClick={() => {

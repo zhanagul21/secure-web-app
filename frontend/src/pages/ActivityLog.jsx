@@ -18,7 +18,7 @@ function ActivityLog({ setPage, setLoggedIn }) {
 
   const getLogs = async () => {
     try {
-      const res = await API.get("/logs/my");
+      const res = await API.get("/logs");
       setLogs(res.data.logs || []);
       setMessage("");
     } catch (error) {
@@ -60,8 +60,6 @@ function ActivityLog({ setPage, setLoggedIn }) {
         return "Құжат жүктеу";
       case "DOCUMENT_DELETE":
         return "Құжат өшіру";
-      case "DOCUMENT_SHARE":
-        return "Сілтеме жасау";
       case "LOGIN":
         return "Жүйеге кіру";
       case "REGISTER":
@@ -85,8 +83,6 @@ function ActivityLog({ setPage, setLoggedIn }) {
         return "bg-cyan-100 text-cyan-700";
       case "DOCUMENT_DELETE":
         return "bg-rose-100 text-rose-700";
-      case "DOCUMENT_SHARE":
-        return "bg-indigo-100 text-indigo-700";
       case "LOGIN":
         return "bg-violet-100 text-violet-700";
       case "REGISTER":
@@ -110,8 +106,6 @@ function ActivityLog({ setPage, setLoggedIn }) {
         return "⬇️";
       case "DOCUMENT_DELETE":
         return "🗑️";
-      case "DOCUMENT_SHARE":
-        return "🔗";
       case "LOGIN":
         return "🔐";
       case "REGISTER":
@@ -136,9 +130,7 @@ function ActivityLog({ setPage, setLoggedIn }) {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-sky-700">
-                  AuthGuard Locker
-                </p>
+                <p className="text-sm font-medium text-sky-700">AuthGuard Locker</p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
                   Әрекет тарихы
                 </h1>
@@ -149,22 +141,13 @@ function ActivityLog({ setPage, setLoggedIn }) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setPage("dashboard")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white"
-              >
+              <button onClick={() => setPage("dashboard")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">
                 Басты бет
               </button>
-              <button
-                onClick={() => setPage("documents")}
-                className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white"
-              >
+              <button onClick={() => setPage("documents")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">
                 Құжаттар
               </button>
-              <button
-                onClick={logout}
-                className="rounded-2xl bg-rose-600 px-4 py-2.5 font-semibold text-white"
-              >
+              <button onClick={logout} className="rounded-2xl bg-rose-600 px-4 py-2.5 font-semibold text-white">
                 Шығу
               </button>
             </div>
@@ -174,9 +157,7 @@ function ActivityLog({ setPage, setLoggedIn }) {
         <div className="mt-6 rounded-[28px] border border-sky-200 bg-white/90 p-5 shadow-sm sm:p-6">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Іздеу
-              </label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Іздеу</label>
               <input
                 type="text"
                 value={search}
@@ -187,9 +168,7 @@ function ActivityLog({ setPage, setLoggedIn }) {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Әрекет түрі
-              </label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Әрекет түрі</label>
               <select
                 value={actionFilter}
                 onChange={(e) => setActionFilter(e.target.value)}
@@ -197,9 +176,7 @@ function ActivityLog({ setPage, setLoggedIn }) {
               >
                 <option value="all">Барлығы</option>
                 {actionTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
+                  <option key={type} value={type}>{type}</option>
                 ))}
               </select>
             </div>
@@ -215,20 +192,13 @@ function ActivityLog({ setPage, setLoggedIn }) {
         {filteredLogs.length === 0 ? (
           <div className="mt-6 rounded-[32px] border border-sky-200 bg-white/90 p-10 text-center shadow-sm">
             <div className="text-5xl">🕘</div>
-            <h2 className="mt-4 text-2xl font-semibold text-slate-800">
-              Логтар табылмады
-            </h2>
-            <p className="mt-2 text-slate-700">
-              Әзірге журнал жазбалары жоқ немесе іздеу нәтижесі бос.
-            </p>
+            <h2 className="mt-4 text-2xl font-semibold text-slate-800">Логтар табылмады</h2>
+            <p className="mt-2 text-slate-700">Әзірге журнал жазбалары жоқ немесе іздеу нәтижесі бос.</p>
           </div>
         ) : (
           <div className="mt-6 space-y-4">
             {filteredLogs.map((log) => (
-              <div
-                key={log.id}
-                className="rounded-[28px] border border-sky-200 bg-white/90 p-5 shadow-sm"
-              >
+              <div key={log.id} className="rounded-[28px] border border-sky-200 bg-white/90 p-5 shadow-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-2xl">
@@ -243,18 +213,12 @@ function ActivityLog({ setPage, setLoggedIn }) {
                         {log.action_details || "Сипаттама жоқ"}
                       </p>
                       <p className="mt-2 text-sm text-slate-400">
-                        {log.created_at
-                          ? new Date(log.created_at).toLocaleString()
-                          : ""}
+                        {log.created_at ? new Date(log.created_at).toLocaleString() : ""}
                       </p>
                     </div>
                   </div>
 
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getActionBadgeClass(
-                      log.action_type
-                    )}`}
-                  >
+                  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getActionBadgeClass(log.action_type)}`}>
                     {log.action_type}
                   </span>
                 </div>

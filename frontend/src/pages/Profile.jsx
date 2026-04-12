@@ -41,33 +41,20 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-sky-700">
-                  AuthGuard Locker
-                </p>
-
+                <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
                 <h1 className="text-2xl font-bold text-slate-800">Профиль</h1>
-
                 <p className="text-sm text-slate-600">Аккаунт мәліметтері</p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setPage("dashboard")}
-                className="rounded-xl bg-slate-700 px-4 py-2 text-white"
-              >
+              <button onClick={() => setPage("dashboard")} className="rounded-xl bg-slate-700 px-4 py-2 text-white">
                 Басты бет
               </button>
-              <button
-                onClick={() => setPage("documents")}
-                className="rounded-xl bg-slate-700 px-4 py-2 text-white"
-              >
+              <button onClick={() => setPage("documents")} className="rounded-xl bg-slate-700 px-4 py-2 text-white">
                 Құжаттар
               </button>
-              <button
-                onClick={logout}
-                className="rounded-xl bg-slate-700 px-4 py-2 text-white"
-              >
+              <button onClick={logout} className="rounded-xl bg-slate-700 px-4 py-2 text-white">
                 Шығу
               </button>
             </div>
@@ -94,16 +81,12 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
 
               <div className="rounded-2xl bg-sky-50 p-4">
                 <p className="text-sm text-slate-500">Email</p>
-                <p className="mt-1 text-lg font-semibold text-slate-800">
-                  {user.email}
-                </p>
+                <p className="mt-1 text-lg font-semibold text-slate-800">{user.email}</p>
               </div>
 
               <div className="rounded-2xl bg-sky-50 p-4">
                 <p className="text-sm text-slate-500">Рөлі</p>
-                <p className="mt-1 text-lg font-semibold text-slate-800">
-                  {user.role}
-                </p>
+                <p className="mt-1 text-lg font-semibold text-slate-800">{user.role}</p>
               </div>
 
               <div className="rounded-2xl bg-sky-50 p-4">
@@ -116,9 +99,7 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
               <div className="rounded-2xl bg-sky-50 p-4 sm:col-span-2">
                 <p className="text-sm text-slate-500">Тіркелген уақыты</p>
                 <p className="mt-1 text-lg font-semibold text-slate-800">
-                  {user.created_at
-                    ? new Date(user.created_at).toLocaleString()
-                    : "Белгісіз"}
+                  {user.created_at ? new Date(user.created_at).toLocaleString() : "Белгісіз"}
                 </p>
               </div>
             </div>

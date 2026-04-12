@@ -24,7 +24,10 @@ function SharedDocument({ token }) {
 
   const loadSharedDocument = async () => {
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL;
+      const apiBase =
+        import.meta.env.VITE_API_BASE_URL ||
+        "https://authguard-backend-7mbc.onrender.com/api";
+
       const url = `${apiBase}/documents/shared/${token}`;
 
       const res = await fetch(url);
@@ -41,7 +44,8 @@ function SharedDocument({ token }) {
         return;
       }
 
-      const contentType = res.headers.get("content-type") || "application/octet-stream";
+      const contentType =
+        res.headers.get("content-type") || "application/octet-stream";
       const blob = await res.blob();
       const objectUrl = window.URL.createObjectURL(blob);
 
@@ -53,6 +57,53 @@ function SharedDocument({ token }) {
       setError("Серверге қосылу мүмкін болмады");
       setLoading(false);
     }
+  };
+
+  const downloadShared = () => {
+    const apiBase =
+      import.meta.env.VITE_API_BASE_URL ||
+      "https://authguard-backend-7mbc.onrender.com/api";
+    window.open(`${apiBase}/documents/shared/${token}/download`, "_blank");
+  };
+
+  const renderPreview = () => {
+    if (mimeType === "application/pdf") {
+      return (
+        <iframe
+          src={fileUrl}
+          title="Shared PDF Viewer"
+          className="h-[85vh] w-full rounded-[24px] border border-sky-100"
+        />
+      );
+    }
+
+    if (mimeType?.startsWith("image/")) {
+      return (
+        <div className="text-center">
+          <img
+            src={fileUrl}
+            alt="Shared document"
+            className="mx-auto max-h-[85vh] rounded-[24px] border border-sky-100"
+          />
+        </div>
+      );
+    }
+
+    if (mimeType?.startsWith("text/plain")) {
+      return (
+        <iframe
+          src={fileUrl}
+          title="Shared Text Viewer"
+          className="h-[85vh] w-full rounded-[24px] border border-sky-100"
+        />
+      );
+    }
+
+    return (
+      <div className="flex min-h-[420px] items-center justify-center rounded-[24px] border border-dashed border-sky-200 bg-sky-50 p-6 text-center text-slate-700">
+        Бұл файл түріне preview жоқ. Төмендегі батырмамен жүктеп алуға болады.
+      </div>
+    );
   };
 
   return (
@@ -75,46 +126,17 @@ function SharedDocument({ token }) {
           <div className="flex min-h-[500px] items-center justify-center rounded-[32px] border border-red-100 bg-white/95 p-8 text-center shadow-sm">
             <h2 className="text-xl font-bold text-red-600">{error}</h2>
           </div>
-        ) : mimeType === "application/pdf" ? (
-          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-4 shadow-sm">
-            <iframe
-              src={fileUrl}
-              title="Shared PDF Viewer"
-              className="h-[85vh] w-full rounded-[24px] border border-sky-100"
-            />
-          </div>
-        ) : mimeType?.startsWith("image/") ? (
-          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-4 text-center shadow-sm">
-            <img
-              src={fileUrl}
-              alt="Shared document"
-              className="mx-auto max-h-[85vh] rounded-[24px] border border-sky-100"
-            />
-          </div>
-        ) : mimeType?.startsWith("text/plain") ? (
-          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-4 shadow-sm">
-            <iframe
-              src={fileUrl}
-              title="Shared Text Viewer"
-              className="h-[85vh] w-full rounded-[24px] border border-sky-100"
-            />
-          </div>
         ) : (
-          <div className="flex min-h-[500px] flex-col items-center justify-center rounded-[32px] border border-sky-100 bg-white/95 p-8 text-center shadow-sm">
-            <div className="text-5xl">📄</div>
-            <h2 className="mt-4 text-2xl font-bold text-slate-800">
-              Preview қолжетімсіз
-            </h2>
-            <p className="mt-2 text-slate-600">
-              Бұл файл түрі браузер ішінде көрсетілмейді.
-            </p>
-            <a
-              href={fileUrl}
-              download="shared-document"
-              className="mt-5 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700"
-            >
-              Файлды жүктеу
-            </a>
+          <div className="rounded-[32px] border border-sky-100 bg-white/95 p-4 shadow-sm">
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={downloadShared}
+                className="rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+              >
+                Файлды жүктеу
+              </button>
+            </div>
+            {renderPreview()}
           </div>
         )}
       </div>

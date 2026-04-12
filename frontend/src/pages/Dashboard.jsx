@@ -18,33 +18,34 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
   };
 
   const getProfile = async () => {
-    try {
-      const res = await API.get("/user/profile");
-      setUser(res.data.user);
-    } catch (error) {
-      console.error("GET PROFILE ERROR:", error);
-      setMessage("Пайдаланушы мәліметін жүктеу кезінде қате шықты");
-    }
-  };
+  try {
+    const res = await API.get("/user/profile");
+    setUser(res.data.user);
+  } catch (error) {
+    console.error("GET PROFILE ERROR:", error);
+    setMessage("Пайдаланушы мәліметін жүктеу кезінде қате шықты");
+  }
+};
 
-  const getDocuments = async () => {
-    try {
-      const res = await API.get("/documents/my");
-      setDocuments(res.data.documents || []);
-    } catch (error) {
-      console.error("GET DOCUMENTS ERROR:", error);
-      setMessage("Құжаттарды жүктеу кезінде қате шықты");
-    }
-  };
+const getDocuments = async () => {
+  try {
+    const res = await API.get("/documents/my");
+    setDocuments(res.data.documents || []);
+  } catch (error) {
+    console.error("GET DOCUMENTS ERROR:", error);
+    setMessage("Құжаттарды жүктеу кезінде қате шықты");
+  }
+};
 
-  const getLogs = async () => {
-    try {
-      const res = await API.get("/logs/my");
-      setLogs(res.data.logs || []);
-    } catch (error) {
-      console.error("GET LOGS ERROR:", error);
-    }
-  };
+const getLogs = async () => {
+  try {
+    const res = await API.get("/logs");
+    setLogs(res.data.logs || []);
+  } catch (error) {
+    console.error("GET LOGS ERROR:", error);
+    setMessage("Логтарды жүктеу кезінде қате шықты");
+  }
+};
 
   useEffect(() => {
     getProfile();

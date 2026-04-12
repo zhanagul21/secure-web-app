@@ -45,8 +45,10 @@ function TwoFA({ setPage, setLoggedIn }) {
 
   const goBack = () => {
     localStorage.removeItem("tempUserEmail");
-    setPage("dashboard");
-    window.location.reload();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setLoggedIn(false);
+    setPage("login");
   };
 
   return (
