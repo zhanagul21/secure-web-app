@@ -3,7 +3,7 @@ import API from "../services/api";
 
 function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   const [document, setDocument] = useState(null);
-  const [fileUrl, setFileUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
   const [mimeType, setMimeType] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -14,6 +14,10 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   const [shareMessage, setShareMessage] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
 
+  const apiBase =
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://authguard-backend-7mbc.onrender.com/api";
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -22,12 +26,6 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
     localStorage.removeItem("tempUserId");
     setLoggedIn(false);
   };
-
-  const apiBase =
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://authguard-backend-7mbc.onrender.com/api";
-
-  const backendBase = apiBase.replace("/api", "");
 
   const loadDocument = async () => {
     try {
@@ -46,11 +44,9 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         return;
       }
 
-      const rawUrl = `${backendBase}/uploads/${encodeURIComponent(doc.filename)}`;
-
       setDocument(doc);
       setMimeType(doc.mime_type || "");
-      setFileUrl(rawUrl);
+      setPreviewUrl(`${apiBase}/documents/preview/${documentId}`);
       setMessage("");
     } catch (error) {
       console.log("VIEW ERROR:", error);
@@ -66,7 +62,10 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         responseType: "blob",
       });
 
-      const blob = new Blob([res.data]);
+      const blob = new Blob([res.data], {
+        type: document?.mime_type || "application/octet-stream",
+      });
+
       const url = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
@@ -80,7 +79,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
       setMessage("");
     } catch (error) {
       console.log("DOWNLOAD ERROR:", error);
-      setMessage(error.response?.data?.message || "Файлды жүктеу мүмкін болмады");
+      setMessage(error.response?.data?.message || "Файлды жүктеу кезінде қате шықты");
     }
   };
 
@@ -125,70 +124,25 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
     loadDocument();
   }, [documentId]);
 
-  const isOfficeFile = () => {
-    return [
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-powerpoint",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ].includes(mimeType);
-  };
-
   const renderPreview = () => {
-    if (!fileUrl) return null;
-
-    if (mimeType === "application/pdf") {
-      return (
-        <iframe
-          src={`${fileUrl}#toolbar=0`}
-          title="PDF Viewer"
-          className="h-[80vh] w-full rounded-[24px] border border-sky-100"
-        />
-      );
-    }
+    if (!previewUrl) return null;
 
     if (mimeType?.startsWith("image/")) {
       return (
-        <div className="text-center">
-          <img
-            src={fileUrl}
-            alt="Document preview"
-            className="mx-auto max-h-[80vh] rounded-[24px] border border-sky-100"
-          />
-        </div>
-      );
-    }
-
-    if (mimeType === "text/plain") {
-      return (
-        <iframe
-          src={fileUrl}
-          title="Text Viewer"
-          className="h-[80vh] w-full rounded-[24px] border border-sky-100"
-        />
-      );
-    }
-
-    if (isOfficeFile()) {
-      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-        fileUrl
-      )}`;
-
-      return (
-        <iframe
-          src={officeViewerUrl}
-          title="Office Viewer"
-          className="h-[80vh] w-full rounded-[24px] border border-sky-100"
+        <img
+          src={previewUrl}
+          alt="Document preview"
+          className="mx-auto max-h-[80vh] rounded-[24px] border border-sky-100"
         />
       );
     }
 
     return (
-      <div className="flex min-h-[400px] items-center justify-center rounded-[24px] border border-dashed border-sky-200 bg-sky-50 text-center text-slate-700">
-        Бұл файл түріне preview жоқ. Жүктеу батырмасын қолданыңыз.
-      </div>
+      <iframe
+        src={previewUrl}
+        title="Document Preview"
+        className="h-[80vh] w-full rounded-[24px] border border-sky-100"
+      />
     );
   };
 
