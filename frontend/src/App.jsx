@@ -4,13 +4,13 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
-import MyDocuments from "./pages/MyDocuments";
-import AddDocument from "./pages/AddDocument";
+import MyDocuments from "./pages/MyDocumentsSecure";
+import AddDocument from "./pages/AddDocumentSecure";
 import ActivityLog from "./pages/ActivityLog";
 import AdminPanel from "./pages/AdminPanel";
 import TwoFA from "./pages/TwoFA";
-import DocumentViewer from "./pages/DocumentViewer";
-import SharedDocument from "./pages/SharedDocument";
+import DocumentViewer from "./pages/DocumentViewerSecure";
+import SharedDocument from "./pages/SharedDocumentSecure";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));

@@ -10,10 +10,10 @@ function TwoFA({ setPage, setLoggedIn }) {
     e.preventDefault();
     setMessage("");
 
-    const email = localStorage.getItem("tempUserEmail");
+    const tempToken = localStorage.getItem("temp2faToken");
 
-    if (!email) {
-      setMessage("Уақытша email табылмады. Қайта кіріңіз.");
+    if (!tempToken) {
+      setMessage("2FA сессиясы табылмады. Қайта кіріңіз.");
       return;
     }
 
@@ -26,13 +26,16 @@ function TwoFA({ setPage, setLoggedIn }) {
       setLoading(true);
 
       const res = await API.post("/auth/login-2fa", {
-        email,
+        tempToken,
         token: code.trim(),
       });
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.removeItem("temp2faToken");
       localStorage.removeItem("tempUserEmail");
+      localStorage.removeItem("tempUserRole");
+      localStorage.removeItem("tempUserId");
 
       setLoggedIn(true);
       setPage("dashboard");
@@ -45,7 +48,10 @@ function TwoFA({ setPage, setLoggedIn }) {
   };
 
   const goBack = () => {
+    localStorage.removeItem("temp2faToken");
     localStorage.removeItem("tempUserEmail");
+    localStorage.removeItem("tempUserRole");
+    localStorage.removeItem("tempUserId");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setLoggedIn(false);

@@ -218,7 +218,7 @@ router.post("/2fa/reset-login", async (req, res) => {
       .query(`
         SELECT TOP 1 *
         FROM users
-        WHERE email = @email
+        WHERE id = @id
       `);
 
     const user = result.recordset[0];

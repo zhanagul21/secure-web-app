@@ -136,12 +136,18 @@ function AddDocument({ setPage, setLoggedIn }) {
 
               <div>
                 <p className="text-sm font-medium text-sky-700">
-                  AuthGuard Locker
+                  Secure Web Application
                 </p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
-                  Жаңа құжат қосу
+                  Қорғалған құжат қосу
                 </h1>
                 <p className="mt-2 text-sm leading-6 text-slate-700 sm:text-base">
+                  Файл серверге сақталғанда шифрланады, ал қарау немесе жүктеу кезінде автоматты дешифрланады
+                </p>
+                <h1 className="hidden">
+                  Жаңа құжат қосу
+                </h1>
+                <p className="hidden">
                   Құжатты жүктеу, сипаттама қосу және жүйеге сақтау бөлімі
                 </p>
               </div>

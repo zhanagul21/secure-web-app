@@ -1,16 +1,47 @@
-# React + Vite
+# Secure Web Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Takyrip
 
-Currently, two official plugins are available:
+Kazakh: Kazirgi autentifikatsiya zhane shifrlau adisterin paidalana otyryp, korgalgan web-kosymshany azirleu.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Russian: Razrabotka zashchishchennogo web-prilozheniya s ispolzovaniem sovremennyh metodov autentifikatsii i shifrovaniya.
 
-## React Compiler
+English: Developing a secure web application using current authentication and encryption methods.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Project Goal
 
-## Expanding the ESLint configuration
+This web application protects user accounts and stores documents securely. The system uses email verification, JWT authorization, two-factor authentication, AES-256-GCM file encryption, and automatic decryption when a user previews, downloads, or opens a shared document.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Main Features
+
+- Email registration and verification code.
+- JWT-protected API routes.
+- Two-factor authentication.
+- Encrypted document storage on the server.
+- Automatic decryption for preview, download, and shared links.
+- Activity logging for account and document actions.
+- Temporary shared links for documents.
+
+## Technologies
+
+- Frontend: React, Vite, Tailwind CSS, Axios.
+- Backend: Node.js, Express, MSSQL.
+- Authentication: JWT, email verification, 2FA.
+- Encryption: AES-256-GCM.
+
+## Run
+
+Backend:
+
+```bash
+cd ../backend
+npm install
+npm run dev
+```
+
+Frontend:
+
+```bash
+npm install
+npm run dev
+```

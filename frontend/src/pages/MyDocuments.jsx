@@ -18,7 +18,9 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");
     localStorage.removeItem("tempUserId");
+    localStorage.removeItem("temp2faToken");
     setLoggedIn(false);
+    setPage("login");
   };
 
   const getDocuments = async () => {
@@ -27,6 +29,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
       setDocuments(res.data.documents || []);
       setMessage("");
     } catch (error) {
+      console.error("GET DOCUMENTS ERROR:", error);
       setMessage("Құжаттарды жүктеу кезінде қате шықты");
     }
   };
@@ -39,6 +42,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
       await API.delete(`/documents/delete/${id}`);
       getDocuments();
     } catch (error) {
+      console.error("DELETE DOCUMENT ERROR:", error);
       setMessage("Құжатты өшіру кезінде қате шықты");
     }
   };
@@ -96,6 +100,7 @@ function MyDocuments({ setPage, setLoggedIn, setSelectedDocumentId }) {
 
       if (!shareUrl) {
         setMessage("Сілтеме жасалмады");
+        setShareLoading(false);
         return;
       }
 

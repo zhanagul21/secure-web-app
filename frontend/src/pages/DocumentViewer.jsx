@@ -8,6 +8,10 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
 
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareDuration, setShareDuration] = useState(60);
+  const [shareLoading, setShareLoading] = useState(false);
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -126,6 +130,57 @@ ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
     }
   };
 
+  const openShareModal = () => {
+    setShareDuration(60);
+    setShareModalOpen(true);
+    setMessage("");
+  };
+
+  const closeShareModal = () => {
+    setShareModalOpen(false);
+    setShareDuration(60);
+    setShareLoading(false);
+  };
+
+  const createShareLink = async () => {
+    try {
+      setShareLoading(true);
+      setMessage("");
+
+      const res = await API.post(`/documents/share/${documentId}`, {
+        durationMinutes: shareDuration,
+      });
+
+      const shareUrl = res.data.shareUrl;
+
+      if (!shareUrl) {
+        setMessage("Сілтеме жасалмады");
+        setShareLoading(false);
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+
+      const durationLabel =
+        shareDuration === 15
+          ? "15 минут"
+          : shareDuration === 60
+          ? "1 сағат"
+          : shareDuration === 480
+          ? "8 сағат"
+          : "1 күн";
+
+      closeShareModal();
+      alert(`Сілтеме көшірілді:\n\n${shareUrl}\n\nЖарамдылық уақыты: ${durationLabel}`);
+    } catch (error) {
+      console.log("SHARE ERROR:", error);
+      setMessage(
+        error.response?.data?.message || "Сілтеме жасау кезінде қате шықты"
+      );
+      setShareLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadPreview();
 
@@ -142,9 +197,9 @@ ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
         <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-sky-700">AuthGuard Locker</p>
+              <p className="text-sm font-medium text-sky-700">Secure Web Application</p>
               <h1 className="text-2xl font-black text-slate-800">
-                Document Viewer
+                Құжатты қауіпсіз қарау
               </h1>
             </div>
 
@@ -161,6 +216,13 @@ ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
                 className="rounded-2xl bg-emerald-600 px-4 py-2.5 font-semibold text-white"
               >
                 Жүктеу
+              </button>
+
+              <button
+                onClick={openShareModal}
+                className="rounded-2xl bg-indigo-600 px-4 py-2.5 font-semibold text-white"
+              >
+                Бөлісу
               </button>
 
               <button
@@ -209,6 +271,82 @@ ${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}
             <div ref={previewRef} className="min-h-[400px]" />
           )}
         </div>
+
+        {shareModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-md rounded-[28px] border border-sky-200 bg-white p-6 shadow-xl">
+              <h3 className="text-2xl font-bold text-slate-800">
+                Бөлісу сілтемесі
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Сілтеменің жарамдылық уақытын таңдаңыз
+              </p>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setShareDuration(15)}
+                  className={`rounded-2xl px-4 py-3 font-semibold transition ${
+                    shareDuration === 15
+                      ? "bg-slate-700 text-white"
+                      : "bg-sky-100 text-slate-800"
+                  }`}
+                >
+                  15 минут
+                </button>
+
+                <button
+                  onClick={() => setShareDuration(60)}
+                  className={`rounded-2xl px-4 py-3 font-semibold transition ${
+                    shareDuration === 60
+                      ? "bg-slate-700 text-white"
+                      : "bg-sky-100 text-slate-800"
+                  }`}
+                >
+                  1 сағат
+                </button>
+
+                <button
+                  onClick={() => setShareDuration(480)}
+                  className={`rounded-2xl px-4 py-3 font-semibold transition ${
+                    shareDuration === 480
+                      ? "bg-slate-700 text-white"
+                      : "bg-sky-100 text-slate-800"
+                  }`}
+                >
+                  8 сағат
+                </button>
+
+                <button
+                  onClick={() => setShareDuration(1440)}
+                  className={`rounded-2xl px-4 py-3 font-semibold transition ${
+                    shareDuration === 1440
+                      ? "bg-slate-700 text-white"
+                      : "bg-sky-100 text-slate-800"
+                  }`}
+                >
+                  1 күн
+                </button>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={closeShareModal}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700"
+                >
+                  Болдырмау
+                </button>
+
+                <button
+                  onClick={createShareLink}
+                  disabled={shareLoading}
+                  className="w-full rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white"
+                >
+                  {shareLoading ? "Жасалуда..." : "Сілтеме жасау"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

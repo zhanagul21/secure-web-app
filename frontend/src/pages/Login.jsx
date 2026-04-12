@@ -30,14 +30,16 @@ function Login({ setLoggedIn, setPage }) {
       });
 
       if (res.data.requires2fa) {
-        localStorage.setItem("tempUserEmail", res.data.email);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.setItem("temp2faToken", res.data.tempToken);
         setPage("2fa");
         return;
       }
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.removeItem("tempUserEmail");
+      localStorage.removeItem("temp2faToken");
 
       setLoggedIn(true);
       setPage("dashboard");
@@ -110,9 +112,11 @@ function Login({ setLoggedIn, setPage }) {
         <div className="rounded-[32px] border border-sky-100 bg-white/95 p-8 shadow-sm">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-black text-slate-800">
-              AuthGuard Locker
+              Secure Web Application
             </h1>
-            <p className="mt-2 text-slate-600">Жүйеге кіру</p>
+            <p className="mt-2 text-slate-600">
+              Қазіргі аутентификация және шифрлау әдістеріне негізделген қорғалған веб-қосымша
+            </p>
           </div>
 
           {!showForgot ? (

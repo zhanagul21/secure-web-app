@@ -173,10 +173,10 @@ const getLogs = async () => {
                   {user?.full_name ? `, ${user.full_name}` : ""}
                 </p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
-                  AuthGuard Locker
+                  Secure Web Application
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700 sm:text-base">
-                  Құжаттар, белсенділік және аккаунт бойынша қысқаша ақпарат
+                  Қазіргі аутентификация және шифрлау әдістерін пайдалана отырып, қорғалған веб-қосымшаны әзірлеу
                 </p>
               </div>
             </div>

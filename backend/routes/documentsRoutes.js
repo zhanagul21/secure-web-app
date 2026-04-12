@@ -10,6 +10,7 @@ const mammoth = require("mammoth");
 const { execFile } = require("child_process");
 const { promisify } = require("util");
 const { sql, pool, poolConnect } = require("../config/db");
+const { encryptFile, decryptFile, isEncryptedFile } = require("../utils/encryption");
 
 const execFileAsync = promisify(execFile);
 
@@ -35,6 +36,7 @@ const upload = multer({
 const authMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "Токен жоқ" });
     }
@@ -90,6 +92,7 @@ const cleanupDir = (dirPath) => {
 const writeLog = async (userId, actionType, actionDetails) => {
   try {
     await poolConnect;
+
     await pool
       .request()
       .input("userId", sql.Int, userId)
@@ -120,6 +123,43 @@ const getDocumentByIdForUser = async (documentId, userId) => {
   return result.recordset[0];
 };
 
+const writeTempDocumentFile = (doc, buffer) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-preview-"));
+  const safeOriginalName = path.basename(doc.original_name || doc.filename || "document");
+  const tempPath = path.join(tempDir, safeOriginalName);
+
+  fs.writeFileSync(tempPath, buffer);
+
+  return { tempDir, tempPath };
+};
+
+const encryptUploadedFile = (file) => {
+  const storedBuffer = fs.readFileSync(file.path);
+
+  if (!isEncryptedFile(storedBuffer)) {
+    fs.writeFileSync(file.path, encryptFile(storedBuffer));
+  }
+};
+
+const getReadableDocument = (doc) => {
+  const filePath = path.join(uploadsDir, doc.filename);
+
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  const storedBuffer = fs.readFileSync(filePath);
+
+  if (!isEncryptedFile(storedBuffer)) {
+    return { filePath, buffer: storedBuffer, tempDir: null };
+  }
+
+  const buffer = decryptFile(storedBuffer);
+  const { tempDir, tempPath } = writeTempDocumentFile(doc, buffer);
+
+  return { filePath: tempPath, buffer, tempDir };
+};
+
 router.get("/my", authMiddleware, async (req, res) => {
   try {
     await poolConnect;
@@ -141,12 +181,19 @@ router.get("/my", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/add", authMiddleware, upload.single("file"), async (req, res) => {
+router.post("/add", authMiddleware, upload.single("file"), (req, res, next) => {
+  if (req.file) {
+    encryptUploadedFile(req.file);
+  }
+  next();
+}, async (req, res) => {
   try {
     const { title, category, description } = req.body;
 
     if (!title?.trim() || !category?.trim()) {
-      return res.status(400).json({ message: "Құжат атауы мен категория міндетті" });
+      return res
+        .status(400)
+        .json({ message: "Құжат атауы мен категория міндетті" });
     }
 
     if (!req.file) {
@@ -220,32 +267,34 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Файл аты базада жоқ" });
     }
 
-    const filePath = path.join(uploadsDir, doc.filename);
+    const readable = getReadableDocument(doc);
 
-    if (!fs.existsSync(filePath)) {
+    if (!readable) {
       return res.status(404).json({ message: "Файл серверде табылмады" });
     }
 
+    tempDirToDelete = readable.tempDir;
+
     if (doc.mime_type === "application/pdf") {
       res.setHeader("Content-Type", "application/pdf");
-      return res.sendFile(filePath);
+      return res.send(readable.buffer);
     }
 
     if (doc.mime_type?.startsWith("image/")) {
       res.setHeader("Content-Type", doc.mime_type);
-      return res.sendFile(filePath);
+      return res.send(readable.buffer);
     }
 
     if (doc.mime_type === "text/plain") {
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
-      return res.sendFile(filePath);
+      return res.send(readable.buffer);
     }
 
     if (
       doc.mime_type ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      const result = await mammoth.convertToHtml({ path: filePath });
+      const result = await mammoth.convertToHtml({ path: readable.filePath });
 
       return res.send(`
         <html>
@@ -274,7 +323,8 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
 
     if (doc.mime_type === "application/msword") {
       try {
-        const { convertedPath, tempDir } = await convertDocToDocx(filePath);
+        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
+        cleanupDir(tempDirToDelete);
         tempDirToDelete = tempDir;
 
         const result = await mammoth.convertToHtml({ path: convertedPath });
@@ -334,18 +384,27 @@ router.get("/download/:id", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Файл аты базада жоқ" });
     }
 
-    const filePath = path.join(uploadsDir, doc.filename);
+    const readable = getReadableDocument(doc);
 
-    if (!fs.existsSync(filePath)) {
+    if (!readable) {
       return res.status(404).json({ message: "Файл серверде табылмады" });
     }
 
-    await writeLog(req.user.id, "DOCUMENT_DOWNLOAD", `Құжат жүктелді: ${doc.title}`);
+    await writeLog(
+      req.user.id,
+      "DOCUMENT_DOWNLOAD",
+      `Құжат жүктелді: ${doc.title}`
+    );
 
-    return res.download(filePath, doc.original_name);
+    res.setHeader("Content-Type", doc.mime_type || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(doc.original_name || doc.filename)}"`);
+    res.send(readable.buffer);
+    return cleanupDir(readable.tempDir);
   } catch (error) {
     console.error("DOWNLOAD DOCUMENT ERROR:", error);
-    return res.status(500).json({ message: "Құжатты жүктеу кезінде қате шықты" });
+    return res.status(500).json({
+      message: "Құжатты жүктеу кезінде қате шықты",
+    });
   }
 });
 
@@ -357,13 +416,18 @@ router.delete("/delete/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Құжат табылмады" });
     }
 
-    const filePath = path.join(uploadsDir, doc.filename);
-
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    const filePath = doc.filename ? path.join(uploadsDir, doc.filename) : null;
 
     await poolConnect;
+
+    await pool
+      .request()
+      .input("documentId", sql.Int, parseInt(req.params.id, 10))
+      .query(`
+        DELETE FROM shared_links
+        WHERE document_id = @documentId
+      `);
+
     await pool
       .request()
       .input("documentId", sql.Int, parseInt(req.params.id, 10))
@@ -373,12 +437,22 @@ router.delete("/delete/:id", authMiddleware, async (req, res) => {
         WHERE id = @documentId AND user_id = @userId
       `);
 
-    await writeLog(req.user.id, "DOCUMENT_DELETE", `Құжат өшірілді: ${doc.title}`);
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    await writeLog(
+      req.user.id,
+      "DOCUMENT_DELETE",
+      `Құжат өшірілді: ${doc.title}`
+    );
 
     res.json({ message: "Құжат сәтті өшірілді" });
   } catch (error) {
     console.error("DELETE DOCUMENT ERROR:", error);
-    res.status(500).json({ message: "Құжатты өшіру кезінде қате шықты" });
+    res.status(500).json({
+      message: error.message || "Құжатты өшіру кезінде қате шықты",
+    });
   }
 });
 
@@ -395,16 +469,17 @@ router.post("/share/:id", authMiddleware, async (req, res) => {
     const expiresAt = new Date(Date.now() + Number(durationMinutes) * 60 * 1000);
 
     await poolConnect;
-   await pool
-  .request()
-  .input("documentId", sql.Int, doc.id)
-  .input("token", sql.NVarChar(255), token)
-  .input("expiresAt", sql.DateTime, expiresAt)
-  .input("createdBy", sql.Int, req.user.id)
-  .query(`
-    INSERT INTO shared_links (document_id, token, expires_at, created_by)
-    VALUES (@documentId, @token, @expiresAt, @createdBy)
-  `);
+
+    await pool
+      .request()
+      .input("documentId", sql.Int, doc.id)
+      .input("token", sql.NVarChar(255), token)
+      .input("expiresAt", sql.DateTime, expiresAt)
+      .input("createdBy", sql.Int, req.user.id)
+      .query(`
+        INSERT INTO shared_links (document_id, token, expires_at, created_by)
+        VALUES (@documentId, @token, @expiresAt, @createdBy)
+      `);
 
     await writeLog(
       req.user.id,
@@ -421,11 +496,15 @@ router.post("/share/:id", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error("SHARE DOCUMENT ERROR:", error);
-    res.status(500).json({ message: error.message || "Сілтеме жасау кезінде қате шықты" });
+    res.status(500).json({
+      message: error.message || "Сілтеме жасау кезінде қате шықты",
+    });
   }
 });
 
 router.get("/shared/:token", async (req, res) => {
+  let tempDirToDelete = null;
+
   try {
     await poolConnect;
 
@@ -450,31 +529,108 @@ router.get("/shared/:token", async (req, res) => {
       return res.status(410).json({ message: "Сілтеменің уақыты өтіп кеткен" });
     }
 
-    const filePath = path.join(uploadsDir, doc.filename);
+    res.setHeader("X-Expires-At", new Date(doc.expires_at).toISOString());
 
-    if (!fs.existsSync(filePath)) {
+    const readable = getReadableDocument(doc);
+
+    if (!readable) {
       return res.status(404).json({ message: "Файл серверде табылмады" });
     }
 
+    tempDirToDelete = readable.tempDir;
+
     if (doc.mime_type === "application/pdf") {
       res.setHeader("Content-Type", "application/pdf");
-      return res.sendFile(filePath);
+      return res.send(readable.buffer);
     }
 
     if (doc.mime_type?.startsWith("image/")) {
       res.setHeader("Content-Type", doc.mime_type);
-      return res.sendFile(filePath);
+      return res.send(readable.buffer);
     }
 
     if (doc.mime_type === "text/plain") {
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
-      return res.sendFile(filePath);
+      return res.send(readable.buffer);
     }
 
-    return res.download(filePath, doc.original_name);
+    if (
+      doc.mime_type ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
+      const resultHtml = await mammoth.convertToHtml({ path: readable.filePath });
+
+      return res.send(`
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+            <title>${doc.original_name}</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                padding: 24px;
+                line-height: 1.6;
+                max-width: 900px;
+                margin: 0 auto;
+                background: #fff;
+                color: #111;
+              }
+              img { max-width: 100%; }
+              table { border-collapse: collapse; width: 100%; }
+              td, th { border: 1px solid #ccc; padding: 8px; }
+            </style>
+          </head>
+          <body>${resultHtml.value}</body>
+        </html>
+      `);
+    }
+
+    if (doc.mime_type === "application/msword") {
+      try {
+        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
+        cleanupDir(tempDirToDelete);
+        tempDirToDelete = tempDir;
+
+        const resultHtml = await mammoth.convertToHtml({ path: convertedPath });
+
+        return res.send(`
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <title>${doc.original_name}</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  padding: 24px;
+                  line-height: 1.6;
+                  max-width: 900px;
+                  margin: 0 auto;
+                  background: #fff;
+                  color: #111;
+                }
+                img { max-width: 100%; }
+                table { border-collapse: collapse; width: 100%; }
+                td, th { border: 1px solid #ccc; padding: 8px; }
+              </style>
+            </head>
+            <body>${resultHtml.value}</body>
+          </html>
+        `);
+      } catch (error) {
+        return res.status(400).json({
+          message: "DOC preview үшін LibreOffice керек. DOCX/PDF қолданған дұрыс.",
+        });
+      }
+    }
+
+    return res.status(400).json({
+      message: "Бұл файл түріне preview жоқ. Төмендегі батырмамен жүктеп алуға болады.",
+    });
   } catch (error) {
     console.error("GET SHARED DOCUMENT ERROR:", error);
     res.status(500).json({ message: "Shared preview кезінде қате шықты" });
+  } finally {
+    cleanupDir(tempDirToDelete);
   }
 });
 
@@ -503,13 +659,18 @@ router.get("/shared/:token/download", async (req, res) => {
       return res.status(410).json({ message: "Сілтеменің уақыты өтіп кеткен" });
     }
 
-    const filePath = path.join(uploadsDir, doc.filename);
+    res.setHeader("X-Expires-At", new Date(doc.expires_at).toISOString());
 
-    if (!fs.existsSync(filePath)) {
+    const readable = getReadableDocument(doc);
+
+    if (!readable) {
       return res.status(404).json({ message: "Файл серверде табылмады" });
     }
 
-    return res.download(filePath, doc.original_name);
+    res.setHeader("Content-Type", doc.mime_type || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(doc.original_name || doc.filename)}"`);
+    res.send(readable.buffer);
+    return cleanupDir(readable.tempDir);
   } catch (error) {
     console.error("DOWNLOAD SHARED DOCUMENT ERROR:", error);
     res.status(500).json({ message: "Shared download кезінде қате шықты" });
