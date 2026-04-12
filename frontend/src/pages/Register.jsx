@@ -28,7 +28,10 @@ function Register({ onClose }) {
         email: email.trim(),
       });
 
-      setMessage(res.data.message || "Код жіберілді");
+      const fallbackCodeText = res.data.fallbackCode
+        ? ` Код: ${res.data.fallbackCode}`
+        : "";
+      setMessage((res.data.message || "Код жіберілді") + fallbackCodeText);
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
@@ -89,7 +92,10 @@ function Register({ onClose }) {
         password: password.trim(),
       });
 
-      setMessage(res.data.message || "Тіркелу сәтті аяқталды");
+      setMessage(
+        res.data.message ||
+          "Тіркелу сәтті аяқталды"
+      );
 
       setTimeout(() => {
         setStep(1);

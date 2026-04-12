@@ -165,7 +165,19 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
           </div>
         )}
 
-        {message && <div className="mt-6 rounded-2xl border border-rose-100 bg-white p-4 text-slate-700">{message}</div>}
+        {message && (
+          <div className="mt-6 rounded-2xl border border-rose-100 bg-white p-4 text-slate-700">
+            <div>{message}</div>
+            {!loading && (
+              <button
+                onClick={handleDownload}
+                className="mt-4 rounded-2xl bg-emerald-600 px-4 py-2.5 font-semibold text-white"
+              >
+                Файлды жүктеп ашу
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="mt-6 rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm">
           {loading ? (

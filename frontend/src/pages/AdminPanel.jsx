@@ -145,7 +145,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
         <div className="mb-6 mt-6">
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-            Admin Panel
+            Қолданушыларды басқару
           </h2>
           <p className="mt-2 text-slate-600">
             Қолданушыларды басқару және қауіпсіздік бақылауы
