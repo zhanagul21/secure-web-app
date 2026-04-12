@@ -3,7 +3,7 @@ import API from "../services/api";
 
 function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   const [document, setDocument] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewBlobUrl, setPreviewBlobUrl] = useState("");
   const [mimeType, setMimeType] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -13,10 +13,6 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   const [shareUrl, setShareUrl] = useState("");
   const [shareMessage, setShareMessage] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
-
-  const apiBase =
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://authguard-backend-7mbc.onrender.com/api";
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -46,13 +42,30 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
 
       setDocument(doc);
       setMimeType(doc.mime_type || "");
-      setPreviewUrl(`${apiBase}/documents/preview/${documentId}`);
       setMessage("");
     } catch (error) {
       console.log("VIEW ERROR:", error);
-      setMessage(error.response?.data?.message || "Файл ашылмады");
-    } finally {
-      setLoading(false);
+      setMessage(error.response?.data?.message || "Құжат ашылмады");
+    }
+  };
+
+  const loadPreview = async () => {
+    try {
+      const res = await API.get(`/documents/preview/${documentId}`, {
+        responseType: "blob",
+      });
+
+      const blobType =
+        res.data.type || document?.mime_type || "application/octet-stream";
+
+      const blob = new Blob([res.data], { type: blobType });
+      const objectUrl = window.URL.createObjectURL(blob);
+
+      setPreviewBlobUrl(objectUrl);
+      setMessage("");
+    } catch (error) {
+      console.log("PREVIEW ERROR:", error);
+      setMessage(error.response?.data?.message || "Preview ашылмады");
     }
   };
 
@@ -94,16 +107,16 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
       });
 
       if (!res.data.shareUrl) {
-        setShareMessage("Ссылка жасалмады");
+        setShareMessage("Сілтеме жасалмады");
         return;
       }
 
       setShareUrl(res.data.shareUrl);
-      setShareMessage("Ссылка дайын");
+      setShareMessage("Сілтеме дайын");
     } catch (error) {
       console.log("SHARE ERROR:", error);
       setShareMessage(
-        error.response?.data?.message || "Ссылка жасау кезінде қате шықты"
+        error.response?.data?.message || "Сілтеме жасау кезінде қате шықты"
       );
     } finally {
       setShareLoading(false);
@@ -114,23 +127,43 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
     try {
       if (!shareUrl) return;
       await navigator.clipboard.writeText(shareUrl);
-      setShareMessage("Ссылка көшірілді");
-    } catch (error) {
+      setShareMessage("Сілтеме көшірілді");
+    } catch {
       setShareMessage("Сілтемені көшіру мүмкін болмады");
     }
   };
 
   useEffect(() => {
-    loadDocument();
+    let mounted = true;
+
+    const init = async () => {
+      setLoading(true);
+      await loadDocument();
+      if (mounted) {
+        await loadPreview();
+      }
+      if (mounted) {
+        setLoading(false);
+      }
+    };
+
+    init();
+
+    return () => {
+      mounted = false;
+      if (previewBlobUrl) {
+        window.URL.revokeObjectURL(previewBlobUrl);
+      }
+    };
   }, [documentId]);
 
   const renderPreview = () => {
-    if (!previewUrl) return null;
+    if (!previewBlobUrl) return null;
 
     if (mimeType?.startsWith("image/")) {
       return (
         <img
-          src={previewUrl}
+          src={previewBlobUrl}
           alt="Document preview"
           className="mx-auto max-h-[80vh] rounded-[24px] border border-sky-100"
         />
@@ -139,7 +172,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
 
     return (
       <iframe
-        src={previewUrl}
+        src={previewBlobUrl}
         title="Document Preview"
         className="h-[80vh] w-full rounded-[24px] border border-sky-100"
       />
