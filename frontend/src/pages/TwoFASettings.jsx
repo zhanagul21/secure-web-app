@@ -118,16 +118,16 @@ function TwoFASettings({ setPage, setLoggedIn, logoutEverywhere }) {
         {message && <div className="rounded-2xl border border-sky-100 bg-white/95 px-4 py-3 text-slate-700 shadow-sm">{message}</div>}
 
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[32px] border border-white/70 bg-slate-900 p-6 text-white shadow-[0_20px_70px_rgba(15,23,42,0.18)]">
-            <div className="rounded-3xl bg-white/5 p-5">
-              <div className="text-sm uppercase tracking-[0.18em] text-slate-300">Қауіпсіздік статусы</div>
-              <div className="mt-4 text-3xl font-black">{user?.twofa_enabled ? "2FA қосулы" : "2FA өшірулі"}</div>
-              <p className="mt-3 text-slate-300">Бұл функция аккаунтқа кіргенде қосымша бір реттік код сұратады.</p>
+          <div className="rounded-[32px] border border-white/70 bg-white/95 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
+            <div className="rounded-3xl border border-sky-100 bg-sky-50 p-5">
+              <div className="text-sm uppercase tracking-[0.18em] text-sky-700">Қауіпсіздік статусы</div>
+              <div className="mt-4 text-3xl font-black text-slate-900">{user?.twofa_enabled ? "2FA қосулы" : "2FA өшірулі"}</div>
+              <p className="mt-3 text-slate-600">Бұл функция аккаунтқа кіргенде қосымша бір реттік код сұратады.</p>
             </div>
 
-            <div className="mt-6 rounded-3xl bg-white/5 p-5">
-              <div className="text-sm font-semibold text-slate-200">Сканерлейтін қолданбалар</div>
-              <ul className="mt-3 space-y-2 text-slate-300">
+            <div className="mt-6 rounded-3xl border border-sky-100 bg-sky-50 p-5">
+              <div className="text-sm font-semibold text-slate-800">Сканерлейтін қолданбалар</div>
+              <ul className="mt-3 space-y-2 text-slate-600">
                 <li>Google Authenticator</li>
                 <li>Microsoft Authenticator</li>
                 <li>2FAS Auth</li>

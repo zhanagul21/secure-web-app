@@ -104,18 +104,18 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
             <p className="text-sm font-medium text-slate-600">Барлық құжаттар</p>
             <p className="mt-3 text-3xl font-black text-slate-800">{stats.totalDocuments}</p>
           </div>
-          <div className="rounded-[28px] border border-white/80 bg-slate-900 p-6 text-white shadow-[0_18px_60px_rgba(15,23,42,0.18)]">
-            <p className="text-sm font-medium text-slate-300">Қаралған құжаттар</p>
-            <p className="mt-3 text-3xl font-black">{stats.totalViews}</p>
+          <div className="rounded-[28px] border border-sky-200 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
+            <p className="text-sm font-medium text-slate-600">Қаралған құжаттар</p>
+            <p className="mt-3 text-3xl font-black text-slate-800">{stats.totalViews}</p>
           </div>
           <div className="rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <p className="text-sm font-medium text-slate-600">Жүктелген құжаттар</p>
             <p className="mt-3 text-3xl font-black text-slate-800">{stats.totalDownloads}</p>
           </div>
-          <div className="rounded-[28px] border border-sky-200 bg-[linear-gradient(135deg,#0f172a,#1e293b)] p-6 text-white shadow-[0_18px_60px_rgba(15,23,42,0.20)]">
-            <p className="text-sm font-medium text-slate-300">Қауіпсіздік</p>
-            <p className="mt-3 text-2xl font-black">2FA және шифрлау</p>
-            <p className="mt-2 text-sm text-slate-300">Жүйе қорғаныс модульдері белсенді</p>
+          <div className="rounded-[28px] border border-sky-200 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
+            <p className="text-sm font-medium text-slate-600">Қауіпсіздік</p>
+            <p className="mt-3 text-2xl font-black text-slate-800">2FA және шифрлау</p>
+            <p className="mt-2 text-sm text-slate-600">Жүйе қорғаныс модульдері белсенді</p>
           </div>
         </div>
 

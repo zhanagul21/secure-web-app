@@ -126,9 +126,9 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
   };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(135deg,#020617_0%,#0f172a_35%,#111827_100%)] text-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#0f172a_0,#111827_34%,#1e293b_100%)] text-white">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur">
+        <div className="rounded-[32px] border border-sky-300/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.88))] p-6 shadow-[0_24px_90px_rgba(0,0,0,0.38)] backdrop-blur">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-500/15 text-3xl ring-1 ring-sky-400/30">
@@ -156,19 +156,19 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
         )}
 
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur">
+          <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 shadow-lg backdrop-blur">
             <div className="text-sm text-slate-400">Барлық қолданушылар</div>
             <div className="mt-3 text-4xl font-black text-white">{roleStats.total}</div>
           </div>
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur">
+          <div className="rounded-[28px] border border-sky-300/10 bg-[linear-gradient(135deg,rgba(59,130,246,0.18),rgba(255,255,255,0.04))] p-6 shadow-lg backdrop-blur">
             <div className="text-sm text-slate-400">Admin қолданушылар</div>
             <div className="mt-3 text-4xl font-black text-sky-300">{roleStats.admins}</div>
           </div>
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-lg backdrop-blur">
+          <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 shadow-lg backdrop-blur">
             <div className="text-sm text-slate-400">Қарапайым қолданушылар</div>
             <div className="mt-3 text-4xl font-black text-white">{roleStats.regularUsers}</div>
           </div>
-          <div className="rounded-[28px] border border-emerald-400/20 bg-emerald-400/10 p-6 shadow-lg backdrop-blur">
+          <div className="rounded-[28px] border border-emerald-400/20 bg-[linear-gradient(135deg,rgba(16,185,129,0.22),rgba(255,255,255,0.03))] p-6 shadow-lg backdrop-blur">
             <div className="text-sm text-emerald-200">Қорғаныс статусы</div>
             <div className="mt-3 text-2xl font-black text-white">Шифрлау қосулы</div>
             <div className="mt-2 text-sm text-emerald-100">Storage: {appStats?.storage_mode || "database"}</div>
@@ -194,7 +194,7 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <form onSubmit={createUser} className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <form onSubmit={createUser} className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-6 backdrop-blur">
             <h2 className="text-2xl font-black text-white">Қолданушы қосу</h2>
             <p className="mt-2 text-slate-300">Жаңа user немесе admin аккаунтын осы жерден жасай аласыз.</p>
 
@@ -211,7 +211,7 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
             <button type="submit" className="mt-5 rounded-2xl bg-sky-500 px-5 py-3 font-semibold text-white">Қолданушы қосу</button>
           </form>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-6 backdrop-blur">
             <h2 className="text-2xl font-black text-white">Соңғы оқиғалар</h2>
             <div className="mt-5 space-y-3">
               {latestLogs.length === 0 ? (
@@ -228,7 +228,7 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur">
+        <div className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-6 backdrop-blur">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
               <label className="mb-2 block font-medium text-slate-300">Іздеу</label>
@@ -251,7 +251,7 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.25)] backdrop-blur">
+        <div className="mt-6 rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6 shadow-[0_20px_70px_rgba(0,0,0,0.25)] backdrop-blur">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-black text-white">Қолданушылар</h2>
