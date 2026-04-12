@@ -88,7 +88,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
         <div className="rounded-[32px] border border-sky-200 bg-white/90 p-6 shadow-sm">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold text-sky-700">Secure Web Application</p>
+              <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">Менің қорғалған құжаттарым</h1>
               <p className="mt-2 text-sm leading-6 text-slate-700 sm:text-base">
                 Құжаттар серверде шифрланған түрде сақталады, ашу және жүктеу кезінде автоматты дешифрланады.

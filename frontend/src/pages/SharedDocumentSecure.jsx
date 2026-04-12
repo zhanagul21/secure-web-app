@@ -86,6 +86,7 @@ function SharedDocumentSecure({ token }) {
         <div className="mb-6 rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
+              <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
               <h1 className="text-2xl font-bold text-slate-800">Ортақ қорғалған құжат</h1>
               <p className="mt-2 text-slate-600">Уақытша сілтеме арқылы ашылды. Құжат серверде дешифрланып көрсетіледі.</p>
             </div>

@@ -8,6 +8,8 @@ function AddDocumentSecure({ setPage, setLoggedIn }) {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const previewUrl = useMemo(() => {
     if (!file || !file.type.startsWith("image/")) return null;
@@ -45,6 +47,9 @@ function AddDocumentSecure({ setPage, setLoggedIn }) {
     }
 
     try {
+      setLoading(true);
+      setUploadProgress(0);
+
       const formData = new FormData();
       formData.append("title", title.trim());
       formData.append("category", category.trim());
@@ -53,12 +58,23 @@ function AddDocumentSecure({ setPage, setLoggedIn }) {
 
       const res = await API.post("/documents/add", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          if (!progressEvent.total) return;
+          setUploadProgress(
+            Math.min(
+              100,
+              Math.round((progressEvent.loaded / progressEvent.total) * 100)
+            )
+          );
+        },
       });
 
       setMessage(res.data.message || "Құжат жүктелді және серверде шифрланды.");
       setTimeout(() => setPage("documents"), 700);
     } catch (error) {
       setMessage(error.response?.data?.message || "Құжат жүктеу кезінде қате шықты.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,12 +97,12 @@ function AddDocumentSecure({ setPage, setLoggedIn }) {
         <div className="rounded-[32px] border border-sky-200 bg-white/90 p-6 shadow-sm">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold text-sky-700">Secure Web Application</p>
+              <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
-                Қорғалған құжат қосу
+                Қауіпсіз құжат жүктеу
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700 sm:text-base">
-                Файл серверге сақталғанда AES-256-GCM арқылы шифрланады, ал қарау немесе жүктеу кезінде автоматты дешифрланады.
+                Файл серверде шифрланған күйде сақталады, ал ашу мен жүктеу кезінде ғана уақытша дешифрланады.
               </p>
             </div>
 
@@ -127,15 +143,28 @@ function AddDocumentSecure({ setPage, setLoggedIn }) {
               {file && (
                 <div className="rounded-2xl border border-sky-200 bg-sky-100 p-4">
                   <p className="break-all font-semibold text-slate-900">{file.name}</p>
-                  <p className="mt-1 text-sm text-slate-700">{(file.size / 1024).toFixed(1)} KB</p>
+                  <p className="mt-1 text-sm text-slate-700">
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
                   <p className="mt-2 text-sm font-semibold text-emerald-700">Сақтау кезінде шифрланады</p>
+                  {loading && (
+                    <p className="mt-2 text-sm text-sky-700">
+                      Жүктелу барысы: {uploadProgress}%
+                    </p>
+                  )}
                 </div>
               )}
 
               {message && <div className="rounded-2xl border border-sky-200 bg-sky-100 p-4 text-slate-700">{message}</div>}
 
-              <button type="submit" className="w-full rounded-2xl bg-slate-700 py-3 font-semibold text-white transition hover:bg-slate-800">
-                Құжатты шифрлап жүктеу
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-slate-700 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:opacity-70"
+              >
+                {loading
+                  ? `Жүктеліп жатыр... ${uploadProgress}%`
+                  : "Құжатты шифрлап жүктеу"}
               </button>
             </div>
           </form>

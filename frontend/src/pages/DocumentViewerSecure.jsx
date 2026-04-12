@@ -7,6 +7,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [previewType, setPreviewType] = useState("none");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDuration, setShareDuration] = useState(60);
   const [shareLoading, setShareLoading] = useState(false);
@@ -17,6 +18,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl("");
     }
+    setPreviewType("none");
   };
 
   const logout = () => {
@@ -32,6 +34,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
     try {
       setLoading(true);
       setMessage("");
+      setPreviewType("none");
 
       const metaRes = await API.get(`/documents/view/${documentId}`);
       setDocumentData(metaRes.data.document);
@@ -57,11 +60,13 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       clearPreview();
 
       if (contentType.includes("application/pdf") || contentType.startsWith("image/")) {
+        setPreviewType("media");
         setPreviewUrl(URL.createObjectURL(res.data));
         return;
       }
 
       if (contentType.includes("text/plain")) {
+        setPreviewType("text");
         const text = await res.data.text();
         if (previewRef.current) {
           previewRef.current.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word; font-family: Arial, sans-serif; padding: 16px;">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
@@ -70,13 +75,16 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       }
 
       if (contentType.includes("text/html")) {
+        setPreviewType("html");
         const html = await res.data.text();
         if (previewRef.current) previewRef.current.innerHTML = html;
         return;
       }
 
+      setPreviewType("unsupported");
       setMessage("Бұл файл түріне preview қолдау көрсетілмейді. Файлды жүктеп алуға болады.");
     } catch (error) {
+      setPreviewType("error");
       setMessage(error.response?.data?.message || error.message || "Preview қатесі.");
     } finally {
       setLoading(false);
@@ -136,7 +144,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
         <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-sky-700">Secure Web Application</p>
+              <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
               <h1 className="text-2xl font-black text-slate-800">Құжатты қауіпсіз қарау</h1>
               <p className="mt-2 text-sm text-slate-600">Бұл бетте файл серверден дешифрланып көрсетіледі.</p>
             </div>
@@ -170,6 +178,23 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
                 <img src={previewUrl} alt="preview" className="mx-auto max-h-[85vh] rounded-[24px] border border-sky-100" />
               </div>
             )
+          ) : previewType === "unsupported" ? (
+            <div className="flex min-h-[420px] items-center justify-center rounded-[24px] border border-dashed border-sky-200 bg-sky-50 p-8 text-center">
+              <div>
+                <p className="text-lg font-semibold text-slate-800">
+                  Алдын ала қарау бұл файл түрі үшін қолжетімсіз
+                </p>
+                <p className="mt-2 text-slate-600">
+                  Құжат сақталған, оны дәл қазір дешифрлап жүктеп ашуға болады.
+                </p>
+                <button
+                  onClick={handleDownload}
+                  className="mt-5 rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-white"
+                >
+                  Дешифрлап жүктеу
+                </button>
+              </div>
+            </div>
           ) : (
             <div ref={previewRef} className="min-h-[400px]" />
           )}

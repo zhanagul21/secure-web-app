@@ -35,6 +35,7 @@ function App() {
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");
     localStorage.removeItem("tempUserId");
+    localStorage.removeItem("temp2faToken");
 
     setLoggedIn(false);
     setPage("login");

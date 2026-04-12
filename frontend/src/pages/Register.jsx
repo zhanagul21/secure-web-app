@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../services/api";
+import logo from "../assets/logo.png";
 
 function Register({ onClose }) {
   const [step, setStep] = useState(1);
@@ -113,8 +114,12 @@ function Register({ onClose }) {
         <div className="overflow-hidden rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-sm sm:p-9">
           <div className="mb-8 flex items-start justify-between gap-4">
             <div className="w-full text-center sm:text-left">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200 sm:mx-0">
-                ✨
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 shadow-sm ring-1 ring-sky-200 sm:mx-0">
+                <img
+                  src={logo}
+                  alt="AuthGuard Locker"
+                  className="h-10 w-auto object-contain"
+                />
               </div>
 
               <h2 className="text-3xl font-bold text-slate-800 md:text-4xl">
@@ -122,7 +127,7 @@ function Register({ onClose }) {
               </h2>
 
               <p className="mt-3 text-slate-700">
-                Жаңа аккаунт жасау үшін төмендегі қадамдарды орындаңыз
+                AuthGuard Locker жүйесіне қосылу үшін email-ді растаңыз да, аккаунтыңызды аяқтаңыз
               </p>
             </div>
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../services/api";
+import logo from "../assets/logo.png";
 
 function Login({ setLoggedIn, setPage }) {
   const [email, setEmail] = useState("");
@@ -111,11 +112,21 @@ function Login({ setLoggedIn, setPage }) {
       <div className="mx-auto max-w-md">
         <div className="rounded-[32px] border border-sky-100 bg-white/95 p-8 shadow-sm">
           <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-sky-100 shadow-sm ring-1 ring-sky-200">
+              <img
+                src={logo}
+                alt="AuthGuard Locker"
+                className="h-12 w-auto object-contain"
+              />
+            </div>
+            <p className="text-xs font-semibold uppercase text-sky-700">
+              Қауіпсіз құжат платформасы
+            </p>
             <h1 className="text-3xl font-black text-slate-800">
-              Secure Web Application
+              AuthGuard Locker
             </h1>
             <p className="mt-2 text-slate-600">
-              Қазіргі аутентификация және шифрлау әдістеріне негізделген қорғалған веб-қосымша
+              Құжаттарды шифрлап сақтау, қауіпсіз бөлісу және қолжетімділікті басқаруға арналған жүйе.
             </p>
           </div>
 
