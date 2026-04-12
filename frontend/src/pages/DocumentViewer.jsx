@@ -23,6 +23,12 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
     setLoggedIn(false);
   };
 
+  const apiBase =
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://authguard-backend-7mbc.onrender.com/api";
+
+  const backendBase = apiBase.replace("/api", "");
+
   const loadDocument = async () => {
     try {
       if (!documentId) {
@@ -40,12 +46,11 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         return;
       }
 
+      const rawUrl = `${backendBase}/uploads/${encodeURIComponent(doc.filename)}`;
+
       setDocument(doc);
       setMimeType(doc.mime_type || "");
-      setFileUrl(
-        `${import.meta.env.VITE_API_BASE_URL || "https://authguard-backend-7mbc.onrender.com/api"}`
-          .replace("/api", "") + `/uploads/${doc.filename}`
-      );
+      setFileUrl(rawUrl);
       setMessage("");
     } catch (error) {
       console.log("VIEW ERROR:", error);
@@ -72,9 +77,10 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
       document.body.removeChild(link);
 
       window.URL.revokeObjectURL(url);
+      setMessage("");
     } catch (error) {
       console.log("DOWNLOAD ERROR:", error);
-      setMessage("Файлды жүктеу мүмкін болмады");
+      setMessage(error.response?.data?.message || "Файлды жүктеу мүмкін болмады");
     }
   };
 
@@ -88,14 +94,12 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         durationMinutes,
       });
 
-      const backendShareUrl = res.data.shareUrl;
-
-      if (!backendShareUrl) {
+      if (!res.data.shareUrl) {
         setShareMessage("Ссылка жасалмады");
         return;
       }
 
-      setShareUrl(backendShareUrl);
+      setShareUrl(res.data.shareUrl);
       setShareMessage("Ссылка дайын");
     } catch (error) {
       console.log("SHARE ERROR:", error);
@@ -120,6 +124,15 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   useEffect(() => {
     loadDocument();
   }, [documentId]);
+
+  const isOfficeFile = () => {
+    return [
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ].includes(mimeType);
+  };
 
   const renderPreview = () => {
     if (!fileUrl) return null;
@@ -151,6 +164,20 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
         <iframe
           src={fileUrl}
           title="Text Viewer"
+          className="h-[80vh] w-full rounded-[24px] border border-sky-100"
+        />
+      );
+    }
+
+    if (isOfficeFile()) {
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+        fileUrl
+      )}`;
+
+      return (
+        <iframe
+          src={officeViewerUrl}
+          title="Office Viewer"
           className="h-[80vh] w-full rounded-[24px] border border-sky-100"
         />
       );
@@ -270,9 +297,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
             <div className="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl">
               <h3 className="text-xl font-bold text-slate-800">Құжатты бөлісу</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                Уақытша сілтеме жасаңыз
-              </p>
+              <p className="mt-2 text-sm text-slate-600">Уақытша сілтеме жасаңыз</p>
 
               <div className="mt-5">
                 <label className="mb-2 block text-sm font-medium text-slate-700">

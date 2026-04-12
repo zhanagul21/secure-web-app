@@ -4,6 +4,11 @@ import API from "../services/api";
 function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState("");
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
+  const [manualCode, setManualCode] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [loading2FA, setLoading2FA] = useState(false);
 
   const logout = () => {
     if (logoutEverywhere) {
@@ -23,6 +28,59 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
       setUser(res.data.user);
     } catch (error) {
       setMessage("Профиль жүктеу қатесі");
+    }
+  };
+
+  const handleSetup2FA = async () => {
+    try {
+      setLoading2FA(true);
+      setMessage("");
+
+      const res = await API.post("/auth/setup-2fa");
+      setQrCodeDataUrl(res.data.qrCodeDataUrl);
+      setManualCode(res.data.manualCode);
+      setShow2FASetup(true);
+    } catch (error) {
+      setMessage(error.response?.data?.message || "2FA setup қатесі");
+    } finally {
+      setLoading2FA(false);
+    }
+  };
+
+  const handleEnable2FA = async () => {
+    try {
+      setLoading2FA(true);
+      setMessage("");
+
+      const res = await API.post("/auth/enable-2fa", {
+        token: otpCode,
+      });
+
+      setMessage(res.data.message || "2FA сәтті қосылды");
+      setShow2FASetup(false);
+      setOtpCode("");
+      setQrCodeDataUrl("");
+      setManualCode("");
+      getProfile();
+    } catch (error) {
+      setMessage(error.response?.data?.message || "2FA қосу қатесі");
+    } finally {
+      setLoading2FA(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    try {
+      setLoading2FA(true);
+      setMessage("");
+
+      const res = await API.post("/auth/disable-2fa");
+      setMessage(res.data.message || "2FA өшірілді");
+      getProfile();
+    } catch (error) {
+      setMessage(error.response?.data?.message || "2FA өшіру қатесі");
+    } finally {
+      setLoading2FA(false);
     }
   };
 
@@ -48,13 +106,22 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button onClick={() => setPage("dashboard")} className="rounded-xl bg-slate-700 px-4 py-2 text-white">
+              <button
+                onClick={() => setPage("dashboard")}
+                className="rounded-xl bg-slate-700 px-4 py-2 text-white"
+              >
                 Басты бет
               </button>
-              <button onClick={() => setPage("documents")} className="rounded-xl bg-slate-700 px-4 py-2 text-white">
+              <button
+                onClick={() => setPage("documents")}
+                className="rounded-xl bg-slate-700 px-4 py-2 text-white"
+              >
                 Құжаттар
               </button>
-              <button onClick={logout} className="rounded-xl bg-slate-700 px-4 py-2 text-white">
+              <button
+                onClick={logout}
+                className="rounded-xl bg-slate-700 px-4 py-2 text-white"
+              >
                 Шығу
               </button>
             </div>
@@ -62,7 +129,7 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
         </div>
 
         {message && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <div className="rounded-2xl border border-sky-200 bg-white/95 px-4 py-3 text-slate-700">
             {message}
           </div>
         )}
@@ -81,12 +148,16 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
 
               <div className="rounded-2xl bg-sky-50 p-4">
                 <p className="text-sm text-slate-500">Email</p>
-                <p className="mt-1 text-lg font-semibold text-slate-800">{user.email}</p>
+                <p className="mt-1 text-lg font-semibold text-slate-800">
+                  {user.email}
+                </p>
               </div>
 
               <div className="rounded-2xl bg-sky-50 p-4">
                 <p className="text-sm text-slate-500">Рөлі</p>
-                <p className="mt-1 text-lg font-semibold text-slate-800">{user.role}</p>
+                <p className="mt-1 text-lg font-semibold text-slate-800">
+                  {user.role}
+                </p>
               </div>
 
               <div className="rounded-2xl bg-sky-50 p-4">
@@ -99,9 +170,84 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
               <div className="rounded-2xl bg-sky-50 p-4 sm:col-span-2">
                 <p className="text-sm text-slate-500">Тіркелген уақыты</p>
                 <p className="mt-1 text-lg font-semibold text-slate-800">
-                  {user.created_at ? new Date(user.created_at).toLocaleString() : "Белгісіз"}
+                  {user.created_at
+                    ? new Date(user.created_at).toLocaleString()
+                    : "Белгісіз"}
                 </p>
               </div>
+            </div>
+          )}
+
+          {user && !user.twofa_enabled && (
+            <div className="mt-6 rounded-2xl border border-sky-100 bg-sky-50 p-5">
+              <h3 className="text-lg font-bold text-slate-800">2FA қосу</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Google Authenticator арқылы екі факторлы аутентификацияны қосыңыз
+              </p>
+
+              {!show2FASetup ? (
+                <button
+                  onClick={handleSetup2FA}
+                  disabled={loading2FA}
+                  className="mt-4 rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white"
+                >
+                  {loading2FA ? "Дайындалуда..." : "2FA баптау"}
+                </button>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {qrCodeDataUrl && (
+                    <div className="rounded-2xl bg-white p-4">
+                      <img
+                        src={qrCodeDataUrl}
+                        alt="2FA QR"
+                        className="mx-auto max-w-[220px]"
+                      />
+                    </div>
+                  )}
+
+                  {manualCode && (
+                    <div className="rounded-2xl bg-white p-4">
+                      <p className="text-sm text-slate-500">Қолмен енгізу коды</p>
+                      <p className="mt-2 break-all font-semibold text-slate-800">
+                        {manualCode}
+                      </p>
+                    </div>
+                  )}
+
+                  <input
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    placeholder="Authenticator кодын енгізіңіз"
+                    className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 outline-none"
+                  />
+
+                  <button
+                    onClick={handleEnable2FA}
+                    disabled={loading2FA}
+                    className="rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-white"
+                  >
+                    {loading2FA ? "Қосылуда..." : "2FA қосу"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {user && user.twofa_enabled && (
+            <div className="mt-6 rounded-2xl border border-sky-100 bg-sky-50 p-5">
+              <h3 className="text-lg font-bold text-slate-800">2FA басқару</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Екі факторлы аутентификация қосылған
+              </p>
+
+              <button
+                onClick={handleDisable2FA}
+                disabled={loading2FA}
+                className="mt-4 rounded-2xl bg-rose-600 px-5 py-3 font-semibold text-white"
+              >
+                {loading2FA ? "Өшірілуде..." : "2FA өшіру"}
+              </button>
             </div>
           )}
         </div>

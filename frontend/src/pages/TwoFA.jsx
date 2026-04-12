@@ -54,7 +54,7 @@ function TwoFA({ setPage, setLoggedIn }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-[0_20px_60px_rgba(2,132,199,0.15)] sm:p-9">
+        <div className="rounded-[32px] border border-sky-200 bg-white/90 p-7 shadow-sm sm:p-9">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-3xl shadow-sm ring-1 ring-sky-200">
               🔑
