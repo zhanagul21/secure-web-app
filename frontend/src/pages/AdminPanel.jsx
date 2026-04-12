@@ -6,6 +6,12 @@ function AdminPanel({ setPage, setLoggedIn }) {
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [appStats, setAppStats] = useState(null);
+  const [latestLogs, setLatestLogs] = useState([]);
+  const [newFullName, setNewFullName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState("user");
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -27,6 +33,46 @@ function AdminPanel({ setPage, setLoggedIn }) {
     }
   };
 
+  const getAdminStats = async () => {
+    try {
+      const res = await API.get("/user/admin-stats");
+      setAppStats(res.data.stats || null);
+      setLatestLogs(res.data.latestLogs || []);
+    } catch (error) {
+      console.error("GET ADMIN STATS ERROR:", error);
+      setMessage("Қолданба жағдайын жүктеу кезінде қате шықты");
+    }
+  };
+
+  const refreshAdminData = () => {
+    getUsers();
+    getAdminStats();
+  };
+
+  const createUser = async (event) => {
+    event.preventDefault();
+    setMessage("");
+
+    try {
+      await API.post("/user/admin-create", {
+        full_name: newFullName.trim(),
+        email: newEmail.trim(),
+        password: newPassword.trim(),
+        role: newRole,
+      });
+
+      setNewFullName("");
+      setNewEmail("");
+      setNewPassword("");
+      setNewRole("user");
+      setMessage("Қолданушы қосылды");
+      refreshAdminData();
+    } catch (error) {
+      console.error("CREATE USER ERROR:", error);
+      setMessage(error.response?.data?.message || "Қолданушы қосу кезінде қате шықты");
+    }
+  };
+
   const deleteUser = async (id, fullName) => {
     const ok = window.confirm(
       `${fullName || "Бұл"} қолданушыны өшіргіңіз келе ме?`
@@ -35,7 +81,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
     try {
       await API.delete(`/user/delete/${id}`);
-      getUsers();
+      refreshAdminData();
     } catch (error) {
       console.error("DELETE USER ERROR:", error);
       setMessage("Қолданушыны өшіру кезінде қате шықты");
@@ -50,7 +96,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
     try {
       await API.put(`/user/make-admin/${id}`, {});
-      getUsers();
+      refreshAdminData();
     } catch (error) {
       console.error("MAKE ADMIN ERROR:", error);
       setMessage("Admin рөлін беру кезінде қате шықты");
@@ -58,7 +104,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
   };
 
   useEffect(() => {
-    getUsers();
+    refreshAdminData();
   }, []);
 
   const filteredUsers = useMemo(() => {
@@ -87,6 +133,12 @@ function AdminPanel({ setPage, setLoggedIn }) {
       regularUsers,
     };
   }, [users]);
+
+  const formatBytes = (value) => {
+    const bytes = Number(value || 0);
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   const getRoleBadgeClass = (role) => {
     if (role === "admin") {
@@ -207,6 +259,125 @@ function AdminPanel({ setPage, setLoggedIn }) {
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-2xl ring-1 ring-sky-100">
                 👤
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-[28px] border border-sky-100 bg-white/95 p-6 shadow-sm">
+            <p className="text-sm text-slate-500">Құжаттар</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+              {appStats?.total_documents || 0}
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Жалпы көлем: {formatBytes(appStats?.total_file_size)}
+            </p>
+          </div>
+
+          <div className="rounded-[28px] border border-sky-100 bg-white/95 p-6 shadow-sm">
+            <p className="text-sm text-slate-500">Журнал оқиғалары</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+              {appStats?.total_events || 0}
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Login, upload, view, download әрекеттері
+            </p>
+          </div>
+
+          <div className="rounded-[28px] border border-sky-100 bg-white/95 p-6 shadow-sm">
+            <p className="text-sm text-slate-500">Уақытша сілтемелер</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+              {appStats?.active_links || 0}
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Қазір белсенді shared links
+            </p>
+          </div>
+
+          <div className="rounded-[28px] border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
+            <p className="text-sm text-emerald-700">Қорғаныс статусы</p>
+            <p className="mt-3 text-2xl font-bold text-emerald-900">
+              Шифрлау қосулы
+            </p>
+            <p className="mt-2 text-sm text-emerald-800">
+              Storage: {appStats?.storage_mode || "database"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <form
+            onSubmit={createUser}
+            className="rounded-[28px] border border-sky-100 bg-white/95 p-6 shadow-sm"
+          >
+            <h3 className="text-2xl font-bold text-slate-800">
+              Қолданушы қосу
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Admin жаңа user немесе admin аккаунтын өзі қоса алады
+            </p>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <input
+                value={newFullName}
+                onChange={(event) => setNewFullName(event.target.value)}
+                placeholder="Аты-жөні"
+                className="rounded-2xl border border-sky-100 bg-sky-50 p-3 outline-none"
+              />
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(event) => setNewEmail(event.target.value)}
+                placeholder="Email"
+                className="rounded-2xl border border-sky-100 bg-sky-50 p-3 outline-none"
+              />
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                placeholder="Пароль"
+                className="rounded-2xl border border-sky-100 bg-sky-50 p-3 outline-none"
+              />
+              <select
+                value={newRole}
+                onChange={(event) => setNewRole(event.target.value)}
+                className="rounded-2xl border border-sky-100 bg-sky-50 p-3 outline-none"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              className="mt-5 rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+            >
+              Қолданушы қосу
+            </button>
+          </form>
+
+          <div className="rounded-[28px] border border-sky-100 bg-white/95 p-6 shadow-sm">
+            <h3 className="text-2xl font-bold text-slate-800">
+              Соңғы оқиғалар
+            </h3>
+            <div className="mt-5 space-y-3">
+              {latestLogs.length === 0 ? (
+                <p className="text-slate-500">Әзірге оқиға жоқ</p>
+              ) : (
+                latestLogs.map((log, index) => (
+                  <div
+                    key={`${log.action_type}-${index}`}
+                    className="rounded-2xl border border-sky-100 bg-sky-50 p-3"
+                  >
+                    <p className="font-semibold text-slate-800">
+                      {log.action_type}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {log.action_details || "Сипаттама жоқ"}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
