@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { renderAsync } from "docx-preview";
 import API from "../services/api";
 
 function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
@@ -70,6 +71,26 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
         const text = await res.data.text();
         if (previewRef.current) {
           previewRef.current.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word; font-family: Arial, sans-serif; padding: 16px;">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
+        }
+        return;
+      }
+
+      if (
+        contentType.includes(
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+      ) {
+        setPreviewType("docx");
+        const arrayBuffer = await res.data.arrayBuffer();
+
+        if (previewRef.current) {
+          previewRef.current.innerHTML = "";
+          await renderAsync(arrayBuffer, previewRef.current, null, {
+            className: "docx-preview",
+            inWrapper: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+          });
         }
         return;
       }
@@ -208,7 +229,10 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
               </div>
             </div>
           ) : (
-            <div ref={previewRef} className="min-h-[400px]" />
+            <div
+              ref={previewRef}
+              className="min-h-[400px] overflow-auto rounded-[24px] bg-white [&_.docx-wrapper]:!bg-white [&_.docx-wrapper]:!p-0"
+            />
           )}
         </div>
 

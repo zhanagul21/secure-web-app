@@ -154,9 +154,9 @@ const getLogs = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-300 via-sky-200 to-sky-400">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ecfeff_0,#e0f2fe_32%,#eef2ff_66%,#f8fafc_100%)]">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-sky-200 bg-white/90 p-5 shadow-[0_16px_40px_rgba(2,132,199,0.15)] sm:p-6">
+        <div className="rounded-[32px] border border-white/80 bg-white/90 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm ring-1 ring-sky-200 sm:h-20 sm:w-20">
@@ -208,6 +208,13 @@ const getLogs = async () => {
                 className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-800"
               >
                 Профиль
+              </button>
+
+              <button
+                onClick={() => setPage("profile")}
+                className="rounded-2xl bg-emerald-600 px-4 py-2.5 font-semibold text-white transition hover:bg-emerald-700"
+              >
+                2FA баптау
               </button>
 
               {user?.role === "admin" && (
@@ -283,7 +290,7 @@ const getLogs = async () => {
         )}
 
         <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-[28px] border border-sky-200 bg-white/90 p-6 shadow-sm">
+          <div className="rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <p className="text-sm font-medium text-slate-600">Барлық құжаттар</p>
             <p className="mt-3 text-3xl font-black text-slate-800">
               {stats.totalDocuments}
@@ -291,7 +298,7 @@ const getLogs = async () => {
             <p className="mt-2 text-sm text-slate-600">Жүйедегі файлдар саны</p>
           </div>
 
-          <div className="rounded-[28px] border border-sky-200 bg-white/90 p-6 shadow-sm">
+          <div className="rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <p className="text-sm font-medium text-slate-600">
               Қаралған құжаттар
             </p>
@@ -303,7 +310,7 @@ const getLogs = async () => {
             </p>
           </div>
 
-          <div className="rounded-[28px] border border-sky-200 bg-white/90 p-6 shadow-sm">
+          <div className="rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <p className="text-sm font-medium text-slate-600">
               Жүктелген құжаттар
             </p>
@@ -315,7 +322,7 @@ const getLogs = async () => {
             </p>
           </div>
 
-          <div className="rounded-[28px] border border-sky-200 bg-white/90 p-6 shadow-sm">
+          <div className="rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <p className="text-sm font-medium text-slate-600">
               Өшірілген құжаттар
             </p>

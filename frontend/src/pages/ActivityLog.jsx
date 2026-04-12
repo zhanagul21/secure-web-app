@@ -54,7 +54,15 @@ function ActivityLog({ setPage, setLoggedIn }) {
     <div className="min-h-screen bg-gradient-to-br from-sky-300 via-sky-200 to-sky-400">
       <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="rounded-[32px] border border-sky-200 bg-white/90 p-5 shadow-sm">
-          <div className="flex flex-wrap gap-3">
+          <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
+          <h1 className="mt-1 text-3xl font-black text-slate-800">
+            Әрекет тарихы
+          </h1>
+          <p className="mt-2 text-slate-600">
+            Кіру, құжат ашу, жүктеу және қауіпсіздік әрекеттерінің журналы.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() => setPage("dashboard")}
               className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white"

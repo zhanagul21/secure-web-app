@@ -93,6 +93,22 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
     }
   };
 
+  const handleDisable2FA = async () => {
+    if (!window.confirm("2FA өшіру керек пе?")) return;
+
+    try {
+      setLoading2FA(true);
+      setMessage("");
+      const res = await API.post("/user/2fa/disable", {});
+      setMessage(res.data.message || "2FA өшірілді");
+      getProfile();
+    } catch (error) {
+      setMessage(error.response?.data?.message || "2FA өшіру қатесі");
+    } finally {
+      setLoading2FA(false);
+    }
+  };
+
   useEffect(() => {
     getProfile();
   }, []);
@@ -101,9 +117,16 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
     <div className="min-h-screen bg-gradient-to-br from-sky-200 via-sky-100 to-blue-200 px-4 py-6">
       <div className="mx-auto max-w-5xl space-y-6">
 
-        {/* NAV */}
-        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-5 shadow-sm">
-          <div className="flex flex-wrap gap-3">
+        <div className="rounded-[32px] border border-sky-100 bg-white/95 p-6 shadow-sm">
+          <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
+          <h1 className="mt-1 text-3xl font-black text-slate-800">
+            Профиль және 2FA қауіпсіздігі
+          </h1>
+          <p className="mt-2 text-slate-600">
+            Аккаунт мәліметтері, екі факторлы аутентификация және қауіпсіздік баптаулары.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() => setPage("dashboard")}
               className="rounded-xl bg-slate-700 px-4 py-2 text-white"
@@ -161,14 +184,32 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
                 </p>
               </div>
 
-              {/* ENABLE BUTTON */}
-              {!user.twofa_enabled && (
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                <h3 className="text-xl font-bold text-emerald-900">
+                  2FA қалай қосылады?
+                </h3>
+                <p className="mt-2 text-emerald-900">
+                  Телефонға <b>Google Authenticator</b>, <b>Microsoft Authenticator</b>
+                  немесе <b>2FAS Auth</b> орнатып, QR кодты сканерлеңіз.
+                  Содан кейін app ішіндегі 6 таңбалы кодты осы жерде енгізесіз.
+                </p>
+              </div>
+
+              {!user.twofa_enabled ? (
                 <button
                   onClick={handleSetup2FA}
                   disabled={loading2FA}
                   className="rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white"
                 >
                   {loading2FA ? "Жүктелуде..." : "2FA қосу"}
+                </button>
+              ) : (
+                <button
+                  onClick={handleDisable2FA}
+                  disabled={loading2FA}
+                  className="rounded-2xl bg-rose-600 px-5 py-3 font-semibold text-white"
+                >
+                  {loading2FA ? "Өшірілуде..." : "2FA өшіру"}
                 </button>
               )}
 
@@ -189,6 +230,10 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
                       Қолмен енгізу коды: <b>{manualCode}</b>
                     </p>
                   )}
+
+                  <p className="mb-4 text-sm text-slate-700">
+                    QR сканерлейтін app: Google Authenticator / Microsoft Authenticator / 2FAS Auth.
+                  </p>
 
                   <input
                     type="text"

@@ -162,7 +162,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
                   AuthGuard Locker
                 </p>
                 <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-800 sm:text-3xl">
-                  Әкімшілік панель
+                  Admin Panel
                 </h1>
                 <p className="mt-2 text-sm leading-6 text-slate-500 sm:text-base">
                   Қолданушыларды қарау, іздеу, рөл беру және өшіру
@@ -197,7 +197,7 @@ function AdminPanel({ setPage, setLoggedIn }) {
 
         <div className="mb-6 mt-6">
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-            Қолданушыларды басқару
+            Admin Panel
           </h2>
           <p className="mt-2 text-slate-600">
             Қолданушыларды басқару және қауіпсіздік бақылауы

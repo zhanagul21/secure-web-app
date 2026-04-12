@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { renderAsync } from "docx-preview";
 
 function SharedDocumentSecure({ token }) {
   const [error, setError] = useState("");
@@ -50,6 +51,26 @@ function SharedDocumentSecure({ token }) {
           return;
         }
 
+        if (
+          contentType.includes(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          )
+        ) {
+          const blob = await res.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+
+          if (previewRef.current) {
+            previewRef.current.innerHTML = "";
+            await renderAsync(arrayBuffer, previewRef.current, null, {
+              className: "docx-preview",
+              inWrapper: true,
+              ignoreWidth: false,
+              ignoreHeight: false,
+            });
+          }
+          return;
+        }
+
         const blob = await res.blob();
         setFileUrl(window.URL.createObjectURL(blob));
       } catch {
@@ -77,7 +98,12 @@ function SharedDocumentSecure({ token }) {
     if (fileUrl && mimeType?.startsWith("image/")) {
       return <img src={fileUrl} alt="Shared document" className="mx-auto max-h-[85vh] rounded-[24px] border border-sky-100" />;
     }
-    return <div ref={previewRef} className="min-h-[400px]" />;
+    return (
+      <div
+        ref={previewRef}
+        className="min-h-[400px] overflow-auto rounded-[24px] bg-white [&_.docx-wrapper]:!bg-white [&_.docx-wrapper]:!p-0"
+      />
+    );
   };
 
   return (
