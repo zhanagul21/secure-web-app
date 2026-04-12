@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: secure-web-app-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: http://localhost:5173,https://secure-web-app-teal.vercel.app
+      - key: UPLOADS_DIR
+        value: ./uploads
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SERVER
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_PORT
+        value: 1433
+      - key: DB_ENCRYPT
+        value: true
+      - key: DB_TRUST_SERVER_CERTIFICATE
+        value: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false

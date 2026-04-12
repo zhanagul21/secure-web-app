@@ -150,11 +150,13 @@ const getReadableDocument = (doc) => {
 
   const storedBuffer = fs.readFileSync(filePath);
 
-  if (!isEncryptedFile(storedBuffer)) {
+  const encrypted = isEncryptedFile(storedBuffer);
+  const buffer = decryptFile(storedBuffer);
+
+  if (!encrypted && buffer === storedBuffer) {
     return { filePath, buffer: storedBuffer, tempDir: null };
   }
 
-  const buffer = decryptFile(storedBuffer);
   const { tempDir, tempPath } = writeTempDocumentFile(doc, buffer);
 
   return { filePath: tempPath, buffer, tempDir };
