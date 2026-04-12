@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -9,14 +9,13 @@ import AddDocument from "./pages/AddDocumentSecure";
 import ActivityLog from "./pages/ActivityLog";
 import AdminPanel from "./pages/AdminPanel";
 import TwoFA from "./pages/TwoFA";
+import TwoFASettings from "./pages/TwoFASettings";
 import DocumentViewer from "./pages/DocumentViewerSecure";
 import SharedDocument from "./pages/SharedDocumentSecure";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [page, setPage] = useState(
-    localStorage.getItem("token") ? "dashboard" : "login"
-  );
+  const [page, setPage] = useState(localStorage.getItem("token") ? "dashboard" : "login");
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
   useEffect(() => {
@@ -36,7 +35,6 @@ function App() {
     localStorage.removeItem("tempUserRole");
     localStorage.removeItem("tempUserId");
     localStorage.removeItem("temp2faToken");
-
     setLoggedIn(false);
     setPage("login");
     setSelectedDocumentId(null);
@@ -73,13 +71,11 @@ function App() {
   }
 
   if (page === "profile") {
-    return (
-      <Profile
-        setLoggedIn={setLoggedIn}
-        setPage={setPage}
-        logoutEverywhere={logoutEverywhere}
-      />
-    );
+    return <Profile setLoggedIn={setLoggedIn} setPage={setPage} logoutEverywhere={logoutEverywhere} />;
+  }
+
+  if (page === "twofaSettings") {
+    return <TwoFASettings setLoggedIn={setLoggedIn} setPage={setPage} logoutEverywhere={logoutEverywhere} />;
   }
 
   if (page === "documents") {
@@ -94,43 +90,19 @@ function App() {
   }
 
   if (page === "addDocument") {
-    return (
-      <AddDocument
-        setPage={setPage}
-        setLoggedIn={setLoggedIn}
-        logoutEverywhere={logoutEverywhere}
-      />
-    );
+    return <AddDocument setPage={setPage} setLoggedIn={setLoggedIn} logoutEverywhere={logoutEverywhere} />;
   }
 
   if (page === "logs") {
-    return (
-      <ActivityLog
-        setPage={setPage}
-        setLoggedIn={setLoggedIn}
-        logoutEverywhere={logoutEverywhere}
-      />
-    );
+    return <ActivityLog setPage={setPage} setLoggedIn={setLoggedIn} logoutEverywhere={logoutEverywhere} />;
   }
 
   if (page === "admin") {
-    return (
-      <AdminPanel
-        setPage={setPage}
-        setLoggedIn={setLoggedIn}
-        logoutEverywhere={logoutEverywhere}
-      />
-    );
+    return <AdminPanel setPage={setPage} setLoggedIn={setLoggedIn} logoutEverywhere={logoutEverywhere} />;
   }
 
   if (page === "viewer" && selectedDocumentId) {
-    return (
-      <DocumentViewer
-        documentId={selectedDocumentId}
-        setPage={setPage}
-        setLoggedIn={setLoggedIn}
-      />
-    );
+    return <DocumentViewer documentId={selectedDocumentId} setPage={setPage} setLoggedIn={setLoggedIn} />;
   }
 
   return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;

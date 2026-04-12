@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { renderAsync } from "docx-preview";
+﻿import { useEffect, useRef, useState } from "react";
 import API from "../services/api";
 
 function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
@@ -12,13 +11,19 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDuration, setShareDuration] = useState(60);
   const [shareLoading, setShareLoading] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const clearPreview = () => {
-    if (previewRef.current) previewRef.current.innerHTML = "";
+    if (previewRef.current) {
+      previewRef.current.innerHTML = "";
+    }
+
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl("");
     }
+
     setPreviewType("none");
   };
 
@@ -49,12 +54,14 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
 
       if (res.status >= 400) {
         const text = await res.data.text();
+
         try {
           const parsed = JSON.parse(text);
           setMessage(parsed.message || "Preview ашылмады.");
         } catch {
           setMessage(text || "Preview ашылмады.");
         }
+
         return;
       }
 
@@ -69,41 +76,27 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       if (contentType.includes("text/plain")) {
         setPreviewType("text");
         const text = await res.data.text();
-        if (previewRef.current) {
-          previewRef.current.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word; font-family: Arial, sans-serif; padding: 16px;">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
-        }
-        return;
-      }
-
-      if (
-        contentType.includes(
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-      ) {
-        setPreviewType("docx");
-        const arrayBuffer = await res.data.arrayBuffer();
 
         if (previewRef.current) {
-          previewRef.current.innerHTML = "";
-          await renderAsync(arrayBuffer, previewRef.current, null, {
-            className: "docx-preview",
-            inWrapper: true,
-            ignoreWidth: false,
-            ignoreHeight: false,
-          });
+          previewRef.current.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word; font-family: Arial, sans-serif; padding: 20px; color: #0f172a;">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
         }
+
         return;
       }
 
       if (contentType.includes("text/html")) {
         setPreviewType("html");
         const html = await res.data.text();
-        if (previewRef.current) previewRef.current.innerHTML = html;
+
+        if (previewRef.current) {
+          previewRef.current.innerHTML = html;
+        }
+
         return;
       }
 
       setPreviewType("unsupported");
-      setMessage("Бұл файл түріне preview қолдау көрсетілмейді. Файлды жүктеп алуға болады.");
+      setMessage("Бұл файл түріне сайт ішінде preview жоқ. Бірақ оны жүктеп ашуға болады.");
     } catch (error) {
       setPreviewType("error");
       setMessage(error.response?.data?.message || error.message || "Preview қатесі.");
@@ -114,16 +107,23 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
 
   useEffect(() => {
     loadPreview();
+
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   }, [documentId]);
 
   const handleDownload = async () => {
     try {
       setMessage("");
-      const res = await API.get(`/documents/download/${documentId}`, { responseType: "blob" });
-      const blob = new Blob([res.data], { type: documentData?.mime_type || "application/octet-stream" });
+      const res = await API.get(`/documents/download/${documentId}`, {
+        responseType: "blob",
+      });
+      const blob = new Blob([res.data], {
+        type: documentData?.mime_type || "application/octet-stream",
+      });
       const url = window.URL.createObjectURL(blob);
       const link = window.document.createElement("a");
       link.href = url;
@@ -137,21 +137,33 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
     }
   };
 
+  const handleCopy = async () => {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setMessage("Сілтемені көшіру мүмкін болмады.");
+    }
+  };
+
   const createShareLink = async () => {
     try {
       setShareLoading(true);
       setMessage("");
-      const res = await API.post(`/documents/share/${documentId}`, { durationMinutes: shareDuration });
-      const shareUrl = res.data.shareUrl;
+      setCopied(false);
+      const res = await API.post(`/documents/share/${documentId}`, {
+        durationMinutes: shareDuration,
+      });
 
-      if (!shareUrl) {
+      if (!res.data.shareUrl) {
         setMessage("Сілтеме жасалмады.");
         return;
       }
 
-      await navigator.clipboard.writeText(shareUrl);
-      setShareModalOpen(false);
-      alert(`Сілтеме көшірілді:\n\n${shareUrl}`);
+      setShareUrl(res.data.shareUrl);
     } catch (error) {
       setMessage(error.response?.data?.message || "Сілтеме жасау кезінде қате шықты.");
     } finally {
@@ -160,47 +172,70 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0,#f8fafc_38%,#dbeafe_100%)]">
       <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.12)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-sky-700">AuthGuard Locker</p>
-              <h1 className="text-2xl font-black text-slate-800">Құжатты қауіпсіз қарау</h1>
-              <p className="mt-2 text-sm text-slate-600">Бұл бетте файл серверден дешифрланып көрсетіледі.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
+                AuthGuard Locker
+              </p>
+              <h1 className="mt-1 text-2xl font-black text-slate-900">
+                Құжатты қауіпсіз қарау
+              </h1>
+              <p className="mt-2 text-sm text-slate-600">
+                Құжат серверде дешифрланып, қорғалған арнамен көрсетіледі.
+              </p>
             </div>
+
             <div className="flex flex-wrap gap-3">
-              <button onClick={() => setPage("documents")} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Артқа</button>
-              <button onClick={handleDownload} className="rounded-2xl bg-emerald-600 px-4 py-2.5 font-semibold text-white">Дешифрлап жүктеу</button>
-              <button onClick={() => setShareModalOpen(true)} className="rounded-2xl bg-indigo-600 px-4 py-2.5 font-semibold text-white">Уақытша сілтеме</button>
-              <button onClick={logout} className="rounded-2xl bg-slate-700 px-4 py-2.5 font-semibold text-white">Шығу</button>
+              <button onClick={() => setPage("documents")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">
+                Артқа
+              </button>
+              <button onClick={handleDownload} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">
+                Жүктеу
+              </button>
+              <button
+                onClick={() => {
+                  setShareModalOpen(true);
+                  setShareUrl("");
+                  setCopied(false);
+                }}
+                className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white"
+              >
+                Уақытша сілтеме
+              </button>
+              <button onClick={logout} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">
+                Шығу
+              </button>
             </div>
           </div>
         </div>
 
         {documentData && (
-          <div className="mt-6 grid gap-4 rounded-[24px] border border-sky-100 bg-white p-4 shadow-sm md:grid-cols-3">
-            <p><b>Файл:</b> {documentData.original_name}</p>
-            <p><b>Түрі:</b> {documentData.mime_type}</p>
-            <p className="font-semibold text-emerald-700">Статус: дешифрланған preview</p>
+          <div className="mt-6 grid gap-4 rounded-[24px] border border-white/70 bg-white/95 p-5 shadow-sm md:grid-cols-3">
+            <p className="text-slate-700">
+              <b className="text-slate-900">Файл:</b> {documentData.original_name}
+            </p>
+            <p className="text-slate-700">
+              <b className="text-slate-900">Түрі:</b> {documentData.mime_type}
+            </p>
+            <p className="font-semibold text-emerald-700">Статус: дайын preview</p>
           </div>
         )}
 
         {message && (
-          <div className="mt-6 rounded-2xl border border-rose-100 bg-white p-4 text-slate-700">
+          <div className="mt-6 rounded-2xl border border-rose-100 bg-white/95 p-4 text-slate-700 shadow-sm">
             <div>{message}</div>
             {!loading && (
-              <button
-                onClick={handleDownload}
-                className="mt-4 rounded-2xl bg-emerald-600 px-4 py-2.5 font-semibold text-white"
-              >
+              <button onClick={handleDownload} className="mt-4 rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">
                 Файлды жүктеп ашу
               </button>
             )}
           </div>
         )}
 
-        <div className="mt-6 rounded-[32px] border border-sky-100 bg-white p-5 shadow-sm">
+        <div className="mt-6 rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
           {loading ? (
             <div className="py-16 text-center text-slate-600">Құжат жүктелуде...</div>
           ) : previewUrl ? (
@@ -214,44 +249,58 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
           ) : previewType === "unsupported" ? (
             <div className="flex min-h-[420px] items-center justify-center rounded-[24px] border border-dashed border-sky-200 bg-sky-50 p-8 text-center">
               <div>
-                <p className="text-lg font-semibold text-slate-800">
-                  Алдын ала қарау бұл файл түрі үшін қолжетімсіз
-                </p>
-                <p className="mt-2 text-slate-600">
-                  Құжат сақталған, оны дәл қазір дешифрлап жүктеп ашуға болады.
-                </p>
-                <button
-                  onClick={handleDownload}
-                  className="mt-5 rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-white"
-                >
-                  Дешифрлап жүктеу
+                <p className="text-lg font-semibold text-slate-800">Бұл файл түрі үшін сайт ішінде тікелей preview жоқ</p>
+                <p className="mt-2 text-slate-600">Құжат сақталған. Оны дәл қазір жүктеп ашуға болады.</p>
+                <button onClick={handleDownload} className="mt-5 rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white">
+                  Жүктеу
                 </button>
               </div>
             </div>
           ) : (
-            <div
-              ref={previewRef}
-              className="min-h-[400px] overflow-auto rounded-[24px] bg-white [&_.docx-wrapper]:!bg-white [&_.docx-wrapper]:!p-0"
-            />
+            <div ref={previewRef} className="min-h-[500px] overflow-auto rounded-[24px] border border-sky-100 bg-white" />
           )}
         </div>
 
         {shareModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <div className="w-full max-w-md rounded-[28px] border border-sky-200 bg-white p-6 shadow-xl">
-              <h3 className="text-2xl font-bold text-slate-800">Уақытша сілтеме жасау</h3>
-              <p className="mt-2 text-sm text-slate-600">Сілтеме мерзімі біткен соң құжат ашылмайды.</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4">
+            <div className="w-full max-w-lg rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl">
+              <h3 className="text-2xl font-bold text-slate-900">Уақытша сілтеме</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Пайдаланушы осы сілтеме арқылы құжатты шектеулі уақыт ішінде аша алады.
+              </p>
+
               <div className="mt-5 grid grid-cols-2 gap-3">
                 {[15, 60, 480, 1440].map((duration) => (
-                  <button key={duration} onClick={() => setShareDuration(duration)} className={`rounded-2xl px-4 py-3 font-semibold ${shareDuration === duration ? "bg-slate-700 text-white" : "bg-sky-100 text-slate-800"}`}>
+                  <button
+                    key={duration}
+                    onClick={() => setShareDuration(duration)}
+                    className={`rounded-2xl px-4 py-3 font-semibold ${shareDuration === duration ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-800"}`}
+                  >
                     {duration === 15 ? "15 минут" : duration === 60 ? "1 сағат" : duration === 480 ? "8 сағат" : "1 күн"}
                   </button>
                 ))}
               </div>
-              <div className="mt-6 flex gap-3">
-                <button onClick={() => setShareModalOpen(false)} className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700">Болдырмау</button>
-                <button onClick={createShareLink} disabled={shareLoading} className="w-full rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white">{shareLoading ? "Жасалуда..." : "Сілтеме жасау"}</button>
+
+              <div className="mt-5 flex gap-3">
+                <button onClick={() => setShareModalOpen(false)} className="w-full rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700">
+                  Жабу
+                </button>
+                <button onClick={createShareLink} disabled={shareLoading} className="w-full rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white">
+                  {shareLoading ? "Жасалуда..." : "Сілтеме жасау"}
+                </button>
               </div>
+
+              {shareUrl && (
+                <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Дайын сілтеме</label>
+                  <div className="flex gap-3">
+                    <input readOnly value={shareUrl} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none" />
+                    <button onClick={handleCopy} className="shrink-0 rounded-2xl bg-slate-800 px-4 py-3 font-semibold text-white">
+                      {copied ? "Көшірілді" : "Көшіру"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
