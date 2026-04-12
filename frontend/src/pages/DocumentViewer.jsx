@@ -131,6 +131,8 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "application/vnd.ms-powerpoint",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ].includes(mimeType);
   };
 
@@ -140,7 +142,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
     if (mimeType === "application/pdf") {
       return (
         <iframe
-          src={fileUrl}
+          src={`${fileUrl}#toolbar=0`}
           title="PDF Viewer"
           className="h-[80vh] w-full rounded-[24px] border border-sky-100"
         />
