@@ -67,13 +67,7 @@ function Login({ setLoggedIn, setPage }) {
         email: resetEmail.trim(),
       });
 
-      const fallbackCodeText = res.data.fallbackCode
-        ? ` Код: ${res.data.fallbackCode}`
-        : "";
-      setMessage(
-        (res.data.message || "Қалпына келтіру коды жіберілді") +
-          fallbackCodeText
-      );
+      setMessage(res.data.message || "Қалпына келтіру коды жіберілді");
     } catch (error) {
       console.error("FORGOT PASSWORD ERROR:", error);
       setMessage(

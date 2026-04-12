@@ -28,10 +28,7 @@ function Register({ onClose }) {
         email: email.trim(),
       });
 
-      const fallbackCodeText = res.data.fallbackCode
-        ? ` Код: ${res.data.fallbackCode}`
-        : "";
-      setMessage((res.data.message || "Код жіберілді") + fallbackCodeText);
+      setMessage(res.data.message || "Код жіберілді");
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
