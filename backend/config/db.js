@@ -1,50 +1,30 @@
-const { Pool } = require("pg");
+const sql = require("mssql");
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
-
-function formatValue(value) {
-  if (value === null || value === undefined) return "NULL";
-  if (typeof value === "number") return value;
-  if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
-  if (value instanceof Date) return `'${value.toISOString()}'`;
-  return `'${String(value).replace(/'/g, "''")}'`;
-}
-
-const sql = {
-  query: async (strings, ...values) => {
-    try {
-      let text = "";
-
-      for (let i = 0; i < strings.length; i++) {
-        text += strings[i];
-        if (i < values.length) {
-          text += formatValue(values[i]);
-        }
-      }
-
-      const result = await pool.query(text);
-      return {
-        recordset: result.rows,
-        rowsAffected: [result.rowCount],
-      };
-    } catch (error) {
-      console.error("SQL QUERY ERROR:", error);
-      throw error;
-    }
+const config = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
+  database: process.env.DB_NAME,
+  port: parseInt(process.env.DB_PORT || "1433", 10),
+  options: {
+    encrypt: false,
+    trustServerCertificate: true,
   },
 };
 
+const pool = new sql.ConnectionPool(config);
+const poolConnect = pool.connect();
+
+pool.on("error", (err) => {
+  console.error("SQL Server pool error:", err);
+});
+
 const connectDB = async () => {
   try {
-    await pool.query("SELECT NOW()");
-    console.log("Connected PostgreSQL");
+    await poolConnect;
+    console.log("SQL Server connected");
   } catch (error) {
-    console.error("DB CONNECTION ERROR:", error);
+    console.error("SQL Server connection error:", error);
     throw error;
   }
 };
@@ -52,5 +32,6 @@ const connectDB = async () => {
 module.exports = {
   sql,
   pool,
+  poolConnect,
   connectDB,
 };

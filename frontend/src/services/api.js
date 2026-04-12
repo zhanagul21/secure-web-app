@@ -1,10 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://authguard-backend-7mbc.onrender.com/api",
-  timeout: 30000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  timeout: 15000,
 });
 
 API.interceptors.request.use((config) => {

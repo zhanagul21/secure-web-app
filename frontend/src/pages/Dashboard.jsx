@@ -39,7 +39,7 @@ const getDocuments = async () => {
 
 const getLogs = async () => {
   try {
-    const res = await API.get("/logs");
+    const res = await API.get("/logs/my");
     setLogs(res.data.logs || []);
   } catch (error) {
     console.error("GET LOGS ERROR:", error);

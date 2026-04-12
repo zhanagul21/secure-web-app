@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import MyDocuments from "./pages/MyDocuments";
@@ -13,7 +14,9 @@ import SharedDocument from "./pages/SharedDocument";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(
+    localStorage.getItem("token") ? "dashboard" : "login"
+  );
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
   useEffect(() => {
@@ -23,6 +26,7 @@ function App() {
 
     const token = localStorage.getItem("token");
     setLoggedIn(!!token);
+    setPage(token ? "dashboard" : "login");
   }, []);
 
   const logoutEverywhere = () => {
@@ -31,8 +35,9 @@ function App() {
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");
     localStorage.removeItem("tempUserId");
+
     setLoggedIn(false);
-    setPage("dashboard");
+    setPage("login");
     setSelectedDocumentId(null);
   };
 
@@ -48,6 +53,10 @@ function App() {
   }
 
   if (!loggedIn) {
+    if (page === "register") {
+      return <Register onClose={() => setPage("login")} />;
+    }
+
     return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;
   }
 
@@ -113,18 +122,17 @@ function App() {
     );
   }
 
-  if (page === "viewer") {
+  if (page === "viewer" && selectedDocumentId) {
     return (
       <DocumentViewer
         documentId={selectedDocumentId}
         setPage={setPage}
         setLoggedIn={setLoggedIn}
-        logoutEverywhere={logoutEverywhere}
       />
     );
   }
 
-  return null;
+  return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;
 }
 
 export default App;

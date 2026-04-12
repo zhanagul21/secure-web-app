@@ -37,6 +37,7 @@ function TwoFA({ setPage, setLoggedIn }) {
       setLoggedIn(true);
       setPage("dashboard");
     } catch (error) {
+      console.error("2FA ERROR:", error);
       setMessage(error.response?.data?.message || "2FA тексеру қатесі");
     } finally {
       setLoading(false);
@@ -80,31 +81,31 @@ function TwoFA({ setPage, setLoggedIn }) {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 maxLength={6}
-                className="w-full rounded-2xl border border-sky-200 bg-sky-100 px-5 py-4 text-center text-xl tracking-[0.3em] text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-200"
+                className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 outline-none focus:border-sky-400"
               />
             </div>
 
             {message && (
-              <div className="rounded-2xl border border-sky-200 bg-sky-100 px-4 py-3 text-sm text-slate-700">
+              <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-slate-700">
                 {message}
               </div>
             )}
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 rounded-2xl bg-slate-700 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {loading ? "Тексерілуде..." : "Растау"}
-              </button>
-
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={goBack}
-                className="flex-1 rounded-2xl border border-sky-200 bg-white py-4 text-lg font-semibold text-slate-700 shadow-sm transition hover:bg-sky-50"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700"
               >
                 Артқа
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white"
+              >
+                {loading ? "Тексерілуде..." : "Растау"}
               </button>
             </div>
           </form>

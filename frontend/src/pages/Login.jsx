@@ -42,6 +42,7 @@ function Login({ setLoggedIn, setPage }) {
       setLoggedIn(true);
       setPage("dashboard");
     } catch (error) {
+      console.error("LOGIN ERROR:", error);
       setMessage(error.response?.data?.message || "Login қатесі");
     } finally {
       setLoading(false);
@@ -65,6 +66,7 @@ function Login({ setLoggedIn, setPage }) {
 
       setMessage(res.data.message || "Қалпына келтіру коды жіберілді");
     } catch (error) {
+      console.error("FORGOT PASSWORD ERROR:", error);
       setMessage(
         error.response?.data?.message || "Құпиясөзді қалпына келтіру қатесі"
       );
@@ -91,11 +93,11 @@ function Login({ setLoggedIn, setPage }) {
       });
 
       setMessage(res.data.message || "Құпия сөз жаңартылды");
-
       setResetCode("");
       setNewPassword("");
       setShowForgot(false);
     } catch (error) {
+      console.error("RESET PASSWORD ERROR:", error);
       setMessage(error.response?.data?.message || "Reset password қатесі");
     } finally {
       setLoading(false);
@@ -157,7 +159,10 @@ function Login({ setLoggedIn, setPage }) {
 
               <button
                 type="button"
-                onClick={() => setPage("register")}
+                onClick={() => {
+                  setMessage("");
+                  setPage("register");
+                }}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700"
               >
                 Тіркелу
@@ -177,10 +182,6 @@ function Login({ setLoggedIn, setPage }) {
             </form>
           ) : (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-800">
-                Құпия сөзді қалпына келтіру
-              </h2>
-
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Email
