@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import API from "../services/api";
 
 function DocumentViewer({ documentId, setPage, setLoggedIn }) {
@@ -14,6 +14,8 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   const [shareMessage, setShareMessage] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
 
+  const oldBlobUrlRef = useRef("");
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -23,16 +25,51 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
     setLoggedIn(false);
   };
 
-  const loadDocument = async () => {
+  const loadDocumentMeta = async () => {
+    const res = await API.get(`/documents/view/${documentId}`);
+    return res.data.document;
+  };
+
+  const loadPreviewBlob = async () => {
+    const res = await API.get(`/documents/preview/${documentId}`, {
+      responseType: "blob",
+      validateStatus: (status) => status >= 200 && status < 500,
+    });
+
+    const contentType = res.headers["content-type"] || "";
+
+    if (res.status >= 400) {
+      const text = await res.data.text();
+      try {
+        const parsed = JSON.parse(text);
+        throw new Error(parsed.message || "Preview ашылмады");
+      } catch {
+        throw new Error(text || "Preview ашылмады");
+      }
+    }
+
+    const blob = new Blob([res.data], {
+      type: contentType || "application/octet-stream",
+    });
+
+    return {
+      blob,
+      contentType: blob.type || contentType,
+    };
+  };
+
+  const loadAll = async () => {
     try {
+      setLoading(true);
+      setMessage("");
+
       if (!documentId) {
         setMessage("Құжат ID табылмады");
         setLoading(false);
         return;
       }
 
-      const res = await API.get(`/documents/view/${documentId}`);
-      const doc = res.data.document;
+      const doc = await loadDocumentMeta();
 
       if (!doc) {
         setMessage("Құжат табылмады");
@@ -42,30 +79,26 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
 
       setDocument(doc);
       setMimeType(doc.mime_type || "");
-      setMessage("");
-    } catch (error) {
-      console.log("VIEW ERROR:", error);
-      setMessage(error.response?.data?.message || "Құжат ашылмады");
-    }
-  };
 
-  const loadPreview = async () => {
-    try {
-      const res = await API.get(`/documents/preview/${documentId}`, {
-        responseType: "blob",
-      });
+      const { blob, contentType } = await loadPreviewBlob();
 
-      const blobType =
-        res.data.type || document?.mime_type || "application/octet-stream";
+      if (oldBlobUrlRef.current) {
+        URL.revokeObjectURL(oldBlobUrlRef.current);
+      }
 
-      const blob = new Blob([res.data], { type: blobType });
-      const objectUrl = window.URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(blob);
+      oldBlobUrlRef.current = objectUrl;
 
       setPreviewBlobUrl(objectUrl);
-      setMessage("");
+      if (contentType) {
+        setMimeType(contentType.includes("text/html") ? "text/html" : doc.mime_type || contentType);
+      }
     } catch (error) {
-      console.log("PREVIEW ERROR:", error);
-      setMessage(error.response?.data?.message || "Preview ашылмады");
+      console.log("PREVIEW LOAD ERROR:", error);
+      setMessage(error.message || "Preview ашылмады");
+      setPreviewBlobUrl("");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,25 +167,11 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
   };
 
   useEffect(() => {
-    let mounted = true;
-
-    const init = async () => {
-      setLoading(true);
-      await loadDocument();
-      if (mounted) {
-        await loadPreview();
-      }
-      if (mounted) {
-        setLoading(false);
-      }
-    };
-
-    init();
+    loadAll();
 
     return () => {
-      mounted = false;
-      if (previewBlobUrl) {
-        window.URL.revokeObjectURL(previewBlobUrl);
+      if (oldBlobUrlRef.current) {
+        URL.revokeObjectURL(oldBlobUrlRef.current);
       }
     };
   }, [documentId]);
@@ -174,7 +193,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
       <iframe
         src={previewBlobUrl}
         title="Document Preview"
-        className="h-[80vh] w-full rounded-[24px] border border-sky-100"
+        className="h-[80vh] w-full rounded-[24px] border border-sky-100 bg-white"
       />
     );
   };
@@ -254,7 +273,7 @@ function DocumentViewer({ documentId, setPage, setLoggedIn }) {
               <div className="rounded-2xl bg-slate-50 p-4">
                 <p className="text-sm text-slate-500">MIME type</p>
                 <p className="mt-1 break-all text-sm font-medium text-slate-700">
-                  {mimeType || "-"}
+                  {document?.mime_type || "-"}
                 </p>
               </div>
 
