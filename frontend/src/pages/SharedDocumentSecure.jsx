@@ -1,13 +1,13 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 function SharedDocumentSecure({ token }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [fileUrl, setFileUrl] = useState("");
+  const [htmlContent, setHtmlContent] = useState("");
   const [mimeType, setMimeType] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [now, setNow] = useState(Date.now());
-  const previewRef = useRef(null);
 
   useEffect(() => {
     const loadSharedDocument = async () => {
@@ -29,32 +29,28 @@ function SharedDocumentSecure({ token }) {
 
         if (!res.ok) {
           const text = await res.text();
-
           try {
             const data = JSON.parse(text);
             setError(data.message || "Қате шықты.");
           } catch {
             setError(text || "Қате шықты.");
           }
-
           return;
         }
 
         setMimeType(contentType);
+        setFileUrl("");
+        setHtmlContent("");
 
         if (contentType.includes("text/html")) {
           const html = await res.text();
-          if (previewRef.current) {
-            previewRef.current.innerHTML = html;
-          }
+          setHtmlContent(html);
           return;
         }
 
         if (contentType.includes("text/plain")) {
           const text = await res.text();
-          if (previewRef.current) {
-            previewRef.current.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word; font-family: Arial, sans-serif; padding: 20px; color: #0f172a;">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
-          }
+          setHtmlContent(`<!doctype html><html><body style="font-family: Arial, sans-serif; padding: 20px; color: #0f172a;"><pre style="white-space: pre-wrap; word-wrap: break-word;">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre></body></html>`);
           return;
         }
 
@@ -78,11 +74,7 @@ function SharedDocumentSecure({ token }) {
 
   useEffect(() => {
     if (!expiresAt) return undefined;
-
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [expiresAt]);
 
@@ -90,13 +82,12 @@ function SharedDocumentSecure({ token }) {
     if (!expiresAt) return "Есептелуде...";
 
     const diff = new Date(expiresAt).getTime() - now;
-    if (diff <= 0) return "Уақыты аяқталды";
+    if (diff <= 0) return "00:00:00";
 
     const totalSeconds = Math.floor(diff / 1000);
     const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
     const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
     const seconds = String(totalSeconds % 60).padStart(2, "0");
-
     return `${hours}:${minutes}:${seconds}`;
   }, [expiresAt, now]);
 
@@ -114,7 +105,11 @@ function SharedDocumentSecure({ token }) {
       return <img src={fileUrl} alt="Shared document" className="mx-auto max-h-[85vh] rounded-[24px] border border-sky-100" />;
     }
 
-    return <div ref={previewRef} className="min-h-[500px] overflow-auto rounded-[24px] border border-sky-100 bg-white" />;
+    if (htmlContent) {
+      return <iframe title="Shared HTML Preview" srcDoc={htmlContent} className="h-[85vh] w-full rounded-[24px] border border-sky-100 bg-white" />;
+    }
+
+    return <div className="min-h-[500px] rounded-[24px] border border-sky-100 bg-white" />;
   };
 
   return (
@@ -125,17 +120,13 @@ function SharedDocumentSecure({ token }) {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">AuthGuard Locker</p>
               <h1 className="text-2xl font-bold text-slate-900">Ортақ қорғалған құжат</h1>
-              <p className="mt-2 text-slate-600">
-                Құжат уақытша сілтеме арқылы ашылды және қауіпсіз түрде көрсетіледі.
-              </p>
+              <p className="mt-2 text-slate-600">Құжат уақытша сілтеме арқылы ашылды және қауіпсіз түрде көрсетіледі.</p>
             </div>
 
             <div className="rounded-2xl bg-slate-900 px-5 py-4 text-white shadow-lg">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-300">Қалған уақыт</div>
               <div className="mt-2 text-2xl font-black">{remainingTime}</div>
-              <div className="mt-2 text-sm text-slate-300">
-                {expiresAt ? new Date(expiresAt).toLocaleString() : "Есептелуде..."}
-              </div>
+              <div className="mt-2 text-sm text-slate-300">{expiresAt ? new Date(expiresAt).toLocaleString() : "Есептелуде..."}</div>
             </div>
           </div>
         </div>
@@ -152,9 +143,7 @@ function SharedDocumentSecure({ token }) {
           <div className="rounded-[32px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
             <div className="mb-4 flex items-center justify-between gap-4">
               <p className="text-sm font-semibold text-emerald-700">Статус: дешифрланған preview</p>
-              <button onClick={downloadShared} className="rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white">
-                Жүктеу
-              </button>
+              <button onClick={downloadShared} className="rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white">Жүктеу</button>
             </div>
             {renderPreview()}
           </div>
