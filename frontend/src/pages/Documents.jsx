@@ -1,23 +1,27 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-
+ 
 function Documents() {
   const [docs, setDocs] = useState([]);
-
+ 
   const loadDocs = async () => {
     const token = localStorage.getItem("token");
-
+ 
     const res = await API.get("/documents", {
       headers: { Authorization: `Bearer ${token}` },
     });
-
+ 
     setDocs(res.data);
   };
-
+ 
   useEffect(() => {
     loadDocs();
   }, []);
-
+ 
+  // API base URL - environment variable арқылы алу керек
+  const apiBase =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -35,13 +39,13 @@ function Documents() {
                 қажет файлдарды жылдам қарауға болады.
               </p>
             </div>
-
+ 
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-50 text-3xl shadow-sm ring-1 ring-sky-100">
               📁
             </div>
           </div>
         </div>
-
+ 
         {docs.length === 0 ? (
           <div className="rounded-[32px] border border-sky-100 bg-white/95 p-10 text-center shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sky-50 text-4xl ring-1 ring-sky-100">
@@ -65,35 +69,36 @@ function Documents() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-2xl ring-1 ring-sky-100">
                     📄
                   </div>
-
+ 
                   <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
                     ID: {doc.id}
                   </span>
                 </div>
-
+ 
                 <h2 className="mt-5 text-xl font-bold leading-snug text-slate-900">
                   {doc.title}
                 </h2>
-
+ 
                 <p className="mt-2 text-sm text-slate-500">
                   {doc.category || "Категория көрсетілмеген"}
                 </p>
-
+ 
                 <div className="mt-6 rounded-2xl bg-sky-50/70 p-4">
                   <p className="text-sm text-slate-500">Құжат жайлы</p>
                   <p className="mt-1 text-sm font-medium text-slate-700">
                     Қауіпсіз жүктеу қолжетімді
                   </p>
                 </div>
-
+ 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  {/* ✅ ТҮЗЕТІЛДІ: hardcoded localhost орнына env variable */}
                   <a
-                    href={`http://localhost:5000/api/documents/download/${doc.id}`}
+                    href={`${apiBase}/documents/download/${doc.id}`}
                     className="inline-flex items-center justify-center rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
                   >
                     Жүктеу
                   </a>
-  
+ 
                   <button
                     className="inline-flex items-center justify-center rounded-2xl border border-sky-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-sky-50"
                     type="button"
@@ -109,5 +114,5 @@ function Documents() {
     </div>
   );
 }
-
+ 
 export default Documents;

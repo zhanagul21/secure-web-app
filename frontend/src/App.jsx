@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-
+ 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -10,24 +10,46 @@ import ActivityLog from "./pages/ActivityLog";
 import AdminPanel from "./pages/AdminPanel";
 import TwoFA from "./pages/TwoFA";
 import TwoFASettings from "./pages/TwoFASettings";
+import BiometricSettings from "./pages/BiometricSettings";
 import DocumentViewer from "./pages/DocumentViewerSecure";
 import SharedDocument from "./pages/SharedDocumentSecure";
-
+ 
+// ✅ ТҮЗЕТІЛДІ: pathname-ді state-ке салу керек,
+// себебі window.location.pathname React render кезінде тұрақсыз
+function getSharedToken() {
+  const path = window.location.pathname;
+  if (path.startsWith("/shared/")) {
+    return path.replace("/shared/", "").trim();
+  }
+  return null;
+}
+ 
 function App() {
+  const sharedToken = getSharedToken();
+ 
+  // Shared link болса — тікелей SharedDocument render ет, басқа логика өтпесін
+  if (sharedToken) {
+    return <SharedDocument token={sharedToken} />;
+  }
+ 
+  return <AuthApp />;
+}
+ 
+function AuthApp() {
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
-  const [page, setPage] = useState(localStorage.getItem("token") ? "dashboard" : "login");
+  const [page, setPage] = useState(
+    localStorage.getItem("token") ? "dashboard" : "login"
+  );
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
-
+ 
   useEffect(() => {
-    const path = window.location.pathname;
-
-    if (path.startsWith("/shared/")) return;
-
     const token = localStorage.getItem("token");
     setLoggedIn(!!token);
-    setPage(token ? "dashboard" : "login");
+    if (!token) {
+      setPage("login");
+    }
   }, []);
-
+ 
   const logoutEverywhere = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -39,26 +61,18 @@ function App() {
     setPage("login");
     setSelectedDocumentId(null);
   };
-
-  const path = window.location.pathname;
-
-  if (path.startsWith("/shared/")) {
-    const token = path.split("/shared/")[1];
-    return <SharedDocument token={token} />;
-  }
-
+ 
   if (page === "2fa") {
     return <TwoFA setPage={setPage} setLoggedIn={setLoggedIn} />;
   }
-
+ 
   if (!loggedIn) {
     if (page === "register") {
       return <Register onClose={() => setPage("login")} />;
     }
-
     return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;
   }
-
+ 
   if (page === "dashboard") {
     return (
       <Dashboard
@@ -69,15 +83,37 @@ function App() {
       />
     );
   }
-
+ 
   if (page === "profile") {
-    return <Profile setLoggedIn={setLoggedIn} setPage={setPage} logoutEverywhere={logoutEverywhere} />;
+    return (
+      <Profile
+        setLoggedIn={setLoggedIn}
+        setPage={setPage}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
-
+ 
   if (page === "twofaSettings") {
-    return <TwoFASettings setLoggedIn={setLoggedIn} setPage={setPage} logoutEverywhere={logoutEverywhere} />;
+    return (
+      <TwoFASettings
+        setLoggedIn={setLoggedIn}
+        setPage={setPage}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
 
+  if (page === "biometricSettings") {
+    return (
+      <BiometricSettings
+        setLoggedIn={setLoggedIn}
+        setPage={setPage}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
+  }
+ 
   if (page === "documents") {
     return (
       <MyDocuments
@@ -88,24 +124,49 @@ function App() {
       />
     );
   }
-
+ 
   if (page === "addDocument") {
-    return <AddDocument setPage={setPage} setLoggedIn={setLoggedIn} logoutEverywhere={logoutEverywhere} />;
+    return (
+      <AddDocument
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
-
+ 
   if (page === "logs") {
-    return <ActivityLog setPage={setPage} setLoggedIn={setLoggedIn} logoutEverywhere={logoutEverywhere} />;
+    return (
+      <ActivityLog
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
-
+ 
   if (page === "admin") {
-    return <AdminPanel setPage={setPage} setLoggedIn={setLoggedIn} logoutEverywhere={logoutEverywhere} />;
+    return (
+      <AdminPanel
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
   }
-
+ 
   if (page === "viewer" && selectedDocumentId) {
-    return <DocumentViewer documentId={selectedDocumentId} setPage={setPage} setLoggedIn={setLoggedIn} />;
+    return (
+      <DocumentViewer
+        documentId={selectedDocumentId}
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+      />
+    );
   }
-
+ 
+  // Fallback
   return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;
 }
-
+ 
 export default App;

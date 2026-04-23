@@ -10,6 +10,7 @@ const { connectDB, dbDriver } = require("./config/db");
 const { verifyEmailTransporter } = require("./utils/sendEmail");
 
 const authRoutes = require("./routes/authRoutes");
+const biometricRoutes = require("./routes/biometricRoutes");
 const userRoutes = require("./routes/userRoutes");
 const documentsRoutes = require("./routes/documentsRoutes");
 const logsRoutes = require("./routes/logsRoutes");
@@ -65,6 +66,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/biometric", biometricRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/documents", documentsRoutes);
 app.use("/api/logs", logsRoutes);

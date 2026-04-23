@@ -7,6 +7,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
   const [documents, setDocuments] = useState([]);
   const [logs, setLogs] = useState([]);
   const [message, setMessage] = useState("");
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -48,6 +49,9 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
     getProfile();
     getDocuments();
     getLogs();
+    API.get("/biometric/status")
+      .then((res) => setBiometricAvailable(Boolean(res.data?.available)))
+      .catch(() => setBiometricAvailable(false));
   }, []);
 
   const recentDocuments = useMemo(() => [...documents].slice(0, 5), [documents]);
@@ -91,6 +95,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
               <button onClick={() => setPage("logs")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Әрекет тарихы</button>
               <button onClick={() => setPage("profile")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Профиль</button>
               <button onClick={() => setPage("twofaSettings")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">2FA баптау</button>
+              {biometricAvailable && <button onClick={() => setPage("biometricSettings")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Биометрия</button>}
               {user?.role === "admin" && <button onClick={() => setPage("admin")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Admin</button>}
               <button onClick={logout} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Шығу</button>
             </div>
@@ -114,8 +119,8 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
           </div>
           <div className="rounded-[28px] border border-sky-200 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <p className="text-sm font-medium text-slate-600">Қауіпсіздік</p>
-            <p className="mt-3 text-2xl font-black text-slate-800">2FA және шифрлау</p>
-            <p className="mt-2 text-sm text-slate-600">Жүйе қорғаныс модульдері белсенді</p>
+            <p className="mt-3 text-2xl font-black text-slate-800">{biometricAvailable ? "2FA, биометрия және шифрлау" : "2FA және шифрлау"}</p>
+            <p className="mt-2 text-sm text-slate-600">{biometricAvailable ? "Жүйе қорғаныс модульдерін осы жерден басқара аласыз" : "Қорғаныс модульдері белсенді, биометрия серверде әлі дайын емес"}</p>
           </div>
         </div>
 
