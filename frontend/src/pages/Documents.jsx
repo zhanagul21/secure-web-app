@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import { apiBaseUrl } from "../services/apiConfig";
  
 function Documents() {
   const [docs, setDocs] = useState([]);
@@ -19,8 +20,7 @@ function Documents() {
   }, []);
  
   // API base URL - environment variable арқылы алу керек
-  const apiBase =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const apiBase = apiBaseUrl;
  
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-100 via-[#f7fbff] to-blue-100 px-4 py-6 sm:px-6 lg:px-8">

@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import API from "../services/api";
+import { getApiErrorMessage } from "../services/apiConfig";
 import logo from "../assets/logo.png";
 
 function Register({ onClose }) {
@@ -32,7 +33,7 @@ function Register({ onClose }) {
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
-      setMessage(error.response?.data?.errorDetail || error.response?.data?.message || "Код жіберу кезінде қате");
+      setMessage(getApiErrorMessage(error, "Код жіберу кезінде қате"));
     } finally {
       setLoading(false);
     }
@@ -60,7 +61,7 @@ function Register({ onClose }) {
       setStep(3);
     } catch (error) {
       console.error("VERIFY CODE ERROR:", error);
-      setMessage(error.response?.data?.errorDetail || error.response?.data?.message || "Код жіберу кезінде қате");
+      setMessage(getApiErrorMessage(error, "Кодты тексеру кезінде қате"));
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,7 @@ function Register({ onClose }) {
       }, 1200);
     } catch (error) {
       console.error("REGISTER ERROR:", error);
-      setMessage(error.response?.data?.errorDetail || error.response?.data?.message || "Код жіберу кезінде қате");
+      setMessage(getApiErrorMessage(error, "Тіркелуді аяқтау кезінде қате"));
     } finally {
       setLoading(false);
     }

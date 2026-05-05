@@ -1,0 +1,43 @@
+const LOCAL_API_BASE_URL = "http://localhost:5000/api";
+const PUBLIC_API_BASE_URL = "https://secure-web-app-backend.onrender.com/api";
+
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const isLocalBrowser =
+  typeof window !== "undefined" &&
+  ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const configuredUsesLocalhost =
+  !!configuredApiBaseUrl &&
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredApiBaseUrl);
+const safeConfiguredApiBaseUrl =
+  configuredUsesLocalhost && !isLocalBrowser ? "" : configuredApiBaseUrl;
+
+export const apiBaseUrl =
+  safeConfiguredApiBaseUrl ||
+  (isLocalBrowser ? LOCAL_API_BASE_URL : PUBLIC_API_BASE_URL);
+
+export const uploadBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
+export const apiTimeoutMs = 15000;
+
+export function getApiErrorMessage(error, fallbackMessage) {
+  if (error?.code === "ECONNABORTED") {
+    return "Сервер ұзақ жауап берді. Қайта байқап көріңіз.";
+  }
+
+  if (error?.message === "Network Error") {
+    return "Серверге қосылу мүмкін болмады. Backend адресін тексеріңіз.";
+  }
+
+  return (
+    error?.response?.data?.errorDetail ||
+    error?.response?.data?.message ||
+    fallbackMessage
+  );
+}
+
+export function getFetchErrorMessage(error, fallbackMessage) {
+  if (error instanceof TypeError) {
+    return "Серверге қосылу мүмкін болмады. Сілтеме конфигін тексеріңіз.";
+  }
+
+  return fallbackMessage;
+}

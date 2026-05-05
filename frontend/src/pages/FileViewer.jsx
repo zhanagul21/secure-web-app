@@ -1,11 +1,10 @@
 import React from "react";
+import { uploadBaseUrl } from "../services/apiConfig";
 
 export default function FileViewer({ file }) {
   if (!file) return null;
 
-  const baseUrl =
-    import.meta.env.VITE_API_BASE_URL?.replace("/api", "") ||
-    "http://localhost:5000";
+  const baseUrl = uploadBaseUrl;
 
   const encodedFileName = encodeURIComponent(file.filename);
   const url = `${baseUrl}/uploads/${encodedFileName}`;

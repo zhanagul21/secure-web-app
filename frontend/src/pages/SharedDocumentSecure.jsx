@@ -1,4 +1,8 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  apiBaseUrl,
+  getFetchErrorMessage,
+} from "../services/apiConfig";
 
 function SharedDocumentSecure({ token }) {
   const [error, setError] = useState("");
@@ -18,9 +22,9 @@ function SharedDocumentSecure({ token }) {
       }
 
       try {
-        const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-        const res = await fetch(`${apiBase}/documents/shared/${token}`);
-        const contentType = res.headers.get("content-type") || "application/octet-stream";
+        const res = await fetch(`${apiBaseUrl}/documents/shared/${token}`);
+        const contentType =
+          res.headers.get("content-type") || "application/octet-stream";
         const expiresHeader = res.headers.get("x-expires-at");
 
         if (expiresHeader) {
@@ -50,14 +54,20 @@ function SharedDocumentSecure({ token }) {
 
         if (contentType.includes("text/plain")) {
           const text = await res.text();
-          setHtmlContent(`<!doctype html><html><body style="font-family: Arial, sans-serif; padding: 20px; color: #0f172a;"><pre style="white-space: pre-wrap; word-wrap: break-word;">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre></body></html>`);
+          setHtmlContent(
+            `<!doctype html><html><body style="font-family: Arial, sans-serif; padding: 20px; color: #0f172a;"><pre style="white-space: pre-wrap; word-wrap: break-word;">${text
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")}</pre></body></html>`
+          );
           return;
         }
 
         const blob = await res.blob();
         setFileUrl(window.URL.createObjectURL(blob));
-      } catch {
-        setError("Серверге қосылу мүмкін болмады.");
+      } catch (fetchError) {
+        setError(
+          getFetchErrorMessage(fetchError, "Серверге қосылу мүмкін болмады.")
+        );
       } finally {
         setLoading(false);
       }
@@ -70,7 +80,7 @@ function SharedDocumentSecure({ token }) {
         window.URL.revokeObjectURL(fileUrl);
       }
     };
-  }, [token]);
+  }, [fileUrl, token]);
 
   useEffect(() => {
     if (!expiresAt) return undefined;
@@ -86,30 +96,51 @@ function SharedDocumentSecure({ token }) {
 
     const totalSeconds = Math.floor(diff / 1000);
     const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const minutes = String(
+      Math.floor((totalSeconds % 3600) / 60)
+    ).padStart(2, "0");
     const seconds = String(totalSeconds % 60).padStart(2, "0");
     return `${hours}:${minutes}:${seconds}`;
   }, [expiresAt, now]);
 
   const downloadShared = () => {
-    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-    window.open(`${apiBase}/documents/shared/${token}/download`, "_blank");
+    window.open(`${apiBaseUrl}/documents/shared/${token}/download`, "_blank");
   };
 
   const renderPreview = () => {
     if (fileUrl && mimeType === "application/pdf") {
-      return <iframe src={fileUrl} title="Shared PDF Viewer" className="h-[85vh] w-full rounded-[24px] border border-sky-100" />;
+      return (
+        <iframe
+          src={fileUrl}
+          title="Shared PDF Viewer"
+          className="h-[85vh] w-full rounded-[24px] border border-sky-100"
+        />
+      );
     }
 
     if (fileUrl && mimeType?.startsWith("image/")) {
-      return <img src={fileUrl} alt="Shared document" className="mx-auto max-h-[85vh] rounded-[24px] border border-sky-100" />;
+      return (
+        <img
+          src={fileUrl}
+          alt="Shared document"
+          className="mx-auto max-h-[85vh] rounded-[24px] border border-sky-100"
+        />
+      );
     }
 
     if (htmlContent) {
-      return <iframe title="Shared HTML Preview" srcDoc={htmlContent} className="h-[85vh] w-full rounded-[24px] border border-sky-100 bg-white" />;
+      return (
+        <iframe
+          title="Shared HTML Preview"
+          srcDoc={htmlContent}
+          className="h-[85vh] w-full rounded-[24px] border border-sky-100 bg-white"
+        />
+      );
     }
 
-    return <div className="min-h-[500px] rounded-[24px] border border-sky-100 bg-white" />;
+    return (
+      <div className="min-h-[500px] rounded-[24px] border border-sky-100 bg-white" />
+    );
   };
 
   return (
@@ -118,22 +149,35 @@ function SharedDocumentSecure({ token }) {
         <div className="mb-6 rounded-[32px] border border-white/70 bg-white/95 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.12)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">AuthGuard Locker</p>
-              <h1 className="text-2xl font-bold text-slate-900">Ортақ қорғалған құжат</h1>
-              <p className="mt-2 text-slate-600">Құжат уақытша сілтеме арқылы ашылды және қауіпсіз түрде көрсетіледі.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
+                AuthGuard Locker
+              </p>
+              <h1 className="text-2xl font-bold text-slate-900">
+                Ортақ қорғалған құжат
+              </h1>
+              <p className="mt-2 text-slate-600">
+                Құжат уақытша сілтеме арқылы ашылды және қауіпсіз түрде
+                көрсетіледі.
+              </p>
             </div>
 
             <div className="rounded-2xl bg-slate-900 px-5 py-4 text-white shadow-lg">
-              <div className="text-xs uppercase tracking-[0.18em] text-slate-300">Қалған уақыт</div>
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-300">
+                Қалған уақыт
+              </div>
               <div className="mt-2 text-2xl font-black">{remainingTime}</div>
-              <div className="mt-2 text-sm text-slate-300">{expiresAt ? new Date(expiresAt).toLocaleString() : "Есептелуде..."}</div>
+              <div className="mt-2 text-sm text-slate-300">
+                {expiresAt ? new Date(expiresAt).toLocaleString() : "Есептелуде..."}
+              </div>
             </div>
           </div>
         </div>
 
         {loading ? (
           <div className="flex min-h-[500px] items-center justify-center rounded-[32px] border border-white/70 bg-white/95 p-8 text-center shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-800">Құжат жүктелуде...</h2>
+            <h2 className="text-xl font-semibold text-slate-800">
+              Құжат жүктелуде...
+            </h2>
           </div>
         ) : error ? (
           <div className="flex min-h-[500px] items-center justify-center rounded-[32px] border border-rose-100 bg-white/95 p-8 text-center shadow-sm">
@@ -142,8 +186,15 @@ function SharedDocumentSecure({ token }) {
         ) : (
           <div className="rounded-[32px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
             <div className="mb-4 flex items-center justify-between gap-4">
-              <p className="text-sm font-semibold text-emerald-700">Статус: дешифрланған preview</p>
-              <button onClick={downloadShared} className="rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white">Жүктеу</button>
+              <p className="text-sm font-semibold text-emerald-700">
+                Статус: дешифрланған preview
+              </p>
+              <button
+                onClick={downloadShared}
+                className="rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white"
+              >
+                Жүктеу
+              </button>
             </div>
             {renderPreview()}
           </div>

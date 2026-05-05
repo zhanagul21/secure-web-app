@@ -1,8 +1,10 @@
 import axios from "axios";
+import { apiBaseUrl, apiTimeoutMs } from "./apiConfig";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
-  timeout: 600000,
+  baseURL: apiBaseUrl,
+  timeout: apiTimeoutMs,
+  timeoutErrorMessage: "Сервер ұзақ жауап берді. Қайта байқап көріңіз.",
   maxBodyLength: Infinity,
   maxContentLength: Infinity,
 });

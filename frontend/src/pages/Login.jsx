@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../services/api";
+import { getApiErrorMessage } from "../services/apiConfig";
 import logo from "../assets/logo.png";
 
 function Login({ setLoggedIn, setPage }) {
@@ -46,7 +47,9 @@ function Login({ setLoggedIn, setPage }) {
       setPage("dashboard");
     } catch (error) {
       console.error("LOGIN ERROR:", error);
-      setMessage(error.response?.data?.message || "Login қатесі");
+      setMessage(
+        getApiErrorMessage(error, "Кіру кезінде қате шықты")
+      );
     } finally {
       setLoading(false);
     }
@@ -70,9 +73,7 @@ function Login({ setLoggedIn, setPage }) {
       setMessage(res.data.message || "Қалпына келтіру коды жіберілді");
     } catch (error) {
       console.error("FORGOT PASSWORD ERROR:", error);
-      setMessage(
-        error.response?.data?.message || "Құпиясөзді қалпына келтіру қатесі"
-      );
+      setMessage(getApiErrorMessage(error, "Құпиясөзді қалпына келтіру қатесі"));
     } finally {
       setLoading(false);
     }
@@ -101,7 +102,7 @@ function Login({ setLoggedIn, setPage }) {
       setShowForgot(false);
     } catch (error) {
       console.error("RESET PASSWORD ERROR:", error);
-      setMessage(error.response?.data?.message || "Reset password қатесі");
+      setMessage(getApiErrorMessage(error, "Құпия сөзді жаңарту кезінде қате шықты"));
     } finally {
       setLoading(false);
     }
