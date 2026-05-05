@@ -116,6 +116,11 @@ BEGIN
   ALTER TABLE documents ADD file_data VARBINARY(MAX) NULL;
 END;
 
+IF COL_LENGTH('documents', 'secret_content') IS NOT NULL
+BEGIN
+  ALTER TABLE documents DROP COLUMN secret_content;
+END;
+
 IF OBJECT_ID('shared_links', 'U') IS NULL
 BEGIN
   CREATE TABLE shared_links (

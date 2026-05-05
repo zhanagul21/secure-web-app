@@ -368,6 +368,13 @@ const createSqlServerAdapter = () => {
     `);
 
     await pool.request().query(`
+      IF COL_LENGTH('documents', 'secret_content') IS NOT NULL
+      BEGIN
+        ALTER TABLE documents DROP COLUMN secret_content;
+      END
+    `);
+
+    await pool.request().query(`
       IF OBJECT_ID('shared_links', 'U') IS NULL
       BEGIN
         CREATE TABLE shared_links (

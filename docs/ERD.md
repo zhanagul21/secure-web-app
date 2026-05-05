@@ -100,6 +100,7 @@ erDiagram
 - `users.password` legacy/fallback ретінде кодта әлі бар, әсіресе `2fa/reset-login` flow ішінде.
 - `documents.file_data` тек Postgres database-storage режимінде қолданылады.
 - `documents.filename` filesystem-storage режимінде де, database-storage режимінде де толтырылады.
+- `documents.secret_content` қолданылмайды және cleanup кезінде өшірілуі керек.
 - `shared_links.created_by` логикалық түрде `users.id`-ге сілтейді.
 - `activity_logs.user_id` nullable болуы мүмкін, бірақ код әдетте user бар кезде жазады.
 - `biometric_credentials` passkey/WebAuthn үшін қолданылады.
