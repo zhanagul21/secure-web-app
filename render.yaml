@@ -1,3 +1,8 @@
+databases:
+  - name: secure-web-app-db
+    databaseName: secure_web_app
+    user: secure_web_app_user
+
 services:
   - type: web
     name: secure-web-app-backend
@@ -10,24 +15,18 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DB_DRIVER
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: secure-web-app-db
+          property: connectionString
+      - key: PGSSLMODE
+        value: require
       - key: FRONTEND_URL
         value: http://localhost:5173,https://secure-web-app-teal.vercel.app
       - key: UPLOADS_DIR
         value: ./uploads
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_SERVER
-        sync: false
-      - key: DB_NAME
-        sync: false
-      - key: DB_PORT
-        value: 1433
-      - key: DB_ENCRYPT
-        value: true
-      - key: DB_TRUST_SERVER_CERTIFICATE
-        value: false
       - key: JWT_SECRET
         sync: false
       - key: GMAIL_USER
