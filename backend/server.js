@@ -5,6 +5,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
 const fs = require("fs");
+const { execFile } = require("child_process");
+const { promisify } = require("util");
 
 const { connectDB, dbDriver } = require("./config/db");
 const { verifyEmailTransporter } = require("./utils/sendEmail");
@@ -17,6 +19,7 @@ const documentsRoutes = require("./routes/documentsRoutes");
 const logsRoutes = require("./routes/logsRoutes");
 
 const app = express();
+const execFileAsync = promisify(execFile);
 
 const uploadsPath = path.resolve(process.env.UPLOADS_DIR || "./uploads");
 const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
@@ -27,6 +30,50 @@ const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
 }
+
+const getLibreOfficeExecutable = () => {
+  const configuredPath = process.env.LIBREOFFICE_PATH;
+
+  if (configuredPath && (process.platform === "win32" || !configuredPath.includes(":\\"))) {
+    return configuredPath;
+  }
+
+  return process.platform === "win32" ? "soffice.exe" : "soffice";
+};
+
+let libreOfficeHealth = {
+  checkedAt: 0,
+  result: { available: false, version: "" },
+};
+
+const getLibreOfficeHealth = async () => {
+  const now = Date.now();
+
+  if (now - libreOfficeHealth.checkedAt < 60_000) {
+    return libreOfficeHealth.result;
+  }
+
+  try {
+    const { stdout, stderr } = await execFileAsync(
+      getLibreOfficeExecutable(),
+      ["--version"],
+      { timeout: 5000 }
+    );
+    const version = (stdout || stderr || "").trim().split(/\r?\n/)[0] || "available";
+
+    libreOfficeHealth = {
+      checkedAt: now,
+      result: { available: true, version },
+    };
+  } catch (error) {
+    libreOfficeHealth = {
+      checkedAt: now,
+      result: { available: false, version: "" },
+    };
+  }
+
+  return libreOfficeHealth.result;
+};
 
 app.use(
   cors({
@@ -58,11 +105,12 @@ app.get("/", (req, res) => {
   res.send("AUTHGUARD BACKEND WORKING");
 });
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", async (req, res) => {
   res.json({
     ok: true,
     db: dbDriver,
     documentStorage: dbDriver === "postgres" ? "database" : "filesystem",
+    libreOffice: await getLibreOfficeHealth(),
   });
 });
 
