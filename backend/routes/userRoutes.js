@@ -135,7 +135,7 @@ router.get("/admin-stats", verifyToken, async (req, res) => {
 
     const verifiedResult = await pool
       .request()
-      .input("isVerified", sql.Bit, 1)
+      .input("isVerified", sql.Bit, true)
       .query(`
         SELECT COUNT(*) AS verified_users
         FROM users
@@ -229,7 +229,7 @@ router.post("/admin-create", verifyToken, async (req, res) => {
       .input("email", sql.NVarChar(255), normalizedEmail)
       .input("passwordHash", sql.NVarChar(500), hashedPassword)
       .input("role", sql.NVarChar(50), safeRole)
-      .input("isVerified", sql.Bit, 1)
+      .input("isVerified", sql.Bit, true)
       .query(`
         INSERT INTO users (
           full_name,
@@ -386,9 +386,10 @@ router.post("/2fa/verify", verifyToken, async (req, res) => {
     await pool
       .request()
       .input("userId", sql.Int, req.user.id)
+      .input("twofaEnabled", sql.Bit, true)
       .query(`
         UPDATE users
-        SET twofa_enabled = 1
+        SET twofa_enabled = @twofaEnabled
         WHERE id = @userId
       `);
 
@@ -416,10 +417,11 @@ router.post("/2fa/disable", verifyToken, async (req, res) => {
     await pool
       .request()
       .input("userId", sql.Int, req.user.id)
+      .input("twofaEnabled", sql.Bit, false)
       .query(`
         UPDATE users
         SET twofa_secret = NULL,
-            twofa_enabled = 0
+            twofa_enabled = @twofaEnabled
         WHERE id = @userId
       `);
 
@@ -491,10 +493,11 @@ router.post("/2fa/reset-login", async (req, res) => {
       .request()
       .input("secret", sql.NVarChar(255), secret.base32)
       .input("userId", sql.Int, user.id)
+      .input("twofaEnabled", sql.Bit, false)
       .query(`
         UPDATE users
         SET twofa_secret = @secret,
-            twofa_enabled = 0
+            twofa_enabled = @twofaEnabled
         WHERE id = @userId
       `);
 

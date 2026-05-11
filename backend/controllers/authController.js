@@ -141,7 +141,7 @@ const sendCode = async (req, res) => {
         .input("email", sql.NVarChar(255), normalizedEmail)
         .input("passwordHash", sql.NVarChar(500), "")
         .input("role", sql.NVarChar(50), "user")
-        .input("isVerified", sql.Bit, 0)
+        .input("isVerified", sql.Bit, false)
         .input("verificationCode", sql.NVarChar(10), code)
         .input("codeExpiresAt", sql.DateTime, expiresAt)
         .query(`
@@ -172,11 +172,12 @@ const sendCode = async (req, res) => {
         .input("email", sql.NVarChar(255), normalizedEmail)
         .input("verificationCode", sql.NVarChar(10), code)
         .input("codeExpiresAt", sql.DateTime, expiresAt)
+        .input("isVerified", sql.Bit, false)
         .query(`
           UPDATE users
           SET verification_code = @verificationCode,
               code_expires_at = @codeExpiresAt,
-              is_verified = 0
+              is_verified = @isVerified
           WHERE email = @email
         `);
     }
@@ -317,12 +318,13 @@ const register = async (req, res) => {
       .input("fullName", sql.NVarChar(255), fullName)
       .input("passwordHash", sql.NVarChar(500), hashedPassword)
       .input("role", sql.NVarChar(50), assignedRole)
+      .input("isVerified", sql.Bit, true)
       .query(`
         UPDATE users
         SET full_name = @fullName,
             password_hash = @passwordHash,
             role = @role,
-            is_verified = 1,
+            is_verified = @isVerified,
             verification_code = NULL,
             code_expires_at = NULL
         WHERE email = @email
@@ -404,7 +406,7 @@ const registerDirect = async (req, res) => {
         .input("email", sql.NVarChar(255), normalizedEmail)
         .input("passwordHash", sql.NVarChar(500), hashedPassword)
         .input("role", sql.NVarChar(50), assignedRole)
-        .input("isVerified", sql.Bit, 1)
+        .input("isVerified", sql.Bit, true)
         .query(`
           INSERT INTO users (
             full_name,
@@ -430,7 +432,7 @@ const registerDirect = async (req, res) => {
         .input("fullName", sql.NVarChar(255), fullName)
         .input("passwordHash", sql.NVarChar(500), hashedPassword)
         .input("role", sql.NVarChar(50), assignedRole)
-        .input("isVerified", sql.Bit, 1)
+        .input("isVerified", sql.Bit, true)
         .query(`
           UPDATE users
           SET full_name = @fullName,

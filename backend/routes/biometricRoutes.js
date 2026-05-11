@@ -202,7 +202,8 @@ router.post("/login/options", async (req, res) => {
     const userResult = await pool
       .request()
       .input("email", sql.NVarChar(255), email.trim().toLowerCase())
-      .query("SELECT TOP 1 id FROM users WHERE email = @email AND is_verified = 1");
+      .input("isVerified", sql.Bit, true)
+      .query("SELECT TOP 1 id FROM users WHERE email = @email AND is_verified = @isVerified");
 
     const user = userResult.recordset[0];
     if (!user) {

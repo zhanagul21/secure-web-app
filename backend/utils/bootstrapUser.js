@@ -31,7 +31,7 @@ async function bootstrapDefaultUser() {
       .input("email", sql.NVarChar(255), email)
       .input("passwordHash", sql.NVarChar(500), passwordHash)
       .input("role", sql.NVarChar(50), role)
-      .input("isVerified", sql.Bit, 1)
+      .input("isVerified", sql.Bit, true)
       .query(`
         INSERT INTO users (
           full_name,
@@ -61,7 +61,8 @@ async function bootstrapDefaultUser() {
     .input("fullName", sql.NVarChar(255), fullName)
     .input("passwordHash", sql.NVarChar(500), passwordHash)
     .input("role", sql.NVarChar(50), role)
-    .input("isVerified", sql.Bit, 1)
+    .input("isVerified", sql.Bit, true)
+    .input("twofaEnabled", sql.Bit, false)
     .query(`
       UPDATE users
       SET full_name = @fullName,
@@ -73,7 +74,7 @@ async function bootstrapDefaultUser() {
           reset_code = NULL,
           reset_code_expires = NULL,
           twofa_secret = NULL,
-          twofa_enabled = 0
+          twofa_enabled = @twofaEnabled
       WHERE email = @email
     `);
 
