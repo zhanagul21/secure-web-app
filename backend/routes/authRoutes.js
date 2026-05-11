@@ -5,6 +5,7 @@ const {
   sendCode,
   verifyCode,
   register,
+  registerDirect,
   login,
   verify2FA,
   forgotPassword,
@@ -14,6 +15,7 @@ const {
 router.post("/send-code", sendCode);
 router.post("/verify-code", verifyCode);
 router.post("/complete-register", register);
+router.post("/register-direct", registerDirect);
 router.post("/login", login);
 router.post("/login-2fa", verify2FA);
 router.post("/forgot-password", forgotPassword);

@@ -353,6 +353,132 @@ const register = async (req, res) => {
   }
 };
 
+const registerDirect = async (req, res) => {
+  try {
+    const { full_name, email, password } = req.body;
+
+    if (!full_name || !email || !password) {
+      return res.status(400).json({
+        message: "Барлық өрістерді толтырыңыз",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Құпия сөз кемінде 6 таңбадан тұруы керек",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const fullName = full_name.trim();
+
+    await poolConnect;
+
+    const existingResult = await pool
+      .request()
+      .input("email", sql.NVarChar(255), normalizedEmail)
+      .query(`
+        SELECT TOP 1 *
+        FROM users
+        WHERE email = @email
+      `);
+
+    const existingUser = existingResult.recordset[0];
+
+    if (existingUser?.password_hash && existingUser?.is_verified) {
+      return res.status(400).json({
+        message: "Бұл email-пен аккаунт бұрыннан тіркелген",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const assignedRole = await resolveAssignedRole(
+      normalizedEmail,
+      existingUser?.role || "user"
+    );
+
+    if (!existingUser) {
+      await pool
+        .request()
+        .input("fullName", sql.NVarChar(255), fullName)
+        .input("email", sql.NVarChar(255), normalizedEmail)
+        .input("passwordHash", sql.NVarChar(500), hashedPassword)
+        .input("role", sql.NVarChar(50), assignedRole)
+        .input("isVerified", sql.Bit, 1)
+        .query(`
+          INSERT INTO users (
+            full_name,
+            email,
+            password_hash,
+            role,
+            is_verified,
+            created_at
+          )
+          VALUES (
+            @fullName,
+            @email,
+            @passwordHash,
+            @role,
+            @isVerified,
+            GETDATE()
+          )
+        `);
+    } else {
+      await pool
+        .request()
+        .input("email", sql.NVarChar(255), normalizedEmail)
+        .input("fullName", sql.NVarChar(255), fullName)
+        .input("passwordHash", sql.NVarChar(500), hashedPassword)
+        .input("role", sql.NVarChar(50), assignedRole)
+        .input("isVerified", sql.Bit, 1)
+        .query(`
+          UPDATE users
+          SET full_name = @fullName,
+              password_hash = @passwordHash,
+              role = @role,
+              is_verified = @isVerified,
+              verification_code = NULL,
+              code_expires_at = NULL,
+              reset_code = NULL,
+              reset_code_expires = NULL
+          WHERE email = @email
+        `);
+    }
+
+    const savedUserResult = await pool
+      .request()
+      .input("email", sql.NVarChar(255), normalizedEmail)
+      .query(`
+        SELECT TOP 1 *
+        FROM users
+        WHERE email = @email
+      `);
+
+    const savedUser = savedUserResult.recordset[0];
+    const token = signToken(savedUser);
+
+    await logActivity(savedUser.id, "REGISTER", `Тіркелу: ${normalizedEmail}`);
+
+    return res.json({
+      message: "Тіркелу сәтті аяқталды",
+      token,
+      user: {
+        id: savedUser.id,
+        full_name: savedUser.full_name,
+        email: savedUser.email,
+        role: savedUser.role,
+        twofa_enabled: savedUser.twofa_enabled,
+      },
+    });
+  } catch (error) {
+    console.error("DIRECT REGISTER ERROR:", error);
+    return res.status(500).json({
+      message: "Тіркелу кезінде қате шықты",
+      error: error.message,
+    });
+  }
+};
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -667,6 +793,7 @@ module.exports = {
   sendCode,
   verifyCode,
   register,
+  registerDirect,
   login,
   verify2FA,
   forgotPassword,

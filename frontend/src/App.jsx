@@ -68,7 +68,13 @@ function AuthApp() {
  
   if (!loggedIn) {
     if (page === "register") {
-      return <Register onClose={() => setPage("login")} />;
+      return (
+        <Register
+          onClose={() => setPage("login")}
+          setLoggedIn={setLoggedIn}
+          setPage={setPage}
+        />
+      );
     }
     return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;
   }
