@@ -7,6 +7,7 @@ const fs = require("fs");
 const os = require("os");
 const crypto = require("crypto");
 const mammoth = require("mammoth");
+const WordExtractor = require("word-extractor");
 const { execFile } = require("child_process");
 const { promisify } = require("util");
 const { sql, pool, poolConnect } = require("../config/db");
@@ -300,6 +301,18 @@ const renderDocxPathPreview = async (docxPath, title, compact = false) => {
   return renderDocxBufferPreview(fileBuffer, title, compact);
 };
 
+const renderDocPathTextPreview = async (docPath, title, compact = false) => {
+  const extractor = new WordExtractor();
+  const document = await extractor.extract(docPath);
+  const cleanedText = (document.getBody() || "").trim();
+
+  if (!cleanedText) {
+    throw new Error("DOC_PREVIEW_EMPTY");
+  }
+
+  return wrapPreviewHtml(title, `<pre>${escapeHtml(cleanedText)}</pre>`, compact);
+};
+
 const getReadableDocument = (doc) => {
   if (doc.file_data) {
     const storedBuffer = Buffer.isBuffer(doc.file_data)
@@ -530,9 +543,12 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         res.setHeader("Content-Type", "application/pdf");
         return res.send(await fs.promises.readFile(convertedPath));
       } catch (error) {
-        return res.status(400).json({
-          message: "DOC preview үшін LibreOffice керек. DOCX/PDF қолданған дұрыс.",
-        });
+        const previewHtml = await renderDocPathTextPreview(
+          readable.filePath,
+          doc.original_name
+        );
+
+        return res.send(previewHtml);
       }
     }
 
@@ -772,9 +788,13 @@ router.get("/shared/:token", async (req, res) => {
         res.setHeader("Content-Type", "application/pdf");
         return res.send(await fs.promises.readFile(convertedPath));
       } catch (error) {
-        return res.status(400).json({
-          message: "DOC preview үшін LibreOffice керек. DOCX/PDF қолданған дұрыс.",
-        });
+        const previewHtml = await renderDocPathTextPreview(
+          readable.filePath,
+          doc.original_name,
+          true
+        );
+
+        return res.send(previewHtml);
       }
     }
 
