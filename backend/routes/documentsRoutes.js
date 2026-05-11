@@ -98,12 +98,39 @@ const getLibreOfficeExecutable = () => {
   return process.platform === "win32" ? "soffice.exe" : "soffice";
 };
 
+const getLibreOfficeCandidates = () => {
+  const candidates = [
+    getLibreOfficeExecutable(),
+    process.platform === "win32" ? "libreoffice.exe" : "libreoffice",
+    process.platform === "win32" ? "soffice.exe" : "soffice",
+  ];
+
+  return [...new Set(candidates.filter(Boolean))];
+};
+
+const execLibreOffice = async (args) => {
+  let lastError = null;
+
+  for (const executable of getLibreOfficeCandidates()) {
+    try {
+      return await execFileAsync(executable, args, { timeout: 30000 });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("LibreOffice табылмады");
+};
+
 const convertDocToDocx = async (inputPath) => {
-  const soffice = getLibreOfficeExecutable();
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-doc-"));
 
-  await execFileAsync(soffice, [
+  await execLibreOffice([
     "--headless",
+    "--nologo",
+    "--nofirststartwizard",
+    "--nodefault",
+    "--nolockcheck",
     "--convert-to",
     "docx",
     "--outdir",
@@ -122,13 +149,16 @@ const convertDocToDocx = async (inputPath) => {
 };
 
 const convertDocumentToPdf = async (inputPath) => {
-  const soffice = getLibreOfficeExecutable();
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-doc-"));
 
-  await execFileAsync(soffice, [
+  await execLibreOffice([
     "--headless",
+    "--nologo",
+    "--nofirststartwizard",
+    "--nodefault",
+    "--nolockcheck",
     "--convert-to",
-    "pdf",
+    "pdf:writer_pdf_Export",
     "--outdir",
     tempDir,
     inputPath,

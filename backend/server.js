@@ -41,6 +41,16 @@ const getLibreOfficeExecutable = () => {
   return process.platform === "win32" ? "soffice.exe" : "soffice";
 };
 
+const getLibreOfficeCandidates = () => {
+  const candidates = [
+    getLibreOfficeExecutable(),
+    process.platform === "win32" ? "libreoffice.exe" : "libreoffice",
+    process.platform === "win32" ? "soffice.exe" : "soffice",
+  ];
+
+  return [...new Set(candidates.filter(Boolean))];
+};
+
 let libreOfficeHealth = {
   checkedAt: 0,
   result: { available: false, version: "" },
@@ -53,13 +63,30 @@ const getLibreOfficeHealth = async () => {
     return libreOfficeHealth.result;
   }
 
+  let lastError = null;
+
   try {
-    const { stdout, stderr } = await execFileAsync(
-      getLibreOfficeExecutable(),
-      ["--version"],
-      { timeout: 5000 }
-    );
-    const version = (stdout || stderr || "").trim().split(/\r?\n/)[0] || "available";
+    let version = "";
+
+    for (const executable of getLibreOfficeCandidates()) {
+      try {
+        const { stdout, stderr } = await execFileAsync(
+          executable,
+          ["--version"],
+          { timeout: 5000 }
+        );
+        version =
+          (stdout || stderr || "").trim().split(/\r?\n/)[0] ||
+          `${executable} available`;
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!version) {
+      throw lastError || new Error("LibreOffice not available");
+    }
 
     libreOfficeHealth = {
       checkedAt: now,
