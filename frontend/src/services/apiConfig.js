@@ -1,5 +1,5 @@
 const LOCAL_API_BASE_URL = "http://localhost:5000/api";
-const PUBLIC_API_BASE_URL = "https://secure-web-app-backend.onrender.com/api";
+const PUBLIC_API_BASE_URL = "https://authguard-backend-7mbc.onrender.com/api";
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 const isLocalBrowser =
@@ -8,8 +8,13 @@ const isLocalBrowser =
 const configuredUsesLocalhost =
   !!configuredApiBaseUrl &&
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredApiBaseUrl);
+const configuredUsesRetiredBackend =
+  !!configuredApiBaseUrl &&
+  configuredApiBaseUrl.includes("secure-web-app-backend.onrender.com");
 const safeConfiguredApiBaseUrl =
-  configuredUsesLocalhost && !isLocalBrowser ? "" : configuredApiBaseUrl;
+  (configuredUsesLocalhost && !isLocalBrowser) || configuredUsesRetiredBackend
+    ? ""
+    : configuredApiBaseUrl;
 
 export const apiBaseUrl =
   safeConfiguredApiBaseUrl ||

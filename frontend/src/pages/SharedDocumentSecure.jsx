@@ -14,6 +14,9 @@ function SharedDocumentSecure({ token }) {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
+    let objectUrl = "";
+    let cancelled = false;
+
     const loadSharedDocument = async () => {
       if (!token) {
         setError("Сілтеме табылмады.");
@@ -29,6 +32,7 @@ function SharedDocumentSecure({ token }) {
 
         if (expiresHeader) {
           setExpiresAt(expiresHeader);
+          setNow(Date.now());
         }
 
         if (!res.ok) {
@@ -41,6 +45,8 @@ function SharedDocumentSecure({ token }) {
           }
           return;
         }
+
+        if (cancelled) return;
 
         setMimeType(contentType);
         setFileUrl("");
@@ -63,7 +69,10 @@ function SharedDocumentSecure({ token }) {
         }
 
         const blob = await res.blob();
-        setFileUrl(window.URL.createObjectURL(blob));
+        objectUrl = window.URL.createObjectURL(blob);
+        if (!cancelled) {
+          setFileUrl(objectUrl);
+        }
       } catch (fetchError) {
         setError(
           getFetchErrorMessage(fetchError, "Серверге қосылу мүмкін болмады.")
@@ -76,11 +85,12 @@ function SharedDocumentSecure({ token }) {
     loadSharedDocument();
 
     return () => {
-      if (fileUrl) {
-        window.URL.revokeObjectURL(fileUrl);
+      cancelled = true;
+      if (objectUrl) {
+        window.URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [fileUrl, token]);
+  }, [token]);
 
   useEffect(() => {
     if (!expiresAt) return undefined;
@@ -89,9 +99,10 @@ function SharedDocumentSecure({ token }) {
   }, [expiresAt]);
 
   const remainingTime = useMemo(() => {
-    if (!expiresAt) return "Есептелуде...";
+    if (!expiresAt) return "00:00:00";
 
     const diff = new Date(expiresAt).getTime() - now;
+    if (!Number.isFinite(diff)) return "00:00:00";
     if (diff <= 0) return "00:00:00";
 
     const totalSeconds = Math.floor(diff / 1000);
@@ -167,7 +178,7 @@ function SharedDocumentSecure({ token }) {
               </div>
               <div className="mt-2 text-2xl font-black">{remainingTime}</div>
               <div className="mt-2 text-sm text-slate-300">
-                {expiresAt ? new Date(expiresAt).toLocaleString() : "Есептелуде..."}
+                {expiresAt ? new Date(expiresAt).toLocaleString() : "Уақыты алынуда"}
               </div>
             </div>
           </div>

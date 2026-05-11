@@ -6,10 +6,9 @@ databases:
 services:
   - type: web
     name: secure-web-app-backend
-    env: node
-    rootDir: backend
-    buildCommand: npm ci
-    startCommand: npm start
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
