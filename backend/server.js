@@ -8,6 +8,7 @@ const fs = require("fs");
 
 const { connectDB, dbDriver } = require("./config/db");
 const { verifyEmailTransporter } = require("./utils/sendEmail");
+const { bootstrapDefaultUser } = require("./utils/bootstrapUser");
 
 const authRoutes = require("./routes/authRoutes");
 const biometricRoutes = require("./routes/biometricRoutes");
@@ -83,6 +84,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(async () => {
+  await bootstrapDefaultUser();
   await verifyEmailTransporter();
 
   app.listen(PORT, "0.0.0.0", () => {
