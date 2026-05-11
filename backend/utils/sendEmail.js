@@ -5,6 +5,8 @@ const smtpPass = process.env.GMAIL_APP_PASSWORD;
 const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
 const smtpFamily = Number.parseInt(process.env.SMTP_FAMILY || "4", 10);
 const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
+const resendApiKey = process.env.RESEND_API_KEY;
+const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
 
 const buildTransporter = ({ secure, port, service }) =>
   nodemailer.createTransport({
@@ -48,7 +50,53 @@ const transporters = [
   },
 ];
 
+const canUseSmtp = Boolean(smtpUser && smtpPass);
+
+async function verifyResendTransporter() {
+  if (!resendApiKey) {
+    return false;
+  }
+
+  console.log("MAILER READY: resend-api");
+  return true;
+}
+
+async function sendViaResend(to, subject, html) {
+  const response = await fetch(resendApiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: process.env.MAIL_FROM || process.env.RESEND_FROM_EMAIL || smtpUser,
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = new Error(payload?.message || payload?.error || "Resend email request failed");
+    error.code = payload?.name || `HTTP_${response.status}`;
+    throw error;
+  }
+
+  return payload;
+}
+
 const verifyEmailTransporter = async () => {
+  if (await verifyResendTransporter()) {
+    return;
+  }
+
+  if (!canUseSmtp) {
+    console.error("MAILER VERIFY ERROR: no RESEND_API_KEY and no SMTP credentials configured");
+    return;
+  }
+
   for (const { name, transporter } of transporters) {
     try {
       await transporter.verify();
@@ -61,6 +109,14 @@ const verifyEmailTransporter = async () => {
 };
 
 const sendMail = async (to, subject, html) => {
+  if (resendApiKey) {
+    return sendViaResend(to, subject, html);
+  }
+
+  if (!canUseSmtp) {
+    throw new Error("Email transport is unavailable");
+  }
+
   let lastError;
 
   for (const { name, transporter } of transporters) {
