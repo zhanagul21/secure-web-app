@@ -266,6 +266,15 @@ const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
           border-radius: 16px;
           padding: 16px;
         }
+        .word-fallback {
+          white-space: pre;
+          word-break: normal;
+          overflow: auto;
+          tab-size: 8;
+          font-family: "Courier New", monospace;
+          font-size: 13px;
+          line-height: 1.55;
+        }
       </style>
     </head>
     <body>${bodyHtml}</body>
@@ -310,7 +319,11 @@ const renderDocPathTextPreview = async (docPath, title, compact = false) => {
     throw new Error("DOC_PREVIEW_EMPTY");
   }
 
-  return wrapPreviewHtml(title, `<pre>${escapeHtml(cleanedText)}</pre>`, compact);
+  return wrapPreviewHtml(
+    title,
+    `<pre class="word-fallback">${escapeHtml(cleanedText)}</pre>`,
+    compact
+  );
 };
 
 const getReadableDocument = (doc) => {
@@ -536,11 +549,14 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
 
     if (doc.mime_type === "application/msword") {
       try {
-        const { convertedPath, tempDir } = await convertDocToPdf(readable.filePath);
+        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
         cleanupDir(tempDirToDelete);
         tempDirToDelete = tempDir;
 
-        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
         return res.send(await fs.promises.readFile(convertedPath));
       } catch (error) {
         const previewHtml = await renderDocPathTextPreview(
@@ -781,11 +797,14 @@ router.get("/shared/:token", async (req, res) => {
 
     if (doc.mime_type === "application/msword") {
       try {
-        const { convertedPath, tempDir } = await convertDocToPdf(readable.filePath);
+        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
         cleanupDir(tempDirToDelete);
         tempDirToDelete = tempDir;
 
-        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
         return res.send(await fs.promises.readFile(convertedPath));
       } catch (error) {
         const previewHtml = await renderDocPathTextPreview(

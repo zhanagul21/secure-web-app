@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { renderAsync } from "docx-preview";
 import {
   apiBaseUrl,
   getFetchErrorMessage,
 } from "../services/apiConfig";
 
 function SharedDocumentSecure({ token }) {
+  const docxPreviewRef = useRef(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [fileUrl, setFileUrl] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
+  const [docxBuffer, setDocxBuffer] = useState(null);
   const [mimeType, setMimeType] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [now, setNow] = useState(Date.now());
@@ -51,6 +54,7 @@ function SharedDocumentSecure({ token }) {
         setMimeType(contentType);
         setFileUrl("");
         setHtmlContent("");
+        setDocxBuffer(null);
 
         if (contentType.includes("text/html")) {
           const html = await res.text();
@@ -65,6 +69,15 @@ function SharedDocumentSecure({ token }) {
               .replace(/</g, "&lt;")
               .replace(/>/g, "&gt;")}</pre></body></html>`
           );
+          return;
+        }
+
+        if (
+          contentType.includes(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          )
+        ) {
+          setDocxBuffer(await res.arrayBuffer());
           return;
         }
 
@@ -97,6 +110,30 @@ function SharedDocumentSecure({ token }) {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [expiresAt]);
+
+  useEffect(() => {
+    if (!docxBuffer || !docxPreviewRef.current) {
+      return undefined;
+    }
+
+    const container = docxPreviewRef.current;
+    container.innerHTML = "";
+    renderAsync(docxBuffer, container, undefined, {
+      className: "authguard-docx",
+      inWrapper: false,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      renderHeaders: true,
+      renderFooters: true,
+    }).catch((renderError) => {
+      console.error("SHARED DOCX RENDER ERROR:", renderError);
+      setError("Word preview ашылмады. Файлды жүктеп ашуға болады.");
+    });
+
+    return () => {
+      container.innerHTML = "";
+    };
+  }, [docxBuffer]);
 
   const remainingTime = useMemo(() => {
     if (!expiresAt) return "00:00:00";
@@ -146,6 +183,14 @@ function SharedDocumentSecure({ token }) {
           srcDoc={htmlContent}
           className="h-[85vh] w-full rounded-[24px] border border-sky-100 bg-white"
         />
+      );
+    }
+
+    if (docxBuffer) {
+      return (
+        <div className="h-[85vh] overflow-auto rounded-[24px] border border-sky-100 bg-slate-100 p-4">
+          <div ref={docxPreviewRef} className="mx-auto w-fit bg-white shadow-sm" />
+        </div>
       );
     }
 
