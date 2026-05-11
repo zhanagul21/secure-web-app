@@ -5,7 +5,7 @@ databases:
 
 services:
   - type: web
-    name: secure-web-app-backend
+    name: authguard-backend-7mbc
     runtime: docker
     dockerfilePath: backend/Dockerfile
     dockerContext: backend

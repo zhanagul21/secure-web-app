@@ -101,6 +101,8 @@ const getLibreOfficeExecutable = () => {
 const getLibreOfficeCandidates = () => {
   const candidates = [
     getLibreOfficeExecutable(),
+    "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
+    "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe",
     process.platform === "win32" ? "libreoffice.exe" : "libreoffice",
     process.platform === "win32" ? "soffice.exe" : "soffice",
   ];
