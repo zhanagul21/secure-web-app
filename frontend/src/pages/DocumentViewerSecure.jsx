@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { renderAsync } from "docx-preview";
+import { useEffect, useState } from "react";
 import API from "../services/api";
 
 function formatFileSize(bytes) {
@@ -10,13 +9,12 @@ function formatFileSize(bytes) {
 }
 
 function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
-  const docxPreviewRef = useRef(null);
   const [documentData, setDocumentData] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [previewMimeType, setPreviewMimeType] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
-  const [docxBuffer, setDocxBuffer] = useState(null);
   const [previewType, setPreviewType] = useState("none");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDuration, setShareDuration] = useState(60);
@@ -29,11 +27,8 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl("");
     }
+    setPreviewMimeType("");
     setHtmlContent("");
-    setDocxBuffer(null);
-    if (docxPreviewRef.current) {
-      docxPreviewRef.current.innerHTML = "";
-    }
     setPreviewType("none");
   };
 
@@ -80,6 +75,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
         contentType.startsWith("image/")
       ) {
         setPreviewType("media");
+        setPreviewMimeType(contentType);
         setPreviewUrl(URL.createObjectURL(res.data));
         return;
       }
@@ -99,16 +95,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
         setPreviewType("html");
         const html = await res.data.text();
         setHtmlContent(html);
-        return;
-      }
-
-      if (
-        contentType.includes(
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-      ) {
-        setPreviewType("docx");
-        setDocxBuffer(await res.data.arrayBuffer());
         return;
       }
 
@@ -134,31 +120,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       }
     };
   }, [documentId]);
-
-  useEffect(() => {
-    if (previewType !== "docx" || !docxBuffer || !docxPreviewRef.current) {
-      return undefined;
-    }
-
-    const container = docxPreviewRef.current;
-    container.innerHTML = "";
-    renderAsync(docxBuffer, container, undefined, {
-      className: "authguard-docx",
-      inWrapper: false,
-      ignoreWidth: false,
-      ignoreHeight: false,
-      renderHeaders: true,
-      renderFooters: true,
-    }).catch((error) => {
-      console.error("DOCX RENDER ERROR:", error);
-      setPreviewType("unsupported");
-      setMessage("Word preview ашылмады. Файлды жүктеп ашуға болады.");
-    });
-
-    return () => {
-      container.innerHTML = "";
-    };
-  }, [docxBuffer, previewType]);
 
   const handleDownload = async () => {
     try {
@@ -221,7 +182,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
 
   const renderPreview = () => {
     if (previewUrl) {
-      if (documentData?.mime_type === "application/pdf") {
+      if (previewMimeType.includes("application/pdf")) {
         return (
           <iframe
             src={previewUrl}
@@ -249,14 +210,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
           srcDoc={htmlContent}
           className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
         />
-      );
-    }
-
-    if (previewType === "docx") {
-      return (
-        <div className="h-[82vh] overflow-auto rounded-[24px] border border-sky-100 bg-slate-100 p-4">
-          <div ref={docxPreviewRef} className="mx-auto w-fit bg-white shadow-sm" />
-        </div>
       );
     }
 

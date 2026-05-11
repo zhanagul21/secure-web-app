@@ -121,7 +121,7 @@ const convertDocToDocx = async (inputPath) => {
   return { convertedPath, tempDir };
 };
 
-const convertDocToPdf = async (inputPath) => {
+const convertDocumentToPdf = async (inputPath) => {
   const soffice = getLibreOfficeExecutable();
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-doc-"));
 
@@ -138,10 +138,22 @@ const convertDocToPdf = async (inputPath) => {
   const convertedPath = path.join(tempDir, `${baseName}.pdf`);
 
   if (!fs.existsSync(convertedPath)) {
-    throw new Error("DOC файлын PDF-ке айналдыру мүмкін болмады");
+    throw new Error("WORD файлын PDF-ке айналдыру мүмкін болмады");
   }
 
   return { convertedPath, tempDir };
+};
+
+const sendConvertedPdfPreview = async (res, inputPath, currentTempDir) => {
+  const { convertedPath, tempDir } = await convertDocumentToPdf(inputPath);
+  cleanupDir(currentTempDir);
+
+  const pdfBuffer = await fs.promises.readFile(convertedPath);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "inline");
+  res.send(pdfBuffer);
+
+  return tempDir;
 };
 
 const cleanupDir = (dirPath) => {
@@ -539,25 +551,32 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
       doc.mime_type ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      const previewHtml = await renderDocxBufferPreview(
-        readable.buffer,
-        doc.original_name
-      );
+      try {
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
+        return;
+      } catch (error) {
+        console.error("DOCX PDF PREVIEW ERROR:", error);
+        const previewHtml = await renderDocxBufferPreview(
+          readable.buffer,
+          doc.original_name
+        );
 
-      return res.send(previewHtml);
+        return res.send(previewHtml);
+      }
     }
 
     if (doc.mime_type === "application/msword") {
       try {
-        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
-        cleanupDir(tempDirToDelete);
-        tempDirToDelete = tempDir;
-
-        res.setHeader(
-          "Content-Type",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
         );
-        return res.send(await fs.promises.readFile(convertedPath));
+        return;
       } catch (error) {
         const previewHtml = await renderDocPathTextPreview(
           readable.filePath,
@@ -767,45 +786,33 @@ router.get("/shared/:token", async (req, res) => {
       doc.mime_type ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      const resultHtml = await mammoth.convertToHtml({ buffer: readable.buffer });
+      try {
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
+        return;
+      } catch (error) {
+        console.error("SHARED DOCX PDF PREVIEW ERROR:", error);
+        const previewHtml = await renderDocxBufferPreview(
+          readable.buffer,
+          doc.original_name,
+          true
+        );
 
-      return res.send(`
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-            <title>${doc.original_name}</title>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                padding: 24px;
-                line-height: 1.7;
-                max-width: 920px;
-                margin: 0 auto;
-                background: #fff;
-                color: #111827;
-              }
-              img { max-width: 100%; }
-              table { border-collapse: collapse; width: 100%; }
-              td, th { border: 1px solid #cbd5e1; padding: 8px; }
-              p { margin: 0 0 12px; }
-            </style>
-          </head>
-          <body>${resultHtml.value}</body>
-        </html>
-      `);
+        return res.send(previewHtml);
+      }
     }
 
     if (doc.mime_type === "application/msword") {
       try {
-        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
-        cleanupDir(tempDirToDelete);
-        tempDirToDelete = tempDir;
-
-        res.setHeader(
-          "Content-Type",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
         );
-        return res.send(await fs.promises.readFile(convertedPath));
+        return;
       } catch (error) {
         const previewHtml = await renderDocPathTextPreview(
           readable.filePath,
