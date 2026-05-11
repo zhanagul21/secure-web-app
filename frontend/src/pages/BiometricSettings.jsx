@@ -32,17 +32,6 @@ function prepareRegistrationOptions(options) {
   };
 }
 
-function prepareAuthOptions(options) {
-  return {
-    ...options,
-    challenge: b64url.decode(options.challenge),
-    allowCredentials: (options.allowCredentials || []).map((c) => ({
-      ...c,
-      id: b64url.decode(c.id),
-    })),
-  };
-}
-
 // Credential response-ті сервер үшін сериялау
 function serializeCredential(cred) {
   return {

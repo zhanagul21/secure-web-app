@@ -120,6 +120,29 @@ const convertDocToDocx = async (inputPath) => {
   return { convertedPath, tempDir };
 };
 
+const convertDocToPdf = async (inputPath) => {
+  const soffice = getLibreOfficeExecutable();
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-doc-"));
+
+  await execFileAsync(soffice, [
+    "--headless",
+    "--convert-to",
+    "pdf",
+    "--outdir",
+    tempDir,
+    inputPath,
+  ]);
+
+  const baseName = path.basename(inputPath, path.extname(inputPath));
+  const convertedPath = path.join(tempDir, `${baseName}.pdf`);
+
+  if (!fs.existsSync(convertedPath)) {
+    throw new Error("DOC файлын PDF-ке айналдыру мүмкін болмады");
+  }
+
+  return { convertedPath, tempDir };
+};
+
 const cleanupDir = (dirPath) => {
   try {
     if (dirPath && fs.existsSync(dirPath)) {
@@ -213,6 +236,68 @@ const encryptUploadedFile = async (file) => {
   if (!isEncryptedFile(storedBuffer)) {
     await fs.promises.writeFile(file.path, encryptFile(storedBuffer));
   }
+};
+
+const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <title>${title}</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 24px;
+          line-height: ${compact ? "1.6" : "1.7"};
+          max-width: ${compact ? "900px" : "920px"};
+          margin: 0 auto;
+          background: #fff;
+          color: #111827;
+        }
+        img { max-width: 100%; }
+        table { border-collapse: collapse; width: 100%; }
+        td, th { border: 1px solid #cbd5e1; padding: 8px; }
+        p { margin: 0 0 12px; }
+        pre {
+          white-space: pre-wrap;
+          word-break: break-word;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 16px;
+        }
+      </style>
+    </head>
+    <body>${bodyHtml}</body>
+  </html>
+`;
+
+const escapeHtml = (text) =>
+  String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const renderDocxBufferPreview = async (buffer, title, compact = false) => {
+  const htmlResult = await mammoth.convertToHtml({ buffer });
+  const cleanedHtml = (htmlResult.value || "").trim();
+
+  if (cleanedHtml) {
+    return wrapPreviewHtml(title, cleanedHtml, compact);
+  }
+
+  const textResult = await mammoth.extractRawText({ buffer });
+  const cleanedText = (textResult.value || "").trim();
+
+  if (cleanedText) {
+    return wrapPreviewHtml(title, `<pre>${escapeHtml(cleanedText)}</pre>`, compact);
+  }
+
+  throw new Error("WORD_PREVIEW_EMPTY");
+};
+
+const renderDocxPathPreview = async (docxPath, title, compact = false) => {
+  const fileBuffer = await fs.promises.readFile(docxPath);
+  return renderDocxBufferPreview(fileBuffer, title, compact);
 };
 
 const getReadableDocument = (doc) => {
@@ -428,65 +513,22 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
       doc.mime_type ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      const result = await mammoth.convertToHtml({ buffer: readable.buffer });
+      const previewHtml = await renderDocxBufferPreview(
+        readable.buffer,
+        doc.original_name
+      );
 
-      return res.send(`
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-            <title>${doc.original_name}</title>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                padding: 24px;
-                line-height: 1.7;
-                max-width: 920px;
-                margin: 0 auto;
-                background: #fff;
-                color: #111827;
-              }
-              img { max-width: 100%; }
-              table { border-collapse: collapse; width: 100%; }
-              td, th { border: 1px solid #cbd5e1; padding: 8px; }
-              p { margin: 0 0 12px; }
-            </style>
-          </head>
-          <body>${result.value}</body>
-        </html>
-      `);
+      return res.send(previewHtml);
     }
 
     if (doc.mime_type === "application/msword") {
       try {
-        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
+        const { convertedPath, tempDir } = await convertDocToPdf(readable.filePath);
         cleanupDir(tempDirToDelete);
         tempDirToDelete = tempDir;
 
-        const result = await mammoth.convertToHtml({ path: convertedPath });
-
-        return res.send(`
-          <html>
-            <head>
-              <meta charset="UTF-8" />
-              <title>${doc.original_name}</title>
-              <style>
-                body {
-                  font-family: Arial, sans-serif;
-                  padding: 24px;
-                  line-height: 1.6;
-                  max-width: 900px;
-                  margin: 0 auto;
-                  background: #fff;
-                  color: #111;
-                }
-                img { max-width: 100%; }
-                table { border-collapse: collapse; width: 100%; }
-                td, th { border: 1px solid #ccc; padding: 8px; }
-              </style>
-            </head>
-            <body>${result.value}</body>
-          </html>
-        `);
+        res.setHeader("Content-Type", "application/pdf");
+        return res.send(await fs.promises.readFile(convertedPath));
       } catch (error) {
         return res.status(400).json({
           message: "DOC preview үшін LibreOffice керек. DOCX/PDF қолданған дұрыс.",
@@ -723,35 +765,12 @@ router.get("/shared/:token", async (req, res) => {
 
     if (doc.mime_type === "application/msword") {
       try {
-        const { convertedPath, tempDir } = await convertDocToDocx(readable.filePath);
+        const { convertedPath, tempDir } = await convertDocToPdf(readable.filePath);
         cleanupDir(tempDirToDelete);
         tempDirToDelete = tempDir;
 
-        const resultHtml = await mammoth.convertToHtml({ path: convertedPath });
-
-        return res.send(`
-          <html>
-            <head>
-              <meta charset="UTF-8" />
-              <title>${doc.original_name}</title>
-              <style>
-                body {
-                  font-family: Arial, sans-serif;
-                  padding: 24px;
-                  line-height: 1.6;
-                  max-width: 900px;
-                  margin: 0 auto;
-                  background: #fff;
-                  color: #111;
-                }
-                img { max-width: 100%; }
-                table { border-collapse: collapse; width: 100%; }
-                td, th { border: 1px solid #ccc; padding: 8px; }
-              </style>
-            </head>
-            <body>${resultHtml.value}</body>
-          </html>
-        `);
+        res.setHeader("Content-Type", "application/pdf");
+        return res.send(await fs.promises.readFile(convertedPath));
       } catch (error) {
         return res.status(400).json({
           message: "DOC preview үшін LibreOffice керек. DOCX/PDF қолданған дұрыс.",
