@@ -10,7 +10,8 @@ const configuredUsesLocalhost =
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredApiBaseUrl);
 const configuredUsesRetiredBackend =
   !!configuredApiBaseUrl &&
-  configuredApiBaseUrl.includes("secure-web-app-backend.onrender.com");
+  (configuredApiBaseUrl.includes("secure-web-app-backend.onrender.com") ||
+    configuredApiBaseUrl.includes("authguard-backend-7mbc.onrender.com"));
 const safeConfiguredApiBaseUrl =
   (configuredUsesLocalhost && !isLocalBrowser) || configuredUsesRetiredBackend
     ? ""
