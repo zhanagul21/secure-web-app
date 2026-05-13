@@ -3,11 +3,54 @@ import API from "../services/api";
 import { getApiErrorMessage } from "../services/apiConfig";
 import logo from "../assets/logo.png";
 
+const b64url = {
+  decode: (str) => {
+    const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
+    return Uint8Array.from(raw, (c) => c.charCodeAt(0)).buffer;
+  },
+  encode: (buf) => {
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    bytes.forEach((b) => (binary += String.fromCharCode(b)));
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  },
+};
+
+function prepareAuthenticationOptions(options) {
+  return {
+    ...options,
+    challenge: b64url.decode(options.challenge),
+    allowCredentials: (options.allowCredentials || []).map((credential) => ({
+      ...credential,
+      id: b64url.decode(credential.id),
+    })),
+  };
+}
+
+function serializeCredential(cred) {
+  return {
+    id: cred.id,
+    rawId: b64url.encode(cred.rawId),
+    type: cred.type,
+    response: {
+      clientDataJSON: b64url.encode(cred.response.clientDataJSON),
+      authenticatorData: b64url.encode(cred.response.authenticatorData),
+      signature: b64url.encode(cred.response.signature),
+      userHandle: cred.response.userHandle
+        ? b64url.encode(cred.response.userHandle)
+        : undefined,
+    },
+  };
+}
+
 function Login({ setLoggedIn, setPage }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const biometricSupported =
+    typeof window !== "undefined" && Boolean(window.PublicKeyCredential);
 
   const [showForgot, setShowForgot] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -74,6 +117,54 @@ function Login({ setLoggedIn, setPage }) {
     } catch (error) {
       console.error("FORGOT PASSWORD ERROR:", error);
       setMessage(getApiErrorMessage(error, "Құпиясөзді қалпына келтіру қатесі"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setMessage("");
+
+    if (!biometricSupported) {
+      setMessage("Бұл браузер Face ID / Touch ID арқылы кіруді қолдамайды.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setMessage("Face ID арқылы кіру үшін алдымен email енгізіңіз.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const optionsRes = await API.post("/biometric/login/options", {
+        email: email.trim(),
+      });
+      const options = prepareAuthenticationOptions(optionsRes.data);
+      const credential = await navigator.credentials.get({ publicKey: options });
+
+      if (!credential) {
+        setMessage("Face ID растауы алынбады.");
+        return;
+      }
+
+      const verifyRes = await API.post("/biometric/login/verify", {
+        userId: optionsRes.data.userId,
+        credential: serializeCredential(credential),
+      });
+
+      localStorage.setItem("token", verifyRes.data.token);
+      localStorage.setItem("user", JSON.stringify(verifyRes.data.user));
+      localStorage.removeItem("temp2faToken");
+
+      setLoggedIn(true);
+      setPage("dashboard");
+    } catch (error) {
+      setMessage(
+        error.response?.data?.message ||
+          "Face ID арқылы кіру мүмкін болмады. Аккаунт ішінде биометрияны тіркеп көріңіз."
+      );
     } finally {
       setLoading(false);
     }
@@ -172,6 +263,17 @@ function Login({ setLoggedIn, setPage }) {
               >
                 {loading ? "Кіріп жатыр..." : "Кіру"}
               </button>
+
+              {biometricSupported && (
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  disabled={loading}
+                  className="w-full rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-70"
+                >
+                  Face ID / Touch ID арқылы кіру
+                </button>
+              )}
 
               <button
                 type="button"

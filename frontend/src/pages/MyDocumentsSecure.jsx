@@ -56,12 +56,15 @@ function matchesType(doc, typeFilter) {
 
 function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
   const [documents, setDocuments] = useState([]);
+  const [trashDocuments, setTrashDocuments] = useState([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
   const [selectedId, setSelectedId] = useState(null);
+  const [trashMode, setTrashMode] = useState(false);
+  const [limits, setLimits] = useState(null);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -87,8 +90,26 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
     }
   };
 
+  const getTrashDocuments = async () => {
+    try {
+      const res = await API.get("/documents/trash");
+      const nextDocuments = res.data.documents || [];
+      setTrashDocuments(nextDocuments);
+      setMessage("");
+    } catch (error) {
+      setMessage(
+        error.response?.data?.message ||
+          "Корзинаны жүктеу кезінде қате шықты."
+      );
+    }
+  };
+
   useEffect(() => {
     getDocuments();
+    getTrashDocuments();
+    API.get("/documents/limits")
+      .then((res) => setLimits(res.data))
+      .catch(() => setLimits(null));
   }, []);
 
   const deleteDoc = async (id) => {
@@ -109,6 +130,36 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
         error.response?.data?.message ||
           "Құжатты өшіру кезінде қате шықты."
       );
+    }
+  };
+
+  const restoreDoc = async (id) => {
+    try {
+      await API.patch(`/documents/restore/${id}`);
+      await getDocuments();
+      await getTrashDocuments();
+      setTrashMode(false);
+      setMessage("Құжат қалпына келтірілді.");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Қалпына келтіру кезінде қате шықты.");
+    }
+  };
+
+  const permanentDeleteDoc = async (id) => {
+    if (!window.confirm("Құжатты біржола өшіресіз бе? Бұл әрекет қайтарылмайды.")) return;
+
+    try {
+      await API.delete(`/documents/permanent/${id}`);
+      setTrashDocuments((current) => {
+        const nextDocuments = current.filter((doc) => doc.id !== id);
+        setSelectedId((selected) =>
+          selected === id ? nextDocuments[0]?.id || null : selected
+        );
+        return nextDocuments;
+      });
+      setMessage("Құжат біржола өшірілді.");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Біржола өшіру кезінде қате шықты.");
     }
   };
 
@@ -136,15 +187,20 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
   const categories = useMemo(
     () =>
       [
-        ...new Set(documents.map((doc) => doc.category).filter(Boolean)),
+        ...new Set(
+          (trashMode ? trashDocuments : documents)
+            .map((doc) => doc.category)
+            .filter(Boolean)
+        ),
       ].sort((a, b) => a.localeCompare(b)),
-    [documents]
+    [documents, trashDocuments, trashMode]
   );
 
   const filteredDocuments = useMemo(() => {
     const searchText = search.toLowerCase();
+    const sourceDocuments = trashMode ? trashDocuments : documents;
 
-    return documents.filter((doc) => {
+    return sourceDocuments.filter((doc) => {
       const matchesSearch =
         doc.title?.toLowerCase().includes(searchText) ||
         doc.description?.toLowerCase().includes(searchText) ||
@@ -154,7 +210,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
         categoryFilter === "all" || doc.category === categoryFilter;
       return matchesSearch && matchesCategory && matchesType(doc, typeFilter);
     });
-  }, [documents, search, categoryFilter, typeFilter]);
+  }, [documents, trashDocuments, trashMode, search, categoryFilter, typeFilter]);
 
   useEffect(() => {
     if (!filteredDocuments.some((doc) => doc.id === selectedId)) {
@@ -227,6 +283,19 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
                 Жаңа құжат
               </button>
               <button
+                onClick={() => {
+                  setTrashMode((current) => !current);
+                  setSelectedId(null);
+                }}
+                className={`rounded-2xl px-4 py-2.5 font-semibold transition ${
+                  trashMode
+                    ? "bg-rose-600 text-white hover:bg-rose-700"
+                    : "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                }`}
+              >
+                Корзина ({trashDocuments.length})
+              </button>
+              <button
                 onClick={logout}
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50"
               >
@@ -264,6 +333,18 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
               Preview және download кезінде ғана дешифрланады
             </p>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-[24px] border border-sky-100 bg-white/95 px-5 py-4 text-sm text-slate-700 shadow-sm">
+          Бір файлға нақты limit:{" "}
+          <span className="font-bold text-slate-900">
+            {limits?.maxUploadSizeMb || 100} MB
+          </span>
+          . Қазіргі Render PostgreSQL storage:{" "}
+          <span className="font-bold text-slate-900">
+            {limits?.storage?.renderPostgresStorageLimitGb || 1} GB
+          </span>
+          . Үлкен файл керек болса `MAX_UPLOAD_SIZE_MB` және database plan көтеру керек.
         </div>
 
         <div className="mt-6 rounded-[30px] border border-white/70 bg-white/95 p-5 shadow-sm">
@@ -494,12 +575,28 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
                 </div>
 
                 <div className="mt-6 grid gap-3">
+                  {trashMode && (
+                    <>
+                      <button
+                        onClick={() => restoreDoc(selectedDocument.id)}
+                        className="rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
+                      >
+                        Қалпына келтіру
+                      </button>
+                      <button
+                        onClick={() => permanentDeleteDoc(selectedDocument.id)}
+                        className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 font-semibold text-rose-700 transition hover:bg-rose-100"
+                      >
+                        Біржола өшіру
+                      </button>
+                    </>
+                  )}
                   <button
                     onClick={() => {
                       setSelectedDocumentId(selectedDocument.id);
                       setPage("viewer");
                     }}
-                    className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+                    className={`${trashMode ? "hidden " : ""}rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800`}
                   >
                     Қауіпсіз preview ашу
                   </button>
@@ -510,13 +607,13 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
                         selectedDocument.original_name
                       )
                     }
-                    className="rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className={`${trashMode ? "hidden " : ""}rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50`}
                   >
                     Дешифрлап жүктеу
                   </button>
                   <button
                     onClick={() => deleteDoc(selectedDocument.id)}
-                    className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 font-semibold text-rose-700 transition hover:bg-rose-100"
+                    className={`${trashMode ? "hidden " : ""}rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 font-semibold text-rose-700 transition hover:bg-rose-100`}
                   >
                     Құжатты өшіру
                   </button>
