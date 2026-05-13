@@ -1,5 +1,5 @@
 const LOCAL_API_BASE_URL = "http://localhost:5000/api";
-const PUBLIC_API_BASE_URL = "https://authguard-backend-7mbc.onrender.com/api";
+const PUBLIC_API_BASE_URL = "https://authguard-backend-docker.onrender.com/api";
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 const isLocalBrowser =
