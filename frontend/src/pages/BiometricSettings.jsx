@@ -67,12 +67,18 @@ function BiometricSettings({ setPage, setLoggedIn, logoutEverywhere }) {
     navigator.userAgent.includes("Android") ? "Android" : "Менің құрылғым"
   );
   const [supported, setSupported] = useState(true);
+  const [platformAvailable, setPlatformAvailable] = useState(null);
 
   useEffect(() => {
     // WebAuthn қолдауын тексеру
     if (!window.PublicKeyCredential) {
       setSupported(false);
       return;
+    }
+    if (window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+      window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+        .then(setPlatformAvailable)
+        .catch(() => setPlatformAvailable(false));
     }
     loadCredentials();
   }, []);
@@ -104,6 +110,13 @@ function BiometricSettings({ setPage, setLoggedIn, logoutEverywhere }) {
       } catch (err) {
         if (err.name === "NotAllowedError") {
           setMsg("Биометрия диалогы жабылды немесе рұқсат берілмеді", "error");
+          return;
+        }
+        if (["ConstraintError", "NotSupportedError", "SecurityError"].includes(err.name)) {
+          setMsg(
+            "Бұл браузер немесе құрылғы осы passkey түрін қабылдамады. Windows Hello баптаңыз немесе Chrome/Edge браузерінен қайталап көріңіз.",
+            "error"
+          );
           return;
         }
         throw err;
@@ -204,6 +217,16 @@ function BiometricSettings({ setPage, setLoggedIn, logoutEverywhere }) {
         {message.text && (
           <div className={`rounded-2xl border px-4 py-3 text-sm font-medium ${msgColors[message.type]}`}>
             {message.text}
+          </div>
+        )}
+
+        {supported && platformAvailable === false && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-800">
+            <div className="font-semibold">Бұл құрылғыда built-in Face ID / Windows Hello табылмады</div>
+            <p className="mt-1 text-sm">
+              Windows-та Settings → Accounts → Sign-in options арқылы Windows Hello PIN/Face баптаңыз.
+              Yandex Browser орнына Chrome немесе Edge қолдансаңыз passkey тұрақтырақ жұмыс істейді.
+            </p>
           </div>
         )}
 
