@@ -112,9 +112,9 @@ function BiometricSettings({ setPage, setLoggedIn, logoutEverywhere }) {
           setMsg("Биометрия диалогы жабылды немесе рұқсат берілмеді", "error");
           return;
         }
-        if (["ConstraintError", "NotSupportedError", "SecurityError"].includes(err.name)) {
+        if (["ConstraintError", "InvalidStateError", "NotSupportedError", "SecurityError", "UnknownError"].includes(err.name)) {
           setMsg(
-            "Бұл браузер немесе құрылғы осы passkey түрін қабылдамады. Windows Hello баптаңыз немесе Chrome/Edge браузерінен қайталап көріңіз.",
+            "Windows passkey сақтай алмады. Windows Hello PIN бапталғанын тексеріңіз немесе Chrome/Edge браузерінен қайталап көріңіз.",
             "error"
           );
           return;
