@@ -1,48 +1,8 @@
 import { useState } from "react";
+import { startAuthentication } from "@simplewebauthn/browser";
 import API from "../services/api";
 import { getApiErrorMessage } from "../services/apiConfig";
 import logo from "../assets/logo.png";
-
-const b64url = {
-  decode: (str) => {
-    const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-    const raw = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
-    return Uint8Array.from(raw, (c) => c.charCodeAt(0)).buffer;
-  },
-  encode: (buf) => {
-    const bytes = new Uint8Array(buf);
-    let binary = "";
-    bytes.forEach((b) => (binary += String.fromCharCode(b)));
-    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  },
-};
-
-function prepareAuthenticationOptions(options) {
-  return {
-    ...options,
-    challenge: b64url.decode(options.challenge),
-    allowCredentials: (options.allowCredentials || []).map((credential) => ({
-      ...credential,
-      id: b64url.decode(credential.id),
-    })),
-  };
-}
-
-function serializeCredential(cred) {
-  return {
-    id: cred.id,
-    rawId: b64url.encode(cred.rawId),
-    type: cred.type,
-    response: {
-      clientDataJSON: b64url.encode(cred.response.clientDataJSON),
-      authenticatorData: b64url.encode(cred.response.authenticatorData),
-      signature: b64url.encode(cred.response.signature),
-      userHandle: cred.response.userHandle
-        ? b64url.encode(cred.response.userHandle)
-        : undefined,
-    },
-  };
-}
 
 function Login({ setLoggedIn, setPage }) {
   const [email, setEmail] = useState("");
@@ -141,17 +101,13 @@ function Login({ setLoggedIn, setPage }) {
       const optionsRes = await API.post("/biometric/login/options", {
         email: email.trim(),
       });
-      const options = prepareAuthenticationOptions(optionsRes.data);
-      const credential = await navigator.credentials.get({ publicKey: options });
-
-      if (!credential) {
-        setMessage("Face ID растауы алынбады.");
-        return;
-      }
+      const credential = await startAuthentication({
+        optionsJSON: optionsRes.data,
+      });
 
       const verifyRes = await API.post("/biometric/login/verify", {
         userId: optionsRes.data.userId,
-        credential: serializeCredential(credential),
+        credential,
       });
 
       localStorage.setItem("token", verifyRes.data.token);

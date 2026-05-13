@@ -1,60 +1,6 @@
 import { useEffect, useState } from "react";
+import { startRegistration } from "@simplewebauthn/browser";
 import API from "../services/api";
-
-// WebAuthn helper — base64url <-> ArrayBuffer
-const b64url = {
-  decode: (str) => {
-    const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-    const raw = atob(base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "="));
-    return Uint8Array.from(raw, (c) => c.charCodeAt(0)).buffer;
-  },
-  encode: (buf) => {
-    const bytes = new Uint8Array(buf);
-    let binary = "";
-    bytes.forEach((b) => (binary += String.fromCharCode(b)));
-    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  },
-};
-
-// Options-тегі id/challenge-ді ArrayBuffer-ге айналдыру
-function prepareRegistrationOptions(options) {
-  return {
-    ...options,
-    challenge: b64url.decode(options.challenge),
-    user: {
-      ...options.user,
-      id: b64url.decode(options.user.id),
-    },
-    excludeCredentials: (options.excludeCredentials || []).map((c) => ({
-      ...c,
-      id: b64url.decode(c.id),
-    })),
-  };
-}
-
-// Credential response-ті сервер үшін сериялау
-function serializeCredential(cred) {
-  return {
-    id: cred.id,
-    rawId: b64url.encode(cred.rawId),
-    type: cred.type,
-    response: {
-      clientDataJSON: b64url.encode(cred.response.clientDataJSON),
-      attestationObject: cred.response.attestationObject
-        ? b64url.encode(cred.response.attestationObject)
-        : undefined,
-      authenticatorData: cred.response.authenticatorData
-        ? b64url.encode(cred.response.authenticatorData)
-        : undefined,
-      signature: cred.response.signature
-        ? b64url.encode(cred.response.signature)
-        : undefined,
-      userHandle: cred.response.userHandle
-        ? b64url.encode(cred.response.userHandle)
-        : undefined,
-    },
-  };
-}
 
 function BiometricSettings({ setPage, setLoggedIn, logoutEverywhere }) {
   const [credentials, setCredentials] = useState([]);
@@ -101,31 +47,10 @@ function BiometricSettings({ setPage, setLoggedIn, logoutEverywhere }) {
     try {
       // 1. Сервердан options алу
       const optRes = await API.post("/biometric/register/options");
-      const options = prepareRegistrationOptions(optRes.data);
+      const credential = await startRegistration({ optionsJSON: optRes.data });
 
-      // 2. Браузер биометрия диалогын ашу
-      let credential;
-      try {
-        credential = await navigator.credentials.create({ publicKey: options });
-      } catch (err) {
-        if (err.name === "NotAllowedError") {
-          setMsg("Биометрия диалогы жабылды немесе рұқсат берілмеді", "error");
-          return;
-        }
-        if (["ConstraintError", "InvalidStateError", "NotSupportedError", "SecurityError", "UnknownError"].includes(err.name)) {
-          setMsg(
-            "Windows passkey сақтай алмады. Windows Hello PIN бапталғанын тексеріңіз немесе Chrome/Edge браузерінен қайталап көріңіз.",
-            "error"
-          );
-          return;
-        }
-        throw err;
-      }
-
-      // 3. Серверге жіберу
-      const serialized = serializeCredential(credential);
       const verifyRes = await API.post("/biometric/register/verify", {
-        credential: serialized,
+        credential,
         deviceName,
       });
 
