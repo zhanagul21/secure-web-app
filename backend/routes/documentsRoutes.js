@@ -19,13 +19,13 @@ const uploadsDir = path.resolve(process.env.UPLOADS_DIR || "./uploads");
 const storeFilesInDatabase =
   Boolean(process.env.DATABASE_URL) && process.env.DB_DRIVER !== "mssql";
 const configuredUploadSizeMb = Number.parseInt(
-  process.env.MAX_UPLOAD_SIZE_MB || "100",
+  process.env.MAX_UPLOAD_SIZE_MB || "500",
   10
 );
 const maxUploadSizeMb =
   Number.isFinite(configuredUploadSizeMb) && configuredUploadSizeMb > 0
     ? configuredUploadSizeMb
-    : 100;
+    : 500;
 const maxUploadSizeBytes = maxUploadSizeMb * 1024 * 1024;
 const renderPostgresStorageLimitGb = Number.parseFloat(
   process.env.RENDER_POSTGRES_STORAGE_GB || "1"

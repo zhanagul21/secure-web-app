@@ -64,7 +64,6 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
   const [viewMode, setViewMode] = useState("grid");
   const [selectedId, setSelectedId] = useState(null);
   const [trashMode, setTrashMode] = useState(false);
-  const [limits, setLimits] = useState(null);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -107,9 +106,6 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
   useEffect(() => {
     getDocuments();
     getTrashDocuments();
-    API.get("/documents/limits")
-      .then((res) => setLimits(res.data))
-      .catch(() => setLimits(null));
   }, []);
 
   const deleteDoc = async (id) => {
@@ -328,18 +324,6 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
               Preview және download кезінде ғана дешифрланады
             </p>
           </div>
-        </div>
-
-        <div className="mt-4 rounded-[24px] border border-sky-100 bg-white/95 px-5 py-4 text-sm text-slate-700 shadow-sm">
-          Бір файлға нақты limit:{" "}
-          <span className="font-bold text-slate-900">
-            {limits?.maxUploadSizeMb || 100} MB
-          </span>
-          . Қазіргі Render PostgreSQL storage:{" "}
-          <span className="font-bold text-slate-900">
-            {limits?.storage?.renderPostgresStorageLimitGb || 1} GB
-          </span>
-          . Үлкен файл керек болса `MAX_UPLOAD_SIZE_MB` және database plan көтеру керек.
         </div>
 
         <div className="mt-6 rounded-[30px] border border-white/70 bg-white/95 p-5 shadow-sm">

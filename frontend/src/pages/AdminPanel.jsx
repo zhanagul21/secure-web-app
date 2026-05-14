@@ -12,6 +12,13 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("user");
+  const currentUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
 
   const logout = () => {
     if (logoutEverywhere) {
@@ -38,13 +45,9 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
   };
 
   const refreshAdminData = async () => {
-    try {
-      setMessage("");
-      const results = await Promise.allSettled([getUsers(), getAdminStats()]);
-      if (results.some((result) => result.status === "rejected")) {
-        setMessage("Кейбір әкімшілік деректер жүктелмеді, бірақ басқару функциялары қолжетімді.");
-      }
-    } catch {
+    setMessage("");
+    const results = await Promise.allSettled([getUsers(), getAdminStats()]);
+    if (results.every((result) => result.status === "rejected")) {
       setMessage("Admin Panel жүктеу кезінде қате шықты");
     }
   };
@@ -80,13 +83,23 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
     }
   };
 
-  const makeAdmin = async (id) => {
+  const setUserRole = async (id, role) => {
     try {
-      await API.put(`/user/make-admin/${id}`, {});
-      setMessage("Қолданушы admin болды");
+      await API.put(`/user/role/${id}`, { role });
+      setMessage(role === "admin" ? "Қолданушы admin болды" : "Қолданушы user рөліне ауысты");
       refreshAdminData();
-    } catch {
-      setMessage("Admin рөлін беру кезінде қате шықты");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Рөлді өзгерту кезінде қате шықты");
+    }
+  };
+
+  const resetUser2FA = async (id) => {
+    try {
+      await API.post(`/user/admin-reset-2fa/${id}`, {});
+      setMessage("Қолданушының 2FA баптауы тазартылды");
+      refreshAdminData();
+    } catch (error) {
+      setMessage(error.response?.data?.message || "2FA тазарту кезінде қате шықты");
     }
   };
 
@@ -154,8 +167,21 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
           <div className="rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5,#ffffff)] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
             <div className="text-sm text-emerald-700">Қорғаныс статусы</div>
             <div className="mt-3 text-2xl font-black text-slate-900">Шифрлау қосулы</div>
-            <div className="mt-2 text-sm text-slate-600">Storage: {appStats?.storage_mode || "database"}</div>
+            <div className="mt-2 text-sm text-slate-600">Құжаттар қорғалған түрде сақталады</div>
           </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            "Қолданушы қосу",
+            "Рөлді admin/user қылып өзгерту",
+            "2FA баптауын тазарту",
+            "Қолданушыны жүйеден өшіру",
+          ].map((item) => (
+            <div key={item} className="rounded-[24px] border border-white/70 bg-white/95 p-5 text-sm font-semibold text-slate-700 shadow-sm">
+              {item}
+            </div>
+          ))}
         </div>
 
         <div className="mt-6 grid gap-5 md:grid-cols-3">
@@ -248,10 +274,21 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
                 <div className="mt-4 text-slate-900">{user.full_name || "-"}</div>
                 <div className="mt-1 break-all text-sm text-slate-600">{user.email || "-"}</div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {user.role !== "admin" && (
-                    <button onClick={() => makeAdmin(user.id)} className="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-white">Admin ету</button>
-                  )}
-                  <button onClick={() => deleteUser(user.id)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">Өшіру</button>
+                  <button
+                    onClick={() => setUserRole(user.id, user.role === "admin" ? "user" : "admin")}
+                    disabled={user.id === currentUser?.id && user.role === "admin"}
+                    className="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {user.role === "admin" ? "User ету" : "Admin ету"}
+                  </button>
+                  <button onClick={() => resetUser2FA(user.id)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-sky-700">2FA reset</button>
+                  <button
+                    onClick={() => deleteUser(user.id)}
+                    disabled={user.id === currentUser?.id}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+                  >
+                    Өшіру
+                  </button>
                 </div>
               </div>
             ))}
@@ -279,10 +316,21 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
                     <td className="p-3">{user.created_at ? new Date(user.created_at).toLocaleString() : "-"}</td>
                     <td className="p-3">
                       <div className="flex flex-wrap gap-2">
-                        {user.role !== "admin" && (
-                          <button onClick={() => makeAdmin(user.id)} className="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-white">Admin ету</button>
-                        )}
-                        <button onClick={() => deleteUser(user.id)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">Өшіру</button>
+                        <button
+                          onClick={() => setUserRole(user.id, user.role === "admin" ? "user" : "admin")}
+                          disabled={user.id === currentUser?.id && user.role === "admin"}
+                          className="rounded-xl bg-slate-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                        >
+                          {user.role === "admin" ? "User ету" : "Admin ету"}
+                        </button>
+                        <button onClick={() => resetUser2FA(user.id)} className="rounded-xl border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-sky-700">2FA reset</button>
+                        <button
+                          onClick={() => deleteUser(user.id)}
+                          disabled={user.id === currentUser?.id}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50"
+                        >
+                          Өшіру
+                        </button>
                       </div>
                     </td>
                   </tr>

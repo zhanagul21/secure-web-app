@@ -126,56 +126,78 @@ router.get("/admin-stats", verifyToken, async (req, res) => {
 
     await poolConnect;
 
-    const usersResult = await pool.request().query(`
+    const safeQuery = async (query, fallback = {}) => {
+      try {
+        const result = await pool.request().query(query);
+        return result.recordset[0] || fallback;
+      } catch (error) {
+        console.error("ADMIN STATS QUERY ERROR:", error);
+        return fallback;
+      }
+    };
+
+    const usersStats = await safeQuery(`
       SELECT
         COUNT(*) AS total_users,
         SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) AS admin_users
       FROM users
-    `);
+    `, { total_users: 0, admin_users: 0 });
 
-    const verifiedResult = await pool
-      .request()
-      .input("isVerified", sql.Bit, true)
-      .query(`
-        SELECT COUNT(*) AS verified_users
-        FROM users
-        WHERE is_verified = @isVerified
-      `);
+    let verifiedStats = { verified_users: 0 };
+    try {
+      const verifiedResult = await pool
+        .request()
+        .input("isVerified", sql.Bit, true)
+        .query(`
+          SELECT COUNT(*) AS verified_users
+          FROM users
+          WHERE is_verified = @isVerified
+        `);
+      verifiedStats = verifiedResult.recordset[0] || verifiedStats;
+    } catch (error) {
+      console.error("ADMIN VERIFIED STATS ERROR:", error);
+    }
 
-    const documentsResult = await pool.request().query(`
+    const documentStats = await safeQuery(`
       SELECT
         COUNT(*) AS total_documents,
         COALESCE(SUM(file_size), 0) AS total_file_size
       FROM documents
-    `);
+    `, { total_documents: 0, total_file_size: 0 });
 
-    const logsResult = await pool.request().query(`
+    const logStats = await safeQuery(`
       SELECT COUNT(*) AS total_events
       FROM activity_logs
-    `);
+    `, { total_events: 0 });
 
-    const linksResult = await pool.request().query(`
+    const linkStats = await safeQuery(`
       SELECT COUNT(*) AS active_links
       FROM shared_links
       WHERE expires_at > GETDATE()
-    `);
+    `, { active_links: 0 });
 
-    const latestLogsResult = await pool.request().query(`
-      SELECT TOP 5 action_type, action_details, created_at
-      FROM activity_logs
-      ORDER BY created_at DESC
-    `);
+    let latestLogs = [];
+    try {
+      const latestLogsResult = await pool.request().query(`
+        SELECT TOP 5 action_type, action_details, created_at
+        FROM activity_logs
+        ORDER BY created_at DESC
+      `);
+      latestLogs = latestLogsResult.recordset;
+    } catch (error) {
+      console.error("ADMIN LATEST LOGS ERROR:", error);
+    }
 
     res.json({
       stats: {
-        ...(usersResult.recordset[0] || {}),
-        ...(verifiedResult.recordset[0] || {}),
-        ...(documentsResult.recordset[0] || {}),
-        ...(logsResult.recordset[0] || {}),
-        ...(linksResult.recordset[0] || {}),
+        ...usersStats,
+        ...verifiedStats,
+        ...documentStats,
+        ...logStats,
+        ...linkStats,
         storage_mode: process.env.DATABASE_URL ? "database" : "filesystem",
       },
-      latestLogs: latestLogsResult.recordset,
+      latestLogs,
     });
   } catch (error) {
     console.error("ADMIN STATS ERROR:", error);
@@ -285,6 +307,64 @@ router.put("/make-admin/:id", verifyToken, async (req, res) => {
   }
 });
 
+router.put("/role/:id", verifyToken, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Тек admin ғана орындай алады" });
+    }
+
+    const id = parseInt(req.params.id, 10);
+    const nextRole = req.body?.role === "admin" ? "admin" : "user";
+
+    if (id === req.user.id && nextRole !== "admin") {
+      return res.status(400).json({ message: "Өзіңіздің admin рөліңізді алып тастауға болмайды" });
+    }
+
+    await poolConnect;
+    await pool
+      .request()
+      .input("id", sql.Int, id)
+      .input("role", sql.NVarChar(50), nextRole)
+      .query(`
+        UPDATE users
+        SET role = @role
+        WHERE id = @id
+      `);
+
+    res.json({ message: "Қолданушы рөлі жаңартылды" });
+  } catch (error) {
+    console.error("SET ROLE ERROR:", error);
+    res.status(500).json({ message: "Рөлді жаңарту кезінде қате шықты" });
+  }
+});
+
+router.post("/admin-reset-2fa/:id", verifyToken, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Тек admin ғана орындай алады" });
+    }
+
+    const id = parseInt(req.params.id, 10);
+
+    await poolConnect;
+    await pool
+      .request()
+      .input("id", sql.Int, id)
+      .input("twofaEnabled", sql.Bit, false)
+      .query(`
+        UPDATE users
+        SET twofa_secret = NULL,
+            twofa_enabled = @twofaEnabled
+        WHERE id = @id
+      `);
+
+    res.json({ message: "Қолданушының 2FA баптауы тазартылды" });
+  } catch (error) {
+    console.error("ADMIN RESET 2FA ERROR:", error);
+    res.status(500).json({ message: "2FA тазарту кезінде қате шықты" });
+  }
+});
+
 router.delete("/delete/:id", verifyToken, async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -292,6 +372,10 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
     }
 
     const id = parseInt(req.params.id, 10);
+
+    if (id === req.user.id) {
+      return res.status(400).json({ message: "Өзіңізді өшіруге болмайды" });
+    }
 
     await poolConnect;
     await pool
