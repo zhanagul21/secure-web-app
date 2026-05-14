@@ -1,5 +1,5 @@
 const LOCAL_API_BASE_URL = "http://localhost:5000/api";
-const PUBLIC_API_BASE_URL = "https://authguard-backend-docker.onrender.com/api";
+const PUBLIC_API_BASE_URL = "https://authguard-backend-7mbc.onrender.com/api";
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 const isLocalBrowser =
@@ -11,7 +11,7 @@ const configuredUsesLocalhost =
 const configuredUsesRetiredBackend =
   !!configuredApiBaseUrl &&
   (configuredApiBaseUrl.includes("secure-web-app-backend.onrender.com") ||
-    configuredApiBaseUrl.includes("authguard-backend-7mbc.onrender.com"));
+    configuredApiBaseUrl.includes("authguard-backend-docker.onrender.com"));
 const safeConfiguredApiBaseUrl =
   (configuredUsesLocalhost && !isLocalBrowser) || configuredUsesRetiredBackend
     ? ""
@@ -22,7 +22,7 @@ export const apiBaseUrl =
   (isLocalBrowser ? LOCAL_API_BASE_URL : PUBLIC_API_BASE_URL);
 
 export const uploadBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
-export const apiTimeoutMs = 15000;
+export const apiTimeoutMs = 45000;
 
 export function getApiErrorMessage(error, fallbackMessage) {
   if (error?.code === "ECONNABORTED") {
