@@ -13,6 +13,23 @@ function Register({ onClose }) {
   const [loading, setLoading] = useState(false);
   const [codeVerified, setCodeVerified] = useState(false);
 
+  const getPasswordStrength = (value) => {
+    const checks = [
+      value.length >= 8,
+      /[A-ZА-ЯЁ]/.test(value),
+      /[a-zа-яё]/.test(value),
+      /\d/.test(value),
+      /[^A-Za-zА-Яа-яЁё0-9]/.test(value),
+    ];
+    const score = checks.filter(Boolean).length;
+
+    if (score >= 5) return { label: "Күшті", color: "bg-emerald-500", width: "100%" };
+    if (score >= 3) return { label: "Орташа", color: "bg-amber-500", width: "66%" };
+    return { label: "Әлсіз", color: "bg-rose-500", width: "33%" };
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+
   const sendCode = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -73,6 +90,11 @@ function Register({ onClose }) {
 
     if (!fullName.trim() || !email.trim() || !password.trim()) {
       setMessage("Барлық өрістерді толтырыңыз");
+      return;
+    }
+
+    if (passwordStrength.label === "Әлсіз") {
+      setMessage("Құпия сөз кемінде 8 таңба, бас әріп, кіші әріп және сан қамтуы керек");
       return;
     }
 
@@ -277,6 +299,23 @@ function Register({ onClose }) {
                   placeholder="Құпия сөз"
                   className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 outline-none focus:border-sky-400"
                 />
+                {password && (
+                  <div className="mt-3 rounded-2xl border border-sky-100 bg-sky-50 p-3">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+                      <span>Құпия сөз күші</span>
+                      <span>{passwordStrength.label}</span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+                      <div
+                        className={`h-full ${passwordStrength.color}`}
+                        style={{ width: passwordStrength.width }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      8+ таңба, бас әріп, кіші әріп, сан және арнайы белгі қолданған дұрыс.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {message && (

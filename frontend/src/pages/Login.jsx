@@ -14,6 +14,23 @@ function Login({ setLoggedIn, setPage }) {
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
+  const getPasswordStrength = (value) => {
+    const checks = [
+      value.length >= 8,
+      /[A-ZА-ЯЁ]/.test(value),
+      /[a-zа-яё]/.test(value),
+      /\d/.test(value),
+      /[^A-Za-zА-Яа-яЁё0-9]/.test(value),
+    ];
+    const score = checks.filter(Boolean).length;
+
+    if (score >= 5) return { label: "Күшті", color: "bg-emerald-500", width: "100%" };
+    if (score >= 3) return { label: "Орташа", color: "bg-amber-500", width: "66%" };
+    return { label: "Әлсіз", color: "bg-rose-500", width: "33%" };
+  };
+
+  const resetPasswordStrength = getPasswordStrength(newPassword);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -85,6 +102,11 @@ function Login({ setLoggedIn, setPage }) {
 
     if (!resetEmail.trim() || !resetCode.trim() || !newPassword.trim()) {
       setMessage("Барлық өрісті толтырыңыз");
+      return;
+    }
+
+    if (resetPasswordStrength.label === "Әлсіз") {
+      setMessage("Жаңа құпия сөз кемінде 8 таңба, бас әріп, кіші әріп және сан қамтуы керек");
       return;
     }
 
@@ -243,6 +265,20 @@ function Login({ setLoggedIn, setPage }) {
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 outline-none"
                 />
+                {newPassword && (
+                  <div className="mt-3 rounded-2xl border border-sky-100 bg-sky-50 p-3">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+                      <span>Құпия сөз күші</span>
+                      <span>{resetPasswordStrength.label}</span>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+                      <div
+                        className={`h-full ${resetPasswordStrength.color}`}
+                        style={{ width: resetPasswordStrength.width }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {message && (

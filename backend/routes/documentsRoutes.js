@@ -30,6 +30,17 @@ const maxUploadSizeBytes = maxUploadSizeMb * 1024 * 1024;
 const renderPostgresStorageLimitGb = Number.parseFloat(
   process.env.RENDER_POSTGRES_STORAGE_GB || "1"
 );
+const allowedFileTypes = new Map([
+  [".pdf", ["application/pdf"]],
+  [".png", ["image/png"]],
+  [".jpg", ["image/jpeg"]],
+  [".jpeg", ["image/jpeg"]],
+  [".doc", ["application/msword"]],
+  [".docx", ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]],
+  [".ppt", ["application/vnd.ms-powerpoint"]],
+  [".pptx", ["application/vnd.openxmlformats-officedocument.presentationml.presentation"]],
+  [".txt", ["text/plain"]],
+]);
 const frontendOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
@@ -53,6 +64,23 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: maxUploadSizeBytes },
+  fileFilter: (req, file, cb) => {
+    const normalizedOriginalName = Buffer.from(file.originalname, "latin1").toString(
+      "utf8"
+    );
+    const extension = path.extname(normalizedOriginalName).toLowerCase();
+    const mimeTypes = allowedFileTypes.get(extension);
+
+    if (!mimeTypes) {
+      return cb(new Error("Бұл файл түріне рұқсат жоқ"));
+    }
+
+    if (file.mimetype && !mimeTypes.includes(file.mimetype)) {
+      return cb(new Error("Файл кеңейтімі мен MIME түрі сәйкес емес"));
+    }
+
+    return cb(null, true);
+  },
 });
 
 const uploadMiddleware = (req, res, next) => {
@@ -302,6 +330,34 @@ const encryptUploadedFile = async (file) => {
   }
 };
 
+const validateUploadedFileSignature = async (file) => {
+  const buffer = await fs.promises.readFile(file.path);
+  const normalizedOriginalName = Buffer.from(file.originalname, "latin1").toString(
+    "utf8"
+  );
+  const extension = path.extname(normalizedOriginalName).toLowerCase();
+
+  const startsWith = (...bytes) =>
+    bytes.every((byte, index) => buffer[index] === byte);
+  const textSample = buffer.subarray(0, Math.min(buffer.length, 512));
+  const looksLikeText = !textSample.includes(0);
+  const zipBasedOffice = startsWith(0x50, 0x4b, 0x03, 0x04);
+
+  const isValid =
+    (extension === ".pdf" && startsWith(0x25, 0x50, 0x44, 0x46)) ||
+    (extension === ".png" && startsWith(0x89, 0x50, 0x4e, 0x47)) ||
+    ((extension === ".jpg" || extension === ".jpeg") &&
+      startsWith(0xff, 0xd8, 0xff)) ||
+    ((extension === ".docx" || extension === ".pptx") && zipBasedOffice) ||
+    ((extension === ".doc" || extension === ".ppt") &&
+      (startsWith(0xd0, 0xcf, 0x11, 0xe0) || zipBasedOffice)) ||
+    (extension === ".txt" && looksLikeText);
+
+  if (!isValid) {
+    throw new Error("Файл мазмұны таңдалған түрге сәйкес емес");
+  }
+};
+
 const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
   <html>
     <head>
@@ -455,12 +511,21 @@ router.post("/add", authMiddleware, uploadMiddleware, async (req, res, next) => 
   }
 
   try {
+    await validateUploadedFileSignature(req.file);
     await encryptUploadedFile(req.file);
     return next();
   } catch (error) {
     console.error("ENCRYPT UPLOAD ERROR:", error);
-    return res.status(500).json({
-      message: "Файлды шифрлау кезінде қате шықты.",
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.error("INVALID UPLOAD CLEANUP ERROR:", cleanupError);
+      }
+    }
+
+    return res.status(400).json({
+      message: error.message || "Файлды қабылдау кезінде қате шықты.",
     });
   }
 }, async (req, res) => {

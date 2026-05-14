@@ -20,6 +20,8 @@ const logsRoutes = require("./routes/logsRoutes");
 const app = express();
 const execFileAsync = promisify(execFile);
 
+app.set("trust proxy", 1);
+
 const uploadsPath = path.resolve(process.env.UPLOADS_DIR || "./uploads");
 const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
   .split(",")

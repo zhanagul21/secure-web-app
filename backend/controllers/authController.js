@@ -4,16 +4,32 @@ const speakeasy = require("speakeasy");
 const { sql, pool, poolConnect } = require("../config/db");
 const { sendMail } = require("../utils/sendEmail");
 
-async function logActivity(userId, actionType, actionDetails) {
+function getClientIp(req) {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  const firstForwardedIp = Array.isArray(forwardedFor)
+    ? forwardedFor[0]
+    : forwardedFor?.split(",")[0];
+
+  return (
+    firstForwardedIp?.trim() ||
+    req.headers["cf-connecting-ip"] ||
+    req.socket?.remoteAddress ||
+    "unknown"
+  );
+}
+
+async function logActivity(userId, actionType, actionDetails, req) {
   try {
-    if (!userId) return;
+    const ip = req ? getClientIp(req) : "unknown";
+    const userAgent = req?.headers?.["user-agent"] || "unknown";
+    const detailsWithContext = `${actionDetails}; IP: ${ip}; UA: ${String(userAgent).slice(0, 160)}`;
 
     await poolConnect;
     await pool
       .request()
-      .input("userId", sql.Int, userId)
+      .input("userId", sql.Int, userId || null)
       .input("actionType", sql.NVarChar(100), actionType)
-      .input("actionDetails", sql.NVarChar(sql.MAX), actionDetails)
+      .input("actionDetails", sql.NVarChar(sql.MAX), detailsWithContext)
       .query(`
         INSERT INTO activity_logs (user_id, action_type, action_details, created_at)
         VALUES (@userId, @actionType, @actionDetails, GETDATE())
@@ -341,7 +357,7 @@ const register = async (req, res) => {
 
     const savedUser = updatedResult.recordset[0];
 
-    await logActivity(savedUser.id, "REGISTER", `Тіркелу: ${normalizedEmail}`);
+    await logActivity(savedUser.id, "REGISTER", `Тіркелу: ${normalizedEmail}`, req);
 
     return res.json({
       message: "Тіркелу сәтті аяқталды",
@@ -459,7 +475,7 @@ const registerDirect = async (req, res) => {
     const savedUser = savedUserResult.recordset[0];
     const token = signToken(savedUser);
 
-    await logActivity(savedUser.id, "REGISTER", `Тіркелу: ${normalizedEmail}`);
+    await logActivity(savedUser.id, "REGISTER", `Тіркелу: ${normalizedEmail}`, req);
 
     return res.json({
       message: "Тіркелу сәтті аяқталды",
@@ -505,6 +521,7 @@ const login = async (req, res) => {
     const user = result.recordset[0];
 
     if (!user || !user.password_hash) {
+      await logActivity(null, "LOGIN_FAILED", `Қате кіру әрекеті: ${normalizedEmail}`, req);
       return res.status(400).json({ message: "Қате email немесе пароль" });
     }
 
@@ -517,6 +534,7 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
+      await logActivity(user.id, "LOGIN_FAILED", `Қате пароль: ${user.email}`, req);
       return res.status(400).json({ message: "Қате email немесе пароль" });
     }
 
@@ -551,7 +569,7 @@ const login = async (req, res) => {
 
     const token = signToken(user);
 
-    await logActivity(user.id, "LOGIN", `Жүйеге кірді: ${user.email}`);
+    await logActivity(user.id, "LOGIN", `Жүйеге кірді: ${user.email}`, req);
 
     return res.json({
       token,
@@ -621,12 +639,13 @@ const verify2FA = async (req, res) => {
     });
 
     if (!verified) {
+      await logActivity(user.id, "2FA_FAILED", `2FA коды қате: ${user.email}`, req);
       return res.status(400).json({ message: "2FA коды қате" });
     }
 
     const jwtToken = signToken(user);
 
-    await logActivity(user.id, "LOGIN", `2FA арқылы кірді: ${user.email}`);
+    await logActivity(user.id, "LOGIN", `2FA арқылы кірді: ${user.email}`, req);
 
     return res.json({
       token: jwtToken,
@@ -777,7 +796,7 @@ const resetPassword = async (req, res) => {
         WHERE email = @email
       `);
 
-    await logActivity(user.id, "PASSWORD_RESET", `Пароль жаңартылды: ${user.email}`);
+    await logActivity(user.id, "PASSWORD_RESET", `Пароль жаңартылды: ${user.email}`, req);
 
     return res.json({
       message: "Құпия сөз сәтті жаңартылды",
