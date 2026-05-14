@@ -142,6 +142,8 @@ const getLibreOfficeExecutable = () => {
 const getLibreOfficeCandidates = () => {
   const candidates = [
     getLibreOfficeExecutable(),
+    "/usr/bin/libreoffice",
+    "/usr/bin/soffice",
     "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
     "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe",
     process.platform === "win32" ? "libreoffice.exe" : "libreoffice",
@@ -156,7 +158,10 @@ const execLibreOffice = async (args) => {
 
   for (const executable of getLibreOfficeCandidates()) {
     try {
-      return await execFileAsync(executable, args, { timeout: 30000 });
+      return await execFileAsync(executable, args, {
+        timeout: 90000,
+        env: { ...process.env, HOME: process.env.HOME || os.tmpdir() },
+      });
     } catch (error) {
       lastError = error;
     }
@@ -193,19 +198,25 @@ const convertDocToDocx = async (inputPath) => {
 
 const convertDocumentToPdf = async (inputPath) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-doc-"));
+  const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-lo-"));
 
-  await execLibreOffice([
-    "--headless",
-    "--nologo",
-    "--nofirststartwizard",
-    "--nodefault",
-    "--nolockcheck",
-    "--convert-to",
-    "pdf:writer_pdf_Export",
-    "--outdir",
-    tempDir,
-    inputPath,
-  ]);
+  try {
+    await execLibreOffice([
+      "--headless",
+      "--nologo",
+      "--nofirststartwizard",
+      "--nodefault",
+      "--nolockcheck",
+      `-env:UserInstallation=file://${profileDir.replace(/\\/g, "/")}`,
+      "--convert-to",
+      "pdf:writer_pdf_Export",
+      "--outdir",
+      tempDir,
+      inputPath,
+    ]);
+  } finally {
+    cleanupDir(profileDir);
+  }
 
   const baseName = path.basename(inputPath, path.extname(inputPath));
   const convertedPath = path.join(tempDir, `${baseName}.pdf`);
@@ -742,12 +753,10 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         return;
       } catch (error) {
         console.error("DOCX PDF PREVIEW ERROR:", error);
-        const previewHtml = await renderDocxBufferPreview(
-          readable.buffer,
-          doc.original_name
-        );
-
-        return res.send(previewHtml);
+        return res.status(503).json({
+          message:
+            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
+        });
       }
     }
 
@@ -760,12 +769,11 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         );
         return;
       } catch (error) {
-        const previewHtml = await renderDocPathTextPreview(
-          readable.filePath,
-          doc.original_name
-        );
-
-        return res.send(previewHtml);
+        console.error("DOC PDF PREVIEW ERROR:", error);
+        return res.status(503).json({
+          message:
+            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
+        });
       }
     }
 
@@ -1089,13 +1097,10 @@ router.get("/shared/:token", async (req, res) => {
         return;
       } catch (error) {
         console.error("SHARED DOCX PDF PREVIEW ERROR:", error);
-        const previewHtml = await renderDocxBufferPreview(
-          readable.buffer,
-          doc.original_name,
-          true
-        );
-
-        return res.send(previewHtml);
+        return res.status(503).json({
+          message:
+            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
+        });
       }
     }
 
@@ -1108,13 +1113,11 @@ router.get("/shared/:token", async (req, res) => {
         );
         return;
       } catch (error) {
-        const previewHtml = await renderDocPathTextPreview(
-          readable.filePath,
-          doc.original_name,
-          true
-        );
-
-        return res.send(previewHtml);
+        console.error("SHARED DOC PDF PREVIEW ERROR:", error);
+        return res.status(503).json({
+          message:
+            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
+        });
       }
     }
 

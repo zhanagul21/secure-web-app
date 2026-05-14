@@ -45,6 +45,8 @@ const getLibreOfficeExecutable = () => {
 const getLibreOfficeCandidates = () => {
   const candidates = [
     getLibreOfficeExecutable(),
+    "/usr/bin/libreoffice",
+    "/usr/bin/soffice",
     "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
     "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe",
     process.platform === "win32" ? "libreoffice.exe" : "libreoffice",
@@ -76,7 +78,10 @@ const getLibreOfficeHealth = async () => {
         const { stdout, stderr } = await execFileAsync(
           executable,
           ["--version"],
-          { timeout: 5000 }
+          {
+            timeout: 15000,
+            env: { ...process.env, HOME: process.env.HOME || require("os").tmpdir() },
+          }
         );
         version =
           (stdout || stderr || "").trim().split(/\r?\n/)[0] ||
