@@ -1,8 +1,15 @@
 ﻿const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
+const crypto = require("crypto");
 const { sql, pool, poolConnect } = require("../config/db");
 const { sendMail } = require("../utils/sendEmail");
+const {
+  storeRefreshToken,
+  findActiveRefreshToken,
+  revokeRefreshToken,
+  blacklistAccessToken,
+} = require("../utils/tokenStore");
 
 function getClientIp(req) {
   const forwardedFor = req.headers["x-forwarded-for"];
@@ -109,10 +116,39 @@ function signToken(user) {
       email: user.email,
       role: user.role || "user",
       type: "access",
+      jti: crypto.randomUUID(),
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+}
+
+function signRefreshToken(user) {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role || "user",
+      type: "refresh",
+      jti: crypto.randomUUID(),
     },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
+}
+
+async function issueTokenPair(user) {
+  const token = signToken(user);
+  const refreshToken = signRefreshToken(user);
+  const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await storeRefreshToken(user.id, refreshToken, refreshExpiresAt);
+
+  return {
+    token,
+    refreshToken,
+    accessTokenExpiresInSeconds: 15 * 60,
+  };
 }
 
 function signTemp2FAToken(user) {
@@ -496,13 +532,13 @@ const registerDirect = async (req, res) => {
       `);
 
     const savedUser = savedUserResult.recordset[0];
-    const token = signToken(savedUser);
+    const tokens = await issueTokenPair(savedUser);
 
     await logActivity(savedUser.id, "REGISTER", `Тіркелу: ${normalizedEmail}`, req);
 
     return res.json({
       message: "Тіркелу сәтті аяқталды",
-      token,
+      ...tokens,
       user: {
         id: savedUser.id,
         full_name: savedUser.full_name,
@@ -590,12 +626,12 @@ const login = async (req, res) => {
       user.role = assignedRole;
     }
 
-    const token = signToken(user);
+    const tokens = await issueTokenPair(user);
 
     await logActivity(user.id, "LOGIN", `Жүйеге кірді: ${user.email}`, req);
 
     return res.json({
-      token,
+      ...tokens,
       user: {
         id: user.id,
         full_name: user.full_name,
@@ -666,12 +702,12 @@ const verify2FA = async (req, res) => {
       return res.status(400).json({ message: "2FA коды қате" });
     }
 
-    const jwtToken = signToken(user);
+    const tokens = await issueTokenPair(user);
 
     await logActivity(user.id, "LOGIN", `2FA арқылы кірді: ${user.email}`, req);
 
     return res.json({
-      token: jwtToken,
+      ...tokens,
       user: {
         id: user.id,
         full_name: user.full_name,
@@ -686,6 +722,84 @@ const verify2FA = async (req, res) => {
       message: "2FA тексеру кезінде қате шықты",
       error: error.message,
     });
+  }
+};
+
+const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken: currentRefreshToken } = req.body;
+
+    if (!currentRefreshToken) {
+      return res.status(400).json({ message: "Refresh token міндетті" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(currentRefreshToken, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({ message: "Refresh token жарамсыз" });
+    }
+
+    if (decoded.type !== "refresh") {
+      return res.status(401).json({ message: "Refresh token түрі жарамсыз" });
+    }
+
+    const storedToken = await findActiveRefreshToken(currentRefreshToken);
+    if (!storedToken) {
+      return res.status(401).json({ message: "Refresh token табылмады немесе өшірілген" });
+    }
+
+    await revokeRefreshToken(currentRefreshToken);
+
+    const user = {
+      id: storedToken.user_id,
+      email: storedToken.email,
+      full_name: storedToken.full_name,
+      role: storedToken.role,
+      twofa_enabled: storedToken.twofa_enabled,
+    };
+    const tokens = await issueTokenPair(user);
+
+    return res.json({
+      ...tokens,
+      user,
+    });
+  } catch (error) {
+    console.error("REFRESH TOKEN ERROR:", error);
+    return res.status(500).json({ message: "Сессияны жаңарту кезінде қате шықты" });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const accessToken = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : "";
+    const { refreshToken: currentRefreshToken } = req.body || {};
+
+    if (accessToken) {
+      try {
+        const decoded = jwt.decode(accessToken);
+        const expiresAt = decoded?.exp
+          ? new Date(decoded.exp * 1000)
+          : new Date(Date.now() + 15 * 60 * 1000);
+        await blacklistAccessToken(accessToken, expiresAt);
+      } catch (error) {
+        console.error("ACCESS TOKEN BLACKLIST ERROR:", error);
+      }
+    }
+
+    await revokeRefreshToken(currentRefreshToken);
+
+    if (req.user?.id) {
+      await logActivity(req.user.id, "LOGOUT", "Жүйеден шықты", req);
+    }
+
+    return res.json({ message: "Сессия аяқталды" });
+  } catch (error) {
+    console.error("LOGOUT ERROR:", error);
+    return res.status(500).json({ message: "Шығу кезінде қате шықты" });
   }
 };
 
@@ -853,6 +967,8 @@ module.exports = {
   registerDirect,
   login,
   verify2FA,
+  refreshToken,
+  logout,
   forgotPassword,
   resetPassword,
 };

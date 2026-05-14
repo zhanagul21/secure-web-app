@@ -2,14 +2,20 @@
 import API from "../services/api";
 import logo from "../assets/logo.png";
 
-function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
+function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhere }) {
   const [user, setUser] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [logs, setLogs] = useState([]);
   const [message, setMessage] = useState("");
 
   const logout = () => {
+    if (logoutEverywhere) {
+      logoutEverywhere();
+      return;
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");
@@ -136,10 +142,14 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId }) {
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ["JWT", "Қорғалған API маршруттары"],
+              ["JWT + Refresh", "Access 15 минут, refresh 7 күн"],
               ["bcrypt", "Пароль хэш түрінде сақталады"],
-              ["AES-256-GCM", "Құжаттар серверде шифрланады"],
-              ["Audit log", "Кіру және құжат әрекеттері жазылады"],
+              ["AES-256-GCM", "Құжатта шифрлау дәлелі көрсетіледі"],
+              ["Audit + IP", "Кіру әрекеттері IP-мен жазылады"],
+              ["Rate limit", "Bruteforce әрекеттері шектеледі"],
+              ["CSP", "Frontend security headers қосылған"],
+              ["File signature", "Файл түрі magic bytes арқылы тексеріледі"],
+              ["Logout blacklist", "Шыққан токен қайта қолданылмайды"],
             ].map(([title, text]) => (
               <div key={title} className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
                 <div className="font-black text-slate-900">{title}</div>

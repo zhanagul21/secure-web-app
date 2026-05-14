@@ -161,6 +161,26 @@ const createPostgresAdapter = () => {
       )
     `);
 
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        token_hash VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        revoked_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS token_blacklist (
+        id SERIAL PRIMARY KEY,
+        token_hash VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
     await pgPool.query("DROP TABLE IF EXISTS biometric_credentials");
   };
 
@@ -412,6 +432,28 @@ const createSqlServerAdapter = () => {
           user_id INT NULL,
           action_type NVARCHAR(100) NULL,
           action_details NVARCHAR(MAX) NULL,
+          created_at DATETIME NOT NULL DEFAULT GETDATE()
+        );
+      END
+
+      IF OBJECT_ID('refresh_tokens', 'U') IS NULL
+      BEGIN
+        CREATE TABLE refresh_tokens (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT NOT NULL,
+          token_hash NVARCHAR(255) NOT NULL UNIQUE,
+          expires_at DATETIME NOT NULL,
+          revoked_at DATETIME NULL,
+          created_at DATETIME NOT NULL DEFAULT GETDATE()
+        );
+      END
+
+      IF OBJECT_ID('token_blacklist', 'U') IS NULL
+      BEGIN
+        CREATE TABLE token_blacklist (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          token_hash NVARCHAR(255) NOT NULL UNIQUE,
+          expires_at DATETIME NOT NULL,
           created_at DATETIME NOT NULL DEFAULT GETDATE()
         );
       END

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import API from "../services/api";
 import { getApiErrorMessage } from "../services/apiConfig";
 import logo from "../assets/logo.png";
@@ -50,6 +50,7 @@ function Login({ setLoggedIn, setPage }) {
 
       if (res.data.requires2fa) {
         localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         localStorage.setItem("temp2faToken", res.data.tempToken);
         setPage("2fa");
@@ -57,6 +58,7 @@ function Login({ setLoggedIn, setPage }) {
       }
 
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.removeItem("temp2faToken");
 

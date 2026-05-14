@@ -2,6 +2,7 @@ const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const { verifyToken } = require("../middleware/authMiddleware");
 
 const {
   sendCode,
@@ -10,6 +11,8 @@ const {
   registerDirect,
   login,
   verify2FA,
+  refreshToken,
+  logout,
   forgotPassword,
   resetPassword,
 } = require("../controllers/authController");
@@ -116,6 +119,8 @@ router.post(
   ]),
   verify2FA
 );
+router.post("/refresh", authLimiter, refreshToken);
+router.post("/logout", verifyToken, logout);
 router.post("/forgot-password", codeLimiter, validate([emailRule()]), forgotPassword);
 router.post(
   "/reset-password",

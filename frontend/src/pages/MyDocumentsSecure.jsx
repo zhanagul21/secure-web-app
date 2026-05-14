@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 
 function formatFileSize(bytes) {
@@ -54,7 +54,7 @@ function matchesType(doc, typeFilter) {
   return true;
 }
 
-function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
+function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logoutEverywhere }) {
   const [documents, setDocuments] = useState([]);
   const [trashDocuments, setTrashDocuments] = useState([]);
   const [message, setMessage] = useState("");
@@ -66,7 +66,13 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
   const [trashMode, setTrashMode] = useState(false);
 
   const logout = () => {
+    if (logoutEverywhere) {
+      logoutEverywhere();
+      return;
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");

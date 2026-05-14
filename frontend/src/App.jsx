@@ -12,6 +12,7 @@ import TwoFA from "./pages/TwoFA";
 import TwoFASettings from "./pages/TwoFASettings";
 import DocumentViewer from "./pages/DocumentViewerSecure";
 import SharedDocument from "./pages/SharedDocumentSecure";
+import API from "./services/api";
  
 // ✅ ТҮЗЕТІЛДІ: pathname-ді state-ке салу керек,
 // себебі window.location.pathname React render кезінде тұрақсыз
@@ -49,8 +50,18 @@ function AuthApp() {
     }
   }, []);
  
-  const logoutEverywhere = () => {
+  const logoutEverywhere = async () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    try {
+      if (localStorage.getItem("token")) {
+        await API.post("/auth/logout", { refreshToken });
+      }
+    } catch {
+      // Local cleanup still happens if the server session was already expired.
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");
@@ -150,6 +161,7 @@ function AuthApp() {
         documentId={selectedDocumentId}
         setPage={setPage}
         setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
       />
     );
   }

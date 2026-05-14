@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 
 const categorySuggestions = [
@@ -17,7 +17,7 @@ function formatFileSize(bytes) {
   return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
 }
 
-function AddDocumentSecure({ setPage, setLoggedIn }) {
+function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
@@ -39,7 +39,13 @@ function AddDocumentSecure({ setPage, setLoggedIn }) {
   }, [previewUrl]);
 
   const logout = () => {
+    if (logoutEverywhere) {
+      logoutEverywhere();
+      return;
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");
@@ -191,7 +197,7 @@ function AddDocumentSecure({ setPage, setLoggedIn }) {
                 </p>
               </div>
               <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-                End-to-end storage encryption
+                AES-256-GCM storage encryption
               </div>
             </div>
 

@@ -12,6 +12,7 @@ const { execFile } = require("child_process");
 const { promisify } = require("util");
 const { sql, pool, poolConnect } = require("../config/db");
 const { encryptFile, decryptFile, isEncryptedFile } = require("../utils/encryption");
+const { isAccessTokenBlacklisted } = require("../utils/tokenStore");
 
 const execFileAsync = promisify(execFile);
 
@@ -105,7 +106,7 @@ const uploadMiddleware = (req, res, next) => {
   });
 };
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -114,7 +115,14 @@ const authMiddleware = (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
+    if (await isAccessTokenBlacklisted(token)) {
+      return res.status(401).json({ message: "Сессия аяқталған. Қайта кіріңіз." });
+    }
+
     req.user = jwt.verify(token, process.env.JWT_SECRET);
+    if (req.user.type !== "access") {
+      return res.status(401).json({ message: "Жарамсыз токен түрі" });
+    }
     next();
   } catch (error) {
     return res.status(401).json({ message: "Жарамсыз токен" });
@@ -447,11 +455,24 @@ const renderDocPathTextPreview = async (docPath, title, compact = false) => {
   );
 };
 
-const getReadableDocument = (doc) => {
+const getStoredDocumentBuffer = (doc) => {
   if (doc.file_data) {
-    const storedBuffer = Buffer.isBuffer(doc.file_data)
+    return Buffer.isBuffer(doc.file_data)
       ? doc.file_data
       : Buffer.from(doc.file_data);
+  }
+
+  const filePath = path.join(uploadsDir, doc.filename);
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  return fs.readFileSync(filePath);
+};
+
+const getReadableDocument = (doc) => {
+  if (doc.file_data) {
+    const storedBuffer = getStoredDocumentBuffer(doc);
     const encrypted = isEncryptedFile(storedBuffer);
     const buffer = decryptFile(storedBuffer);
 
@@ -470,7 +491,7 @@ const getReadableDocument = (doc) => {
     return null;
   }
 
-  const storedBuffer = fs.readFileSync(filePath);
+  const storedBuffer = getStoredDocumentBuffer(doc);
 
   const encrypted = isEncryptedFile(storedBuffer);
   const buffer = decryptFile(storedBuffer);
@@ -758,6 +779,47 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
     });
   } finally {
     cleanupDir(tempDirToDelete);
+  }
+});
+
+router.get("/encryption-proof/:id", authMiddleware, async (req, res) => {
+  try {
+    const doc = await getDocumentByIdForUser(req.params.id, req.user.id);
+
+    if (!doc) {
+      return res.status(404).json({ message: "Құжат табылмады" });
+    }
+
+    const storedBuffer = getStoredDocumentBuffer(doc);
+    if (!storedBuffer) {
+      return res.status(404).json({ message: "Файл серверде табылмады" });
+    }
+
+    const encrypted = isEncryptedFile(storedBuffer);
+    const decryptedBuffer = decryptFile(storedBuffer);
+    const ciphertextHash = crypto
+      .createHash("sha256")
+      .update(storedBuffer)
+      .digest("hex");
+
+    res.json({
+      encrypted,
+      algorithm: "AES-256-GCM",
+      marker: encrypted ? "AGENC1:" : "жоқ",
+      storedHeaderHex: storedBuffer.subarray(0, 16).toString("hex"),
+      storedHeaderText: storedBuffer.subarray(0, 7).toString("utf8"),
+      storedSizeBytes: storedBuffer.length,
+      originalSizeBytes: decryptedBuffer.length,
+      ciphertextSha256: ciphertextHash,
+      authTagBytes: encrypted ? 16 : 0,
+      ivBytes: encrypted ? 16 : 0,
+      databaseStorage: Boolean(doc.file_data),
+      explanation:
+        "Серверде сақталған файл AES-256-GCM арқылы ciphertext ретінде тұр. Preview/download кезінде ғана backend decrypt жасайды.",
+    });
+  } catch (error) {
+    console.error("ENCRYPTION PROOF ERROR:", error);
+    res.status(500).json({ message: "Шифрлау дәлелін алу кезінде қате шықты" });
   }
 });
 

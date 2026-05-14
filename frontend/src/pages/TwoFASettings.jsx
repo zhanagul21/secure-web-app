@@ -17,6 +17,7 @@ function TwoFASettings({ setPage, setLoggedIn, logoutEverywhere }) {
     }
 
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");

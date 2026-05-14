@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import API from "../services/api";
 
 function TwoFA({ setPage, setLoggedIn }) {
@@ -31,6 +31,7 @@ function TwoFA({ setPage, setLoggedIn }) {
       });
 
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.removeItem("temp2faToken");
       localStorage.removeItem("tempUserEmail");
@@ -53,6 +54,7 @@ function TwoFA({ setPage, setLoggedIn }) {
     localStorage.removeItem("tempUserRole");
     localStorage.removeItem("tempUserId");
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     setLoggedIn(false);
     setPage("login");

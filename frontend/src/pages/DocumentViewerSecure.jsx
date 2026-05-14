@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { renderAsync } from "docx-preview";
 import API from "../services/api";
 
@@ -12,7 +12,7 @@ function formatFileSize(bytes) {
   return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
 }
 
-function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
+function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhere }) {
   const [documentData, setDocumentData] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
   const [previewMimeType, setPreviewMimeType] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
   const [docxBlob, setDocxBlob] = useState(null);
+  const [encryptionProof, setEncryptionProof] = useState(null);
   const [previewType, setPreviewType] = useState("none");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDuration, setShareDuration] = useState(60);
@@ -40,7 +41,13 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
   };
 
   const logout = () => {
+    if (logoutEverywhere) {
+      logoutEverywhere();
+      return;
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     localStorage.removeItem("tempUserEmail");
     localStorage.removeItem("tempUserRole");
@@ -58,6 +65,10 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       const currentDocument = metaRes.data.document;
       setDocumentData(currentDocument);
       clearPreview();
+
+      API.get(`/documents/encryption-proof/${documentId}`)
+        .then((proofRes) => setEncryptionProof(proofRes.data))
+        .catch(() => setEncryptionProof(null));
 
       if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
         const docxRes = await API.get(`/documents/preview/${documentId}?raw=1`, {
@@ -423,6 +434,23 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
                 Бұл preview сервер жағында уақытша дешифрланып беріледі.
                 Құжаттың негізгі сақталу күйі шифрланған.
               </p>
+              {encryptionProof && (
+                <div className="mt-4 space-y-2 text-sm text-emerald-950">
+                  <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
+                    Алгоритм: <b>{encryptionProof.algorithm}</b>
+                  </div>
+                  <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
+                    Marker: <b>{encryptionProof.marker}</b> ({encryptionProof.storedHeaderText})
+                  </div>
+                  <div className="break-all rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
+                    Ciphertext SHA-256: {encryptionProof.ciphertextSha256}
+                  </div>
+                  <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
+                    Stored: {formatFileSize(encryptionProof.storedSizeBytes)} /
+                    Decrypted: {formatFileSize(encryptionProof.originalSizeBytes)}
+                  </div>
+                </div>
+              )}
             </div>
 
             {message && (

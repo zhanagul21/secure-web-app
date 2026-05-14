@@ -8,9 +8,12 @@ Current authentication and encryption methods for a protected web application.
 
 - Email verification code for registration.
 - JWT-protected API routes.
+- Access token plus refresh token session model.
+- Logout token blacklist so signed-out access tokens stop working.
 - TOTP two-factor authentication with QR setup.
 - bcrypt password hashing.
 - AES-256-GCM document encryption before storage.
+- Encryption proof endpoint shows the stored `AGENC1:` marker, ciphertext SHA-256 hash, IV, and auth tag metadata.
 - Role-based access control with `user` and `admin` roles.
 - Admin panel for user, role, and 2FA management.
 - Activity logging for account, security, and document actions.
@@ -22,6 +25,7 @@ Current authentication and encryption methods for a protected web application.
 - Password strength indicator in the frontend.
 - Backend file upload validation by extension, MIME type, and file signature.
 - Production HTTPS through Vercel and Render.
+- Frontend security headers through Vercel CSP, `nosniff`, referrer policy, and permissions policy.
 
 ## Algorithms To Explain
 
@@ -29,6 +33,7 @@ Current authentication and encryption methods for a protected web application.
 - JWT for stateless access authorization.
 - TOTP for time-based two-factor authentication.
 - AES-256-GCM for authenticated symmetric encryption.
+- SHA-256 for token hashing and ciphertext fingerprint display.
 
 ## Security Testing Checklist
 
@@ -38,3 +43,5 @@ Current authentication and encryption methods for a protected web application.
 - Uploaded files with mismatched extension and file signature are rejected.
 - Non-admin users cannot access admin endpoints.
 - Expired shared links stop working.
+- Logout invalidates refresh tokens and blacklists the current access token.
+- Document viewer shows encryption proof without exposing plaintext storage.
