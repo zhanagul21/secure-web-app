@@ -161,19 +161,7 @@ const createPostgresAdapter = () => {
       )
     `);
 
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS biometric_credentials (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        credential_id VARCHAR(500) UNIQUE NOT NULL,
-        public_key TEXT NOT NULL,
-        sign_count BIGINT DEFAULT 0,
-        device_name VARCHAR(255),
-        aaguid VARCHAR(255),
-        created_at TIMESTAMPTZ DEFAULT NOW(),
-        last_used_at TIMESTAMPTZ DEFAULT NOW()
-      )
-    `);
+    await pgPool.query("DROP TABLE IF EXISTS biometric_credentials");
   };
 
   const poolConnect = (async () => {
@@ -430,21 +418,9 @@ const createSqlServerAdapter = () => {
     `);
 
     await pool.request().query(`
-      IF OBJECT_ID('biometric_credentials', 'U') IS NULL
+      IF OBJECT_ID('biometric_credentials', 'U') IS NOT NULL
       BEGIN
-        CREATE TABLE biometric_credentials (
-          id INT IDENTITY(1,1) PRIMARY KEY,
-          user_id INT NOT NULL,
-          credential_id NVARCHAR(500) NOT NULL UNIQUE,
-          public_key NVARCHAR(MAX) NOT NULL,
-          sign_count BIGINT DEFAULT 0,
-          device_name NVARCHAR(255) NULL,
-          aaguid NVARCHAR(255) NULL,
-          created_at DATETIME DEFAULT GETDATE(),
-          last_used_at DATETIME DEFAULT GETDATE(),
-          CONSTRAINT FK_biometric_credentials_users
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
+        DROP TABLE biometric_credentials;
       END
     `);
 

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { startAuthentication } from "@simplewebauthn/browser";
 import API from "../services/api";
 import { getApiErrorMessage } from "../services/apiConfig";
 import logo from "../assets/logo.png";
@@ -9,8 +8,6 @@ function Login({ setLoggedIn, setPage }) {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const biometricSupported =
-    typeof window !== "undefined" && Boolean(window.PublicKeyCredential);
 
   const [showForgot, setShowForgot] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -82,49 +79,6 @@ function Login({ setLoggedIn, setPage }) {
     }
   };
 
-  const handleBiometricLogin = async () => {
-    setMessage("");
-
-    if (!biometricSupported) {
-      setMessage("Бұл браузер Face ID / Touch ID арқылы кіруді қолдамайды.");
-      return;
-    }
-
-    if (!email.trim()) {
-      setMessage("Face ID арқылы кіру үшін алдымен email енгізіңіз.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const optionsRes = await API.post("/biometric/login/options", {
-        email: email.trim(),
-      });
-      const credential = await startAuthentication({
-        optionsJSON: optionsRes.data,
-      });
-
-      const verifyRes = await API.post("/biometric/login/verify", {
-        userId: optionsRes.data.userId,
-        credential,
-      });
-
-      localStorage.setItem("token", verifyRes.data.token);
-      localStorage.setItem("user", JSON.stringify(verifyRes.data.user));
-      localStorage.removeItem("temp2faToken");
-
-      setLoggedIn(true);
-      setPage("dashboard");
-    } catch (error) {
-      setMessage(
-        error.response?.data?.message ||
-          "Face ID арқылы кіру мүмкін болмады. Аккаунт ішінде биометрияны тіркеп көріңіз."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleResetPassword = async () => {
     setMessage("");
@@ -220,16 +174,6 @@ function Login({ setLoggedIn, setPage }) {
                 {loading ? "Кіріп жатыр..." : "Кіру"}
               </button>
 
-              {biometricSupported && (
-                <button
-                  type="button"
-                  onClick={handleBiometricLogin}
-                  disabled={loading}
-                  className="w-full rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-800 transition hover:bg-sky-100 disabled:opacity-70"
-                >
-                  Face ID / Touch ID арқылы кіру
-                </button>
-              )}
 
               <button
                 type="button"

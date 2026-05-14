@@ -13,7 +13,6 @@ const { verifyEmailTransporter } = require("./utils/sendEmail");
 const { bootstrapDefaultUser } = require("./utils/bootstrapUser");
 
 const authRoutes = require("./routes/authRoutes");
-const biometricRoutes = require("./routes/biometricRoutes");
 const userRoutes = require("./routes/userRoutes");
 const documentsRoutes = require("./routes/documentsRoutes");
 const logsRoutes = require("./routes/logsRoutes");
@@ -144,7 +143,6 @@ app.get("/api/health", async (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/biometric", biometricRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/documents", documentsRoutes);
 app.use("/api/logs", logsRoutes);

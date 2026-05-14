@@ -9,7 +9,6 @@ Frontend-тегі негізгі flow-лар:
 - `Login / Register / Forgot password` -> `users`
 - `Dashboard / Profile / 2FA settings` -> `users`, `activity_logs`
 - `MyDocuments / AddDocument / Viewer / SharedDocument` -> `documents`, `shared_links`
-- `BiometricSettings` -> `biometric_credentials`
 - `AdminPanel` -> `users`, `documents`, `activity_logs`, `shared_links`
 
 Backend-тегі негізгі persistence entity-лер:
@@ -18,7 +17,6 @@ Backend-тегі негізгі persistence entity-лер:
 - `documents`
 - `shared_links`
 - `activity_logs`
-- `biometric_credentials`
 
 ## 2. Accurate ERD
 
@@ -27,7 +25,6 @@ erDiagram
     USERS ||--o{ DOCUMENTS : owns
     USERS ||--o{ ACTIVITY_LOGS : creates
     USERS ||--o{ SHARED_LINKS : creates
-    USERS ||--o{ BIOMETRIC_CREDENTIALS : registers
     DOCUMENTS ||--o{ SHARED_LINKS : shared_by_link
 
     USERS {
@@ -79,17 +76,6 @@ erDiagram
         datetime created_at
     }
 
-    BIOMETRIC_CREDENTIALS {
-        int id PK
-        int user_id FK
-        string credential_id UK
-        string public_key
-        bigint sign_count
-        string device_name
-        string aaguid
-        datetime created_at
-        datetime last_used_at
-    }
 ```
 
 ## 3. Important code-alignment notes
@@ -103,7 +89,6 @@ erDiagram
 - `documents.secret_content` қолданылмайды және cleanup кезінде өшірілуі керек.
 - `shared_links.created_by` логикалық түрде `users.id`-ге сілтейді.
 - `activity_logs.user_id` nullable болуы мүмкін, бірақ код әдетте user бар кезде жазады.
-- `biometric_credentials` passkey/WebAuthn үшін қолданылады.
 
 ## 4. Recommended SQL Server schema
 
@@ -179,22 +164,6 @@ BEGIN
   );
 END;
 
-IF OBJECT_ID('biometric_credentials', 'U') IS NULL
-BEGIN
-  CREATE TABLE biometric_credentials (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    user_id INT NOT NULL,
-    credential_id NVARCHAR(500) NOT NULL UNIQUE,
-    public_key NVARCHAR(MAX) NOT NULL,
-    sign_count BIGINT NOT NULL DEFAULT 0,
-    device_name NVARCHAR(255) NULL,
-    aaguid NVARCHAR(255) NULL,
-    created_at DATETIME NOT NULL DEFAULT GETDATE(),
-    last_used_at DATETIME NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_biometric_credentials_users
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-END;
 ```
 
 ## 5. Recommended PostgreSQL schema
@@ -251,17 +220,6 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS biometric_credentials (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  credential_id VARCHAR(500) UNIQUE NOT NULL,
-  public_key TEXT NOT NULL,
-  sign_count BIGINT DEFAULT 0,
-  device_name VARCHAR(255),
-  aaguid VARCHAR(255),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  last_used_at TIMESTAMPTZ DEFAULT NOW()
-);
 ```
 
 ## 6. Schema extraction queries

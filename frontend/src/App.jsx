@@ -10,7 +10,6 @@ import ActivityLog from "./pages/ActivityLog";
 import AdminPanel from "./pages/AdminPanel";
 import TwoFA from "./pages/TwoFA";
 import TwoFASettings from "./pages/TwoFASettings";
-import BiometricSettings from "./pages/BiometricSettings";
 import DocumentViewer from "./pages/DocumentViewerSecure";
 import SharedDocument from "./pages/SharedDocumentSecure";
  
@@ -104,16 +103,6 @@ function AuthApp() {
     );
   }
 
-  if (page === "biometricSettings") {
-    return (
-      <BiometricSettings
-        setLoggedIn={setLoggedIn}
-        setPage={setPage}
-        logoutEverywhere={logoutEverywhere}
-      />
-    );
-  }
- 
   if (page === "documents") {
     return (
       <MyDocuments

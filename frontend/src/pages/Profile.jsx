@@ -7,7 +7,6 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [saving, setSaving] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   const logout = () => {
     if (logoutEverywhere) {
@@ -39,9 +38,6 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
 
   useEffect(() => {
     getProfile();
-    API.get("/biometric/status")
-      .then((res) => setBiometricAvailable(Boolean(res.data?.available)))
-      .catch(() => setBiometricAvailable(false));
   }, []);
 
   const initials = useMemo(() => {
@@ -96,7 +92,6 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
 
             <div className="flex flex-wrap gap-3">
               <button onClick={() => setPage("dashboard")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Басты бет</button>
-              {biometricAvailable && <button onClick={() => setPage("biometricSettings")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Биометрия</button>}
               <button onClick={() => setPage("logs")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Әрекет тарихы</button>
               <button onClick={logout} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Шығу</button>
             </div>
