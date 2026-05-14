@@ -93,6 +93,15 @@ async function sendMailWithFallback({ to, subject, html, code, successMessage })
   }
 }
 
+function isEmailSandboxError(error) {
+  const text = `${error?.code || ""} ${error?.message || ""}`.toLowerCase();
+  return (
+    text.includes("validation_error") ||
+    text.includes("testing emails") ||
+    text.includes("verify a domain")
+  );
+}
+
 function signToken(user) {
   return jwt.sign(
     {
@@ -198,33 +207,47 @@ const sendCode = async (req, res) => {
         `);
     }
 
-    const delivery = await sendMailWithFallback({
-      to: normalizedEmail,
-      subject: "AuthGuard Locker - Растау коды",
-      code,
-      successMessage: "Код email-ге жіберілді",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>AuthGuard Locker</h2>
-          <p>Сіздің растау кодыңыз:</p>
-          <h1 style="letter-spacing: 4px; color: #2563eb;">${code}</h1>
-          <p>Бұл код 10 минут ішінде жарамды.</p>
-        </div>
-      `,
-    });
+    try {
+      const delivery = await sendMailWithFallback({
+        to: normalizedEmail,
+        subject: "AuthGuard Locker - Растау коды",
+        code,
+        successMessage: "Код email-ге жіберілді",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>AuthGuard Locker</h2>
+            <p>Сіздің растау кодыңыз:</p>
+            <h1 style="letter-spacing: 4px; color: #2563eb;">${code}</h1>
+            <p>Бұл код 10 минут ішінде жарамды.</p>
+          </div>
+        `,
+      });
 
-    return res.json({
-      message: delivery.message,
-      email: normalizedEmail,
-      delivery: delivery.ok ? "email" : "fallback",
-    });
+      return res.json({
+        message: delivery.message,
+        email: normalizedEmail,
+        delivery: delivery.ok ? "email" : "fallback",
+      });
+    } catch (mailError) {
+      if (isEmailSandboxError(mailError)) {
+        return res.json({
+          message:
+            "Email сервисі тест режимінде. Демо үшін растау коды экранда көрсетілді.",
+          email: normalizedEmail,
+          delivery: "screen",
+          debugCode: code,
+        });
+      }
+
+      throw mailError;
+    }
   } catch (error) {
     console.error("SEND CODE ERROR:", error);
     return res.status(500).json({
-      message: `Код жіберу кезінде қате шықты: ${error.code || "MAIL_ERROR"}`, 
+      message:
+        "Код жіберу кезінде қате шықты. Email сервисін немесе домен баптауын тексеріңіз.",
       error: error.message,
       errorCode: error.code || "MAIL_ERROR",
-      errorDetail: `${error.code || "MAIL_ERROR"}: ${error.message}`,
     });
   }
 };
@@ -708,32 +731,45 @@ const forgotPassword = async (req, res) => {
         WHERE email = @email
       `);
 
-    const delivery = await sendMailWithFallback({
-      to: normalizedEmail,
-      subject: "AuthGuard Locker - Құпия сөзді қалпына келтіру",
-      code,
-      successMessage: "Құпия сөзді қалпына келтіру коды email-ге жіберілді",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>Құпия сөзді қалпына келтіру</h2>
-          <p>Сіздің қалпына келтіру кодыңыз:</p>
-          <h1 style="letter-spacing: 4px; color: #2563eb;">${code}</h1>
-          <p>Бұл код 10 минут ішінде жарамды.</p>
-        </div>
-      `,
-    });
+    try {
+      const delivery = await sendMailWithFallback({
+        to: normalizedEmail,
+        subject: "AuthGuard Locker - Құпия сөзді қалпына келтіру",
+        code,
+        successMessage: "Құпия сөзді қалпына келтіру коды email-ге жіберілді",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>Құпия сөзді қалпына келтіру</h2>
+            <p>Сіздің қалпына келтіру кодыңыз:</p>
+            <h1 style="letter-spacing: 4px; color: #2563eb;">${code}</h1>
+            <p>Бұл код 10 минут ішінде жарамды.</p>
+          </div>
+        `,
+      });
 
-    return res.json({
-      message: delivery.message,
-      delivery: delivery.ok ? "email" : "fallback",
-    });
+      return res.json({
+        message: delivery.message,
+        delivery: delivery.ok ? "email" : "fallback",
+      });
+    } catch (mailError) {
+      if (isEmailSandboxError(mailError)) {
+        return res.json({
+          message:
+            "Email сервисі тест режимінде. Демо үшін қалпына келтіру коды экранда көрсетілді.",
+          delivery: "screen",
+          debugCode: code,
+        });
+      }
+
+      throw mailError;
+    }
   } catch (error) {
     console.error("FORGOT PASSWORD ERROR:", error);
     return res.status(500).json({
-      message: `Қалпына келтіру кодын жіберу кезінде қате шықты: ${error.code || "MAIL_ERROR"}`, 
+      message:
+        "Қалпына келтіру кодын жіберу кезінде қате шықты. Email сервисін тексеріңіз.",
       error: error.message,
       errorCode: error.code || "MAIL_ERROR",
-      errorDetail: `${error.code || "MAIL_ERROR"}: ${error.message}`,
     });
   }
 };

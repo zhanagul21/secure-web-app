@@ -34,8 +34,8 @@ export function getApiErrorMessage(error, fallbackMessage) {
   }
 
   return (
-    error?.response?.data?.errorDetail ||
     error?.response?.data?.message ||
+    error?.response?.data?.errorDetail ||
     fallbackMessage
   );
 }

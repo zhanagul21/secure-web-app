@@ -1,6 +1,20 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 
+function parseLogDetails(details = "") {
+  const parts = String(details).split("; ");
+  const ipPart = parts.find((part) => part.startsWith("IP: "));
+  const uaPart = parts.find((part) => part.startsWith("UA: "));
+
+  return {
+    summary: parts
+      .filter((part) => !part.startsWith("IP: ") && !part.startsWith("UA: "))
+      .join("; "),
+    ip: ipPart?.replace("IP: ", "") || "",
+    userAgent: uaPart?.replace("UA: ", "") || "",
+  };
+}
+
 function ActivityLog({ setPage, setLoggedIn, logoutEverywhere }) {
   const [logs, setLogs] = useState([]);
   const [message, setMessage] = useState("");
@@ -40,7 +54,17 @@ function ActivityLog({ setPage, setLoggedIn, logoutEverywhere }) {
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       const searchText = search.toLowerCase();
-      const matchesSearch = log.action_type?.toLowerCase().includes(searchText) || log.action_details?.toLowerCase().includes(searchText);
+      const parsed = parseLogDetails(log.action_details);
+      const searchable = [
+        log.action_type,
+        parsed.summary,
+        parsed.ip,
+        parsed.userAgent,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = searchable.includes(searchText);
       const matchesAction = actionFilter === "all" ? true : log.action_type === actionFilter;
       return matchesSearch && matchesAction;
     });
@@ -66,6 +90,14 @@ function ActivityLog({ setPage, setLoggedIn, logoutEverywhere }) {
 
         {message && <div className="mt-6 rounded-2xl border border-rose-100 bg-white p-4 text-slate-700 shadow-sm">{message}</div>}
 
+        <div className="mt-6 rounded-[24px] border border-sky-100 bg-white/95 p-5 text-slate-700 shadow-sm">
+          <div className="font-bold text-slate-900">IP audit қайда көрінеді?</div>
+          <p className="mt-1">
+            Кіру, қате пароль, 2FA және пароль жаңарту логтарында IP мен браузер бөлек көрсетіледі.
+            Іздеу жолына IP адресін жазсаңыз, сол әрекеттер бірден табылады.
+          </p>
+        </div>
+
         <div className="mt-6 rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
           <div className="mb-4 grid gap-4 md:grid-cols-2">
             <input
@@ -83,13 +115,31 @@ function ActivityLog({ setPage, setLoggedIn, logoutEverywhere }) {
           </div>
 
           <div className="space-y-3">
-            {filteredLogs.map((log) => (
-              <div key={log.id} className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-4">
-                <div className="font-semibold text-slate-800">{log.action_type}</div>
-                <div className="mt-1 text-slate-700">{log.action_details}</div>
-                <div className="mt-2 text-sm text-slate-500">{new Date(log.created_at).toLocaleString()}</div>
-              </div>
-            ))}
+            {filteredLogs.map((log) => {
+              const parsed = parseLogDetails(log.action_details);
+
+              return (
+                <div key={log.id} className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-4">
+                  <div className="font-semibold text-slate-800">{log.action_type}</div>
+                  <div className="mt-1 text-slate-700">{parsed.summary || "Сипаттама жоқ"}</div>
+                  {(parsed.ip || parsed.userAgent) && (
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                      {parsed.ip && (
+                        <span className="rounded-full bg-white px-3 py-1 text-sky-800 ring-1 ring-sky-100">
+                          IP: {parsed.ip}
+                        </span>
+                      )}
+                      {parsed.userAgent && (
+                        <span className="max-w-full truncate rounded-full bg-white px-3 py-1 text-slate-700 ring-1 ring-sky-100">
+                          Browser: {parsed.userAgent}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="mt-2 text-sm text-slate-500">{new Date(log.created_at).toLocaleString()}</div>
+                </div>
+              );
+            })}
 
             {filteredLogs.length === 0 && (
               <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-6 text-center text-slate-600">Логтар табылмады</div>

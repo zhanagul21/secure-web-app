@@ -1,17 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { renderAsync } from "docx-preview";
 import {
   apiBaseUrl,
   getFetchErrorMessage,
 } from "../services/apiConfig";
+
+const DOCX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 function SharedDocumentSecure({ token }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [fileUrl, setFileUrl] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
+  const [docxBlob, setDocxBlob] = useState(null);
   const [mimeType, setMimeType] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const [now, setNow] = useState(Date.now());
+  const docxContainerRef = useRef(null);
 
   useEffect(() => {
     let objectUrl = "";
@@ -25,7 +31,7 @@ function SharedDocumentSecure({ token }) {
       }
 
       try {
-        const res = await fetch(`${apiBaseUrl}/documents/shared/${token}`);
+        const res = await fetch(`${apiBaseUrl}/documents/shared/${token}?raw=1`);
         const contentType =
           res.headers.get("content-type") || "application/octet-stream";
         const expiresHeader = res.headers.get("x-expires-at");
@@ -51,6 +57,13 @@ function SharedDocumentSecure({ token }) {
         setMimeType(contentType);
         setFileUrl("");
         setHtmlContent("");
+        setDocxBlob(null);
+
+        if (contentType.includes(DOCX_MIME_TYPE)) {
+          const blob = await res.blob();
+          setDocxBlob(blob);
+          return;
+        }
 
         if (contentType.includes("text/html")) {
           const html = await res.text();
@@ -97,6 +110,34 @@ function SharedDocumentSecure({ token }) {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [expiresAt]);
+
+  useEffect(() => {
+    if (!docxBlob || !docxContainerRef.current) return undefined;
+
+    let cancelled = false;
+    const container = docxContainerRef.current;
+    container.innerHTML = "";
+
+    renderAsync(docxBlob, container, undefined, {
+      className: "docx-preview",
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      breakPages: true,
+      renderHeaders: true,
+      renderFooters: true,
+      renderFootnotes: true,
+      useBase64URL: true,
+    }).catch((renderError) => {
+      if (!cancelled) {
+        setError(renderError.message || "Word preview көрсету кезінде қате шықты.");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [docxBlob]);
 
   const remainingTime = useMemo(() => {
     if (!expiresAt) return "00:00:00";
@@ -146,6 +187,14 @@ function SharedDocumentSecure({ token }) {
           srcDoc={htmlContent}
           className="h-[85vh] w-full rounded-[24px] border border-sky-100 bg-white"
         />
+      );
+    }
+
+    if (docxBlob) {
+      return (
+        <div className="max-h-[85vh] overflow-auto rounded-[24px] border border-sky-100 bg-slate-100 p-4">
+          <div ref={docxContainerRef} className="docx-preview-host" />
+        </div>
       );
     }
 

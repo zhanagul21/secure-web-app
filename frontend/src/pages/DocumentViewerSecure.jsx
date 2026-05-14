@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { renderAsync } from "docx-preview";
 import API from "../services/api";
+
+const DOCX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
@@ -15,12 +19,14 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewMimeType, setPreviewMimeType] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
+  const [docxBlob, setDocxBlob] = useState(null);
   const [previewType, setPreviewType] = useState("none");
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDuration, setShareDuration] = useState(60);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const docxContainerRef = useRef(null);
 
   const clearPreview = () => {
     if (previewUrl) {
@@ -29,6 +35,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
     }
     setPreviewMimeType("");
     setHtmlContent("");
+    setDocxBlob(null);
     setPreviewType("none");
   };
 
@@ -48,7 +55,32 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       setPreviewType("none");
 
       const metaRes = await API.get(`/documents/view/${documentId}`);
-      setDocumentData(metaRes.data.document);
+      const currentDocument = metaRes.data.document;
+      setDocumentData(currentDocument);
+      clearPreview();
+
+      if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
+        const docxRes = await API.get(`/documents/preview/${documentId}?raw=1`, {
+          responseType: "blob",
+          validateStatus: () => true,
+        });
+
+        if (docxRes.status >= 400) {
+          const text = await docxRes.data.text();
+          try {
+            const parsed = JSON.parse(text);
+            setMessage(parsed.message || "Word preview ашылмады.");
+          } catch {
+            setMessage(text || "Word preview ашылмады.");
+          }
+          return;
+        }
+
+        setPreviewType("docx");
+        setPreviewMimeType(DOCX_MIME_TYPE);
+        setDocxBlob(docxRes.data);
+        return;
+      }
 
       const res = await API.get(`/documents/preview/${documentId}`, {
         responseType: "blob",
@@ -67,8 +99,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
         }
         return;
       }
-
-      clearPreview();
 
       if (
         contentType.includes("application/pdf") ||
@@ -120,6 +150,37 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
       }
     };
   }, [documentId]);
+
+  useEffect(() => {
+    if (previewType !== "docx" || !docxBlob || !docxContainerRef.current) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    const container = docxContainerRef.current;
+    container.innerHTML = "";
+
+    renderAsync(docxBlob, container, undefined, {
+      className: "docx-preview",
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      breakPages: true,
+      renderHeaders: true,
+      renderFooters: true,
+      renderFootnotes: true,
+      useBase64URL: true,
+    }).catch((error) => {
+      if (!cancelled) {
+        setPreviewType("unsupported");
+        setMessage(error.message || "Word preview көрсету кезінде қате шықты.");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [previewType, docxBlob]);
 
   const handleDownload = async () => {
     try {
@@ -210,6 +271,14 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn }) {
           srcDoc={htmlContent}
           className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
         />
+      );
+    }
+
+    if (previewType === "docx") {
+      return (
+        <div className="max-h-[82vh] overflow-auto rounded-[24px] border border-sky-100 bg-slate-100 p-4">
+          <div ref={docxContainerRef} className="docx-preview-host" />
+        </div>
       );
     }
 

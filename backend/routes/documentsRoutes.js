@@ -30,13 +30,15 @@ const maxUploadSizeBytes = maxUploadSizeMb * 1024 * 1024;
 const renderPostgresStorageLimitGb = Number.parseFloat(
   process.env.RENDER_POSTGRES_STORAGE_GB || "1"
 );
+const DOCX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const allowedFileTypes = new Map([
   [".pdf", ["application/pdf"]],
   [".png", ["image/png"]],
   [".jpg", ["image/jpeg"]],
   [".jpeg", ["image/jpeg"]],
   [".doc", ["application/msword"]],
-  [".docx", ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]],
+  [".docx", [DOCX_MIME_TYPE]],
   [".ppt", ["application/vnd.ms-powerpoint"]],
   [".pptx", ["application/vnd.openxmlformats-officedocument.presentationml.presentation"]],
   [".txt", ["text/plain"]],
@@ -702,9 +704,14 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
     }
 
     if (
-      doc.mime_type ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      doc.mime_type === DOCX_MIME_TYPE
     ) {
+      if (req.query.raw === "1") {
+        res.setHeader("Content-Type", DOCX_MIME_TYPE);
+        res.setHeader("Content-Disposition", "inline");
+        return res.send(readable.buffer);
+      }
+
       try {
         tempDirToDelete = await sendConvertedPdfPreview(
           res,
@@ -1003,9 +1010,14 @@ router.get("/shared/:token", async (req, res) => {
     }
 
     if (
-      doc.mime_type ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      doc.mime_type === DOCX_MIME_TYPE
     ) {
+      if (req.query.raw === "1") {
+        res.setHeader("Content-Type", DOCX_MIME_TYPE);
+        res.setHeader("Content-Disposition", "inline");
+        return res.send(readable.buffer);
+      }
+
       try {
         tempDirToDelete = await sendConvertedPdfPreview(
           res,
