@@ -117,14 +117,9 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId }) {
 
     try {
       await API.delete(`/documents/delete/${id}`);
-      setDocuments((current) => {
-        const nextDocuments = current.filter((doc) => doc.id !== id);
-        setSelectedId((selected) =>
-          selected === id ? nextDocuments[0]?.id || null : selected
-        );
-        return nextDocuments;
-      });
-      setMessage("Құжат өшірілді.");
+      setSelectedId((selected) => (selected === id ? null : selected));
+      await Promise.all([getDocuments(), getTrashDocuments()]);
+      setMessage("Құжат корзинаға жіберілді.");
     } catch (error) {
       setMessage(
         error.response?.data?.message ||
