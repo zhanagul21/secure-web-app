@@ -73,31 +73,35 @@ router.put("/profile", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "Аты-жөні міндетті" });
     }
 
+    const normalizedAvatarUrl =
+      typeof avatar_url === "string" && avatar_url.trim()
+        ? avatar_url.trim()
+        : null;
+
+    if (
+      normalizedAvatarUrl &&
+      !/^data:image\/(png|jpe?g|webp);base64,/i.test(normalizedAvatarUrl)
+    ) {
+      return res.status(400).json({ message: "Профиль суреті PNG, JPG немесе WEBP болуы керек" });
+    }
+
+    if (normalizedAvatarUrl && normalizedAvatarUrl.length > 3_000_000) {
+      return res.status(413).json({ message: "Профиль суреті тым үлкен. Кішірек сурет таңдаңыз" });
+    }
+
     await poolConnect;
 
-    try {
-      await pool
-        .request()
-        .input("userId", sql.Int, req.user.id)
-        .input("fullName", sql.NVarChar(255), full_name.trim())
-        .input("avatarUrl", sql.NVarChar(sql.MAX), avatar_url || null)
-        .query(`
-          UPDATE users
-          SET full_name = @fullName,
-              avatar_url = @avatarUrl
-          WHERE id = @userId
-        `);
-    } catch {
-      await pool
-        .request()
-        .input("userId", sql.Int, req.user.id)
-        .input("fullName", sql.NVarChar(255), full_name.trim())
-        .query(`
-          UPDATE users
-          SET full_name = @fullName
-          WHERE id = @userId
-        `);
-    }
+    await pool
+      .request()
+      .input("userId", sql.Int, req.user.id)
+      .input("fullName", sql.NVarChar(255), full_name.trim())
+      .input("avatarUrl", sql.NVarChar(sql.MAX), normalizedAvatarUrl)
+      .query(`
+        UPDATE users
+        SET full_name = @fullName,
+            avatar_url = @avatarUrl
+        WHERE id = @userId
+      `);
 
     const result = await pool
       .request()

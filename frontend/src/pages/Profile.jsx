@@ -6,6 +6,7 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
   const [message, setMessage] = useState("");
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarFileName, setAvatarFileName] = useState("");
   const [saving, setSaving] = useState(false);
 
   const logout = () => {
@@ -49,15 +50,50 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
       .join("") || "AU";
   }, [fullName, user]);
 
-  const handleAvatarUpload = (event) => {
+  const resizeAvatar = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      const image = new Image();
+
+      reader.onerror = () => reject(new Error("Суретті оқу мүмкін болмады"));
+      image.onerror = () => reject(new Error("Сурет форматы дұрыс емес"));
+
+      image.onload = () => {
+        const maxSize = 512;
+        const scale = Math.min(maxSize / image.width, maxSize / image.height, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+
+      reader.onload = () => {
+        image.src = reader.result?.toString() || "";
+      };
+      reader.readAsDataURL(file);
+    });
+
+  const handleAvatarUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAvatarUrl(reader.result?.toString() || "");
-    };
-    reader.readAsDataURL(file);
+    if (!file.type.startsWith("image/")) {
+      setMessage("Тек сурет файлын таңдаңыз");
+      return;
+    }
+
+    try {
+      setMessage("");
+      const resizedAvatar = await resizeAvatar(file);
+      setAvatarUrl(resizedAvatar);
+      setAvatarFileName(file.name);
+      setMessage("Сурет дайын. Сақтау батырмасын басыңыз.");
+    } catch (error) {
+      setMessage(error.message || "Суретті дайындау кезінде қате шықты");
+    }
   };
 
   const saveProfile = async (event) => {
@@ -71,6 +107,8 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
         avatar_url: avatarUrl,
       });
       setUser(res.data.user);
+      setAvatarUrl(res.data.user?.avatar_url || "");
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       setMessage(res.data.message || "Профиль жаңартылды");
     } catch (error) {
       setMessage(error.response?.data?.message || "Профильді жаңарту қатесі");
@@ -153,7 +191,29 @@ function Profile({ setLoggedIn, setPage, logoutEverywhere }) {
                   onChange={handleAvatarUpload}
                   className="w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-700 outline-none"
                 />
-                <p className="mt-2 text-sm text-slate-500">PNG немесе JPG таңдауға болады.</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <p className="text-sm text-slate-500">
+                    PNG, JPG немесе WEBP таңдауға болады. Сурет автоматты түрде профильге лайықталып сақталады.
+                  </p>
+                  {avatarFileName && (
+                    <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                      {avatarFileName}
+                    </span>
+                  )}
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAvatarUrl("");
+                        setAvatarFileName("");
+                        setMessage("Сурет өшіруге дайын. Сақтау батырмасын басыңыз.");
+                      }}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+                    >
+                      Суретті өшіру
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
