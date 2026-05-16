@@ -240,6 +240,18 @@ const sendConvertedPdfPreview = async (res, inputPath, currentTempDir) => {
   return tempDir;
 };
 
+const sendDocxHtmlPreview = async (res, buffer, title, compact = false) => {
+  const html = await renderDocxBufferPreview(buffer, title, compact);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
+};
+
+const sendDocHtmlPreview = async (res, filePath, title, compact = false) => {
+  const html = await renderDocPathTextPreview(filePath, title, compact);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
+};
+
 const cleanupDir = (dirPath) => {
   try {
     if (dirPath && fs.existsSync(dirPath)) {
@@ -753,10 +765,8 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         return;
       } catch (error) {
         console.error("DOCX PDF PREVIEW ERROR:", error);
-        return res.status(503).json({
-          message:
-            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
-        });
+        await sendDocxHtmlPreview(res, readable.buffer, doc.title);
+        return;
       }
     }
 
@@ -770,10 +780,8 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         return;
       } catch (error) {
         console.error("DOC PDF PREVIEW ERROR:", error);
-        return res.status(503).json({
-          message:
-            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
-        });
+        await sendDocHtmlPreview(res, readable.filePath, doc.title);
+        return;
       }
     }
 
@@ -1097,10 +1105,8 @@ router.get("/shared/:token", async (req, res) => {
         return;
       } catch (error) {
         console.error("SHARED DOCX PDF PREVIEW ERROR:", error);
-        return res.status(503).json({
-          message:
-            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
-        });
+        await sendDocxHtmlPreview(res, readable.buffer, doc.title, true);
+        return;
       }
     }
 
@@ -1114,10 +1120,8 @@ router.get("/shared/:token", async (req, res) => {
         return;
       } catch (error) {
         console.error("SHARED DOC PDF PREVIEW ERROR:", error);
-        return res.status(503).json({
-          message:
-            "Word preview дәл ашылуы үшін серверде LibreOffice қажет. Құжат өзгертілмеді, түпнұсқасын жүктеп ашуға болады.",
-        });
+        await sendDocHtmlPreview(res, readable.filePath, doc.title, true);
+        return;
       }
     }
 
