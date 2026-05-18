@@ -626,7 +626,7 @@ const renderPresentationPreview = async (buffer, title, compact = false) => {
   const slides = await Promise.all(
     slideFiles.map(async (fileName, index) => {
       const xml = await zip.file(fileName).async("string");
-      const textRuns = [...xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/g)]
+      const textRuns = [...xml.matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)]
         .map((match) => decodeXmlText(match[1]).trim())
         .filter(Boolean);
 
