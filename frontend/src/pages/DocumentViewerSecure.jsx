@@ -90,6 +90,16 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           return;
         }
 
+        if (
+          convertedRes.status < 400 &&
+          convertedContentType.includes("text/html")
+        ) {
+          setPreviewType("html");
+          const html = await convertedRes.data.text();
+          setHtmlContent(html);
+          return;
+        }
+
         const rawDocxRes = await API.get(`/documents/preview/${documentId}?raw=1`, {
           responseType: "arraybuffer",
           validateStatus: () => true,

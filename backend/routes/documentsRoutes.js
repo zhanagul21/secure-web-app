@@ -36,6 +36,8 @@ const DOCX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const XLSX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const PPTX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 const allowedFileTypes = new Map([
   [".pdf", ["application/pdf"]],
   [".png", ["image/png"]],
@@ -46,7 +48,7 @@ const allowedFileTypes = new Map([
   [".xls", ["application/vnd.ms-excel", "application/octet-stream"]],
   [".xlsx", [XLSX_MIME_TYPE]],
   [".ppt", ["application/vnd.ms-powerpoint"]],
-  [".pptx", ["application/vnd.openxmlformats-officedocument.presentationml.presentation"]],
+  [".pptx", [PPTX_MIME_TYPE]],
   [".txt", ["text/plain"]],
 ]);
 const frontendOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
@@ -214,7 +216,7 @@ const convertDocumentToPdf = async (inputPath) => {
       "--nolockcheck",
       `-env:UserInstallation=file://${profileDir.replace(/\\/g, "/")}`,
       "--convert-to",
-      "pdf:writer_pdf_Export",
+      "pdf",
       "--outdir",
       tempDir,
       inputPath,
@@ -534,6 +536,16 @@ const isSpreadsheetDocument = (doc) => {
     doc.mime_type === XLSX_MIME_TYPE ||
     extension === ".xls" ||
     extension === ".xlsx"
+  );
+};
+
+const isPresentationDocument = (doc) => {
+  const extension = path.extname(doc.original_name || doc.filename || "").toLowerCase();
+  return (
+    doc.mime_type === "application/vnd.ms-powerpoint" ||
+    doc.mime_type === PPTX_MIME_TYPE ||
+    extension === ".ppt" ||
+    extension === ".pptx"
   );
 };
 
@@ -874,9 +886,28 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
     }
 
     if (isSpreadsheetDocument(doc)) {
-      const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title);
-      res.setHeader("Content-Type", "text/html; charset=utf-8");
-      return res.send(previewHtml);
+      try {
+        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.send(previewHtml);
+      } catch (error) {
+        console.error("SPREADSHEET HTML PREVIEW ERROR:", error);
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
+        return;
+      }
+    }
+
+    if (isPresentationDocument(doc)) {
+      tempDirToDelete = await sendConvertedPdfPreview(
+        res,
+        readable.filePath,
+        tempDirToDelete
+      );
+      return;
     }
 
     if (
@@ -1220,9 +1251,28 @@ router.get("/shared/:token", async (req, res) => {
     }
 
     if (isSpreadsheetDocument(doc)) {
-      const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title, true);
-      res.setHeader("Content-Type", "text/html; charset=utf-8");
-      return res.send(previewHtml);
+      try {
+        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title, true);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.send(previewHtml);
+      } catch (error) {
+        console.error("SHARED SPREADSHEET HTML PREVIEW ERROR:", error);
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
+        return;
+      }
+    }
+
+    if (isPresentationDocument(doc)) {
+      tempDirToDelete = await sendConvertedPdfPreview(
+        res,
+        readable.filePath,
+        tempDirToDelete
+      );
+      return;
     }
 
     if (
