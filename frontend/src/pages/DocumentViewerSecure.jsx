@@ -1,5 +1,9 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
+import { renderAsync } from "docx-preview";
 import API from "../services/api";
+
+const DOCX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
@@ -9,12 +13,14 @@ function formatFileSize(bytes) {
 }
 
 function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhere }) {
+  const docxPreviewRef = useRef(null);
   const [documentData, setDocumentData] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewMimeType, setPreviewMimeType] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
+  const [docxData, setDocxData] = useState(null);
   const [encryptionProof, setEncryptionProof] = useState(null);
   const [previewType, setPreviewType] = useState("none");
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -30,7 +36,11 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     }
     setPreviewMimeType("");
     setHtmlContent("");
+    setDocxData(null);
     setPreviewType("none");
+    if (docxPreviewRef.current) {
+      docxPreviewRef.current.innerHTML = "";
+    }
   };
 
   const logout = () => {
@@ -62,6 +72,28 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       API.get(`/documents/encryption-proof/${documentId}`)
         .then((proofRes) => setEncryptionProof(proofRes.data))
         .catch(() => setEncryptionProof(null));
+
+      if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
+        const rawDocxRes = await API.get(`/documents/preview/${documentId}?raw=1`, {
+          responseType: "arraybuffer",
+          validateStatus: () => true,
+        });
+
+        if (rawDocxRes.status >= 400) {
+          const text = new TextDecoder("utf-8").decode(rawDocxRes.data);
+          try {
+            const parsed = JSON.parse(text);
+            setMessage(parsed.message || "DOCX preview ашылмады.");
+          } catch {
+            setMessage(text || "DOCX preview ашылмады.");
+          }
+          return;
+        }
+
+        setPreviewType("docx");
+        setDocxData(rawDocxRes.data);
+        return;
+      }
 
       const res = await API.get(`/documents/preview/${documentId}`, {
         responseType: "blob",
@@ -131,6 +163,48 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       }
     };
   }, [documentId]);
+
+  useEffect(() => {
+    if (previewType !== "docx" || !docxData || !docxPreviewRef.current) {
+      return undefined;
+    }
+
+    const container = docxPreviewRef.current;
+    let cancelled = false;
+    container.innerHTML = "";
+
+    renderAsync(docxData, container, container, {
+      className: "docx",
+      inWrapper: true,
+      hideWrapperOnPrint: false,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      ignoreFonts: false,
+      breakPages: true,
+      ignoreLastRenderedPageBreak: false,
+      experimental: true,
+      trimXmlDeclaration: true,
+      useBase64URL: true,
+      renderChanges: false,
+      renderHeaders: true,
+      renderFooters: true,
+      renderFootnotes: true,
+      renderEndnotes: true,
+      renderComments: false,
+      renderAltChunks: true,
+      debug: false,
+    }).catch((error) => {
+      if (!cancelled) {
+        setPreviewType("unsupported");
+        setMessage(error?.message || "DOCX preview ашылмады. Файлды жүктеп ашыңыз.");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      container.innerHTML = "";
+    };
+  }, [previewType, docxData]);
 
   const handleDownload = async () => {
     try {
@@ -221,6 +295,17 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           srcDoc={htmlContent}
           className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
         />
+      );
+    }
+
+    if (previewType === "docx") {
+      return (
+        <div className="h-[82vh] w-full overflow-auto rounded-[24px] border border-sky-100 bg-slate-100 p-4">
+          <div
+            ref={docxPreviewRef}
+            className="[&_.docx-wrapper]:!bg-slate-100 [&_.docx-wrapper]:!p-0 [&_.docx]:!mx-auto [&_.docx]:shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
+          />
+        </div>
       );
     }
 
