@@ -5,13 +5,19 @@ function parseLogDetails(details = "") {
   const parts = String(details).split("; ");
   const ipPart = parts.find((part) => part.startsWith("IP: "));
   const uaPart = parts.find((part) => part.startsWith("UA: "));
+  const riskPart = parts.find((part) => part.startsWith("Қауіп деңгейі: "));
+  const scorePart = parts.find((part) => part.startsWith("Risk score: "));
+  const reasonPart = parts.find((part) => part.startsWith("Себеп: "));
 
   return {
     summary: parts
-      .filter((part) => !part.startsWith("IP: ") && !part.startsWith("UA: "))
+      .filter((part) => !part.startsWith("IP: ") && !part.startsWith("UA: ") && !part.startsWith("Қауіп деңгейі: ") && !part.startsWith("Risk score: ") && !part.startsWith("Себеп: "))
       .join("; "),
     ip: ipPart?.replace("IP: ", "") || "",
     userAgent: uaPart?.replace("UA: ", "") || "",
+    risk: riskPart?.replace("Қауіп деңгейі: ", "") || "",
+    score: scorePart?.replace("Risk score: ", "") || "",
+    reason: reasonPart?.replace("Себеп: ", "") || "",
   };
 }
 
@@ -123,6 +129,21 @@ function ActivityLog({ setPage, setLoggedIn, logoutEverywhere }) {
                 <div key={log.id} className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-4">
                   <div className="font-semibold text-slate-800">{log.action_type}</div>
                   <div className="mt-1 text-slate-700">{parsed.summary || "Сипаттама жоқ"}</div>
+                  {parsed.risk && (
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
+                      <span className={`rounded-full px-3 py-1 ${
+                        parsed.risk === "Жоғары"
+                          ? "bg-rose-100 text-rose-700"
+                          : parsed.risk === "Орташа"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}>
+                        Қауіп деңгейі: {parsed.risk}
+                      </span>
+                      {parsed.score && <span className="rounded-full bg-white px-3 py-1 text-slate-700 ring-1 ring-sky-100">Score: {parsed.score}</span>}
+                      {parsed.reason && <span className="rounded-full bg-white px-3 py-1 text-slate-700 ring-1 ring-sky-100">Себеп: {parsed.reason}</span>}
+                    </div>
+                  )}
                   {(parsed.ip || parsed.userAgent) && (
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                       {parsed.ip && (

@@ -1,6 +1,42 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 
+function getRiskSignal(log) {
+  const action = log.action_type || "";
+  const details = log.action_details || "";
+  const text = `${action} ${details}`.toLowerCase();
+  let score = 0;
+  const reasons = [];
+
+  if (action.includes("DOWNLOAD")) {
+    score += 40;
+    reasons.push("құжат жүктеу");
+  }
+
+  if (action.includes("SHARE")) {
+    score += 35;
+    reasons.push("уақытша сілтеме");
+  }
+
+  if (text.includes("failed") || text.includes("қате") || text.includes("invalid")) {
+    score += 30;
+    reasons.push("сәтсіз әрекет");
+  }
+
+  if (text.includes("2fa") || text.includes("password") || text.includes("пароль")) {
+    score += 20;
+    reasons.push("аккаунт қауіпсіздігі");
+  }
+
+  if (action.includes("DELETE")) {
+    score += 25;
+    reasons.push("өшіру әрекеті");
+  }
+
+  const level = score >= 60 ? "Жоғары" : score >= 30 ? "Орташа" : "Төмен";
+  return { level, score, reasons: reasons.length ? reasons : ["қалыпты әрекет"] };
+}
+
 function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
@@ -121,6 +157,15 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
     return { total: users.length, admins, regularUsers: users.length - admins };
   }, [users]);
 
+  const riskRadar = useMemo(() => {
+    const signals = latestLogs.map((log) => ({ ...log, risk: getRiskSignal(log) }));
+    const high = signals.filter((item) => item.risk.level === "Жоғары").length;
+    const medium = signals.filter((item) => item.risk.level === "Орташа").length;
+    const topScore = Math.max(0, ...signals.map((item) => item.risk.score));
+    const status = high > 0 ? "Жоғары қауіп" : medium > 0 ? "Бақылау керек" : "Тұрақты";
+    return { signals, high, medium, topScore, status };
+  }, [latestLogs]);
+
   const formatBytes = (value) => {
     const bytes = Number(value || 0);
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -199,6 +244,63 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
             <div className="text-sm text-slate-500">Уақытша сілтемелер</div>
             <div className="mt-3 text-3xl font-black text-slate-900">{appStats?.active_links || 0}</div>
             <div className="mt-2 text-sm text-slate-600">Белсенді secure links</div>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-[32px] border border-rose-100 bg-[linear-gradient(135deg,#fff1f2,#ffffff)] p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-700">Қауіпсіздік радары</p>
+              <h2 className="mt-1 text-2xl font-black text-slate-900">Күмәнді әрекеттер бақылауы</h2>
+              <p className="mt-2 text-slate-600">Жүйе соңғы әрекеттерді қарап, қауіпті жүктеу, сілтеме жасау және аккаунт өзгерістерін белгілейді.</p>
+            </div>
+            <div className={`rounded-[24px] px-6 py-4 text-center shadow-sm ${
+              riskRadar.status === "Жоғары қауіп"
+                ? "bg-rose-600 text-white"
+                : riskRadar.status === "Бақылау керек"
+                ? "bg-amber-400 text-slate-950"
+                : "bg-emerald-500 text-white"
+            }`}>
+              <div className="text-xs font-bold uppercase tracking-[0.16em] opacity-80">Жалпы статус</div>
+              <div className="mt-1 text-2xl font-black">{riskRadar.status}</div>
+              <div className="mt-1 text-sm font-semibold">Max score: {riskRadar.topScore}</div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="rounded-[24px] bg-white p-5 ring-1 ring-rose-100">
+              <div className="text-sm text-slate-500">Жоғары қауіп</div>
+              <div className="mt-2 text-3xl font-black text-rose-600">{riskRadar.high}</div>
+            </div>
+            <div className="rounded-[24px] bg-white p-5 ring-1 ring-amber-100">
+              <div className="text-sm text-slate-500">Орташа қауіп</div>
+              <div className="mt-2 text-3xl font-black text-amber-600">{riskRadar.medium}</div>
+            </div>
+            <div className="rounded-[24px] bg-white p-5 ring-1 ring-emerald-100">
+              <div className="text-sm text-slate-500">Тексерілген оқиға</div>
+              <div className="mt-2 text-3xl font-black text-emerald-600">{riskRadar.signals.length}</div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            {riskRadar.signals.slice(0, 4).map((item, index) => (
+              <div key={`${item.action_type}-${index}`} className="rounded-[22px] border border-white bg-white/90 p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-bold text-slate-900">{item.action_type}</div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-black ${
+                    item.risk.level === "Жоғары"
+                      ? "bg-rose-100 text-rose-700"
+                      : item.risk.level === "Орташа"
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-emerald-100 text-emerald-700"
+                  }`}>
+                    {item.risk.level}
+                  </span>
+                </div>
+                <div className="mt-2 line-clamp-2 text-sm text-slate-600">{item.action_details || "Сипаттама жоқ"}</div>
+                <div className="mt-3 text-xs font-semibold text-slate-500">Себеп: {item.risk.reasons.join(", ")}</div>
+              </div>
+            ))}
           </div>
         </div>
 
