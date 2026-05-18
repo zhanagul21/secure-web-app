@@ -457,10 +457,10 @@ function EncryptionLab({ setPage, setLoggedIn, logoutEverywhere }) {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">AuthGuard Locker</p>
-              <h1 className="mt-1 text-3xl font-black text-slate-900">Шифрлау лабораториясы</h1>
+              <h1 className="mt-1 text-3xl font-black text-slate-900">Криптографиялық модуль</h1>
               <p className="mt-2 max-w-xl text-slate-600">
-                AES-256, SHA-256 және RSA-2048 алгоритмдерін браузерде тікелей сынаңыз.
-                Барлығы Web Crypto API арқылы орындалады — деректер серверге жіберілмейді.
+                AES-256, SHA-256 және RSA-2048 алгоритмдерін браузерде тікелей іске асырыңыз.
+                Барлығы Web Crypto API арқылы клиент жағында орындалады — деректер серверге жіберілмейді.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -473,9 +473,9 @@ function EncryptionLab({ setPage, setLoggedIn, logoutEverywhere }) {
         {/* Info banner */}
         <div className="grid gap-4 md:grid-cols-3">
           {[
-            { icon: "🌐", title: "Web Crypto API", desc: "Браузердің кіріктірілген криптографиялық API-і" },
-            { icon: "🛡️", title: "Zero Server", desc: "Деректер тек сіздің браузеріңізде өңделеді" },
-            { icon: "🏛️", title: "NIST стандарты", desc: "АҚШ ұлттық стандарттары институты сертификаты" },
+            { icon: "🌐", title: "Web Crypto API", desc: "Браузерге кіріктірілген криптографиялық интерфейс — бөлек кітапхана талап етілмейді" },
+            { icon: "🛡️", title: "Client-Side Only", desc: "Деректер тек пайдаланушы браузерінде өңделеді, сервер арқылы өтпейді" },
+            { icon: "⚡", title: "Нақты уақыт", desc: "Шифрлау, хэш және кілт жасау нәтижелері лезде көрінеді" },
           ].map((item) => (
             <div key={item.title} className="rounded-[24px] border border-white/70 bg-white/95 p-4 shadow-sm">
               <div className="text-2xl">{item.icon}</div>
@@ -515,8 +515,8 @@ function EncryptionLab({ setPage, setLoggedIn, logoutEverywhere }) {
 
         {/* Footer note */}
         <div className="rounded-[24px] border border-sky-100 bg-white/90 px-5 py-4 text-sm text-slate-600 shadow-sm">
-          <span className="font-semibold text-slate-800">Дипломдық жоба:</span> Қазіргі аутентификация және шифрлау әдістерін қолдана отырып, қорғалған веб-қосымша әзірлеу. 
-          Бұл лаборатория диплом тақырыбының негізгі алгоритмдерін тікелей демонстрациялайды.
+          <span className="font-semibold text-slate-800">Дипломдық жоба:</span> Қазіргі аутентификация және шифрлау әдістерін қолдана отырып, қорғалған веб-қосымша әзірлеу.
+          Бұл модуль жобада қолданылатын криптографиялық алгоритмдерді тікелей демонстрациялайды.
         </div>
       </div>
     </div>
