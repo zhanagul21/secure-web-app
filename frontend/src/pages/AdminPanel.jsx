@@ -157,7 +157,7 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
     return { total: users.length, admins, regularUsers: users.length - admins };
   }, [users]);
 
-  const riskRadar = useMemo(() => {
+  const riskMonitor = useMemo(() => {
     const signals = latestLogs.map((log) => ({ ...log, risk: getRiskSignal(log) }));
     const high = signals.filter((item) => item.risk.level === "Жоғары").length;
     const medium = signals.filter((item) => item.risk.level === "Орташа").length;
@@ -250,40 +250,40 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
         <div className="mt-6 rounded-[32px] border border-rose-100 bg-[linear-gradient(135deg,#fff1f2,#ffffff)] p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-700">Қауіпсіздік радары</p>
-              <h2 className="mt-1 text-2xl font-black text-slate-900">Күмәнді әрекеттер бақылауы</h2>
-              <p className="mt-2 text-slate-600">Жүйе соңғы әрекеттерді қарап, қауіпті жүктеу, сілтеме жасау және аккаунт өзгерістерін белгілейді.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-700">Қауіпсіздік бақылауы</p>
+              <h2 className="mt-1 text-2xl font-black text-slate-900">Қауіпті әрекеттерді бақылау</h2>
+              <p className="mt-2 text-slate-600">Жүйе құжат жүктеу, уақытша сілтеме жасау, өшіру және аккаунт қауіпсіздігіне қатысты күмәнді әрекеттерді автоматты белгілейді.</p>
             </div>
             <div className={`rounded-[24px] px-6 py-4 text-center shadow-sm ${
-              riskRadar.status === "Жоғары қауіп"
+              riskMonitor.status === "Жоғары қауіп"
                 ? "bg-rose-600 text-white"
-                : riskRadar.status === "Бақылау керек"
+                : riskMonitor.status === "Бақылау керек"
                 ? "bg-amber-400 text-slate-950"
                 : "bg-emerald-500 text-white"
             }`}>
               <div className="text-xs font-bold uppercase tracking-[0.16em] opacity-80">Жалпы статус</div>
-              <div className="mt-1 text-2xl font-black">{riskRadar.status}</div>
-              <div className="mt-1 text-sm font-semibold">Max score: {riskRadar.topScore}</div>
+              <div className="mt-1 text-2xl font-black">{riskMonitor.status}</div>
+              <div className="mt-1 text-sm font-semibold">Ең жоғары ұпай: {riskMonitor.topScore}</div>
             </div>
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] bg-white p-5 ring-1 ring-rose-100">
               <div className="text-sm text-slate-500">Жоғары қауіп</div>
-              <div className="mt-2 text-3xl font-black text-rose-600">{riskRadar.high}</div>
+              <div className="mt-2 text-3xl font-black text-rose-600">{riskMonitor.high}</div>
             </div>
             <div className="rounded-[24px] bg-white p-5 ring-1 ring-amber-100">
               <div className="text-sm text-slate-500">Орташа қауіп</div>
-              <div className="mt-2 text-3xl font-black text-amber-600">{riskRadar.medium}</div>
+              <div className="mt-2 text-3xl font-black text-amber-600">{riskMonitor.medium}</div>
             </div>
             <div className="rounded-[24px] bg-white p-5 ring-1 ring-emerald-100">
               <div className="text-sm text-slate-500">Тексерілген оқиға</div>
-              <div className="mt-2 text-3xl font-black text-emerald-600">{riskRadar.signals.length}</div>
+              <div className="mt-2 text-3xl font-black text-emerald-600">{riskMonitor.signals.length}</div>
             </div>
           </div>
 
           <div className="mt-5 grid gap-3 lg:grid-cols-2">
-            {riskRadar.signals.slice(0, 4).map((item, index) => (
+            {riskMonitor.signals.slice(0, 4).map((item, index) => (
               <div key={`${item.action_type}-${index}`} className="rounded-[22px] border border-white bg-white/90 p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-bold text-slate-900">{item.action_type}</div>
