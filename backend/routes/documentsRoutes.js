@@ -397,18 +397,46 @@ const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
       <meta charset="UTF-8" />
       <title>${title}</title>
       <style>
+        * { box-sizing: border-box; }
+        html {
+          background: #eef4fb;
+        }
         body {
           font-family: Arial, sans-serif;
-          padding: 24px;
+          padding: ${compact ? "16px" : "24px"};
           line-height: ${compact ? "1.6" : "1.7"};
-          max-width: ${compact ? "900px" : "920px"};
           margin: 0 auto;
-          background: #fff;
+          background: #eef4fb;
           color: #111827;
+          overflow: auto;
         }
-        img { max-width: 100%; }
-        table { border-collapse: collapse; width: 100%; }
-        td, th { border: 1px solid #cbd5e1; padding: 8px; }
+        .document-page {
+          background: #fff;
+          border: 1px solid #dbe7f3;
+          border-radius: 18px;
+          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+          margin: 0 auto;
+          max-width: 100%;
+          overflow: auto;
+          padding: ${compact ? "18px" : "28px"};
+        }
+        img { max-width: 100%; height: auto; }
+        .table-wrap {
+          max-width: 100%;
+          overflow: auto;
+        }
+        table {
+          border-collapse: collapse;
+          min-width: 100%;
+          table-layout: auto;
+          width: max-content;
+        }
+        td, th {
+          border: 1px solid #cbd5e1;
+          padding: 7px 9px;
+          vertical-align: top;
+          white-space: pre-wrap;
+        }
         p { margin: 0 0 12px; }
         pre {
           white-space: pre-wrap;
@@ -421,15 +449,61 @@ const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
         .word-fallback {
           white-space: pre;
           word-break: normal;
-          overflow: auto;
+          display: inline-block;
+          min-width: max-content;
+          max-width: none;
+          overflow: visible;
           tab-size: 8;
           font-family: "Courier New", monospace;
-          font-size: 13px;
-          line-height: 1.55;
+          font-size: ${compact ? "9px" : "10px"};
+          line-height: 1.35;
+          transform-origin: top left;
+        }
+        .word-fallback-wrap {
+          max-width: 100%;
+          overflow: auto;
+          padding-bottom: 8px;
+        }
+        @media print {
+          html, body {
+            background: #fff;
+          }
+          .document-page {
+            border: 0;
+            box-shadow: none;
+          }
         }
       </style>
     </head>
-    <body>${bodyHtml}</body>
+    <body>
+      <main class="document-page">${bodyHtml}</main>
+      <script>
+        document.querySelectorAll("table").forEach((table) => {
+          if (table.parentElement && table.parentElement.classList.contains("table-wrap")) return;
+          const wrapper = document.createElement("div");
+          wrapper.className = "table-wrap";
+          table.parentNode.insertBefore(wrapper, table);
+          wrapper.appendChild(table);
+        });
+
+        function fitWordFallback() {
+          document.querySelectorAll(".word-fallback").forEach((pre) => {
+            pre.style.transform = "";
+            pre.style.marginBottom = "";
+            const wrapper = pre.parentElement;
+            const availableWidth = wrapper ? wrapper.clientWidth : window.innerWidth;
+            const naturalWidth = pre.scrollWidth;
+            if (!availableWidth || !naturalWidth || naturalWidth <= availableWidth) return;
+            const scale = Math.max(0.45, Math.min(1, availableWidth / naturalWidth));
+            pre.style.transform = "scale(" + scale + ")";
+            pre.style.marginBottom = ((pre.scrollHeight * scale) - pre.scrollHeight) + "px";
+          });
+        }
+
+        window.addEventListener("load", fitWordFallback);
+        window.addEventListener("resize", fitWordFallback);
+      </script>
+    </body>
   </html>
 `;
 
@@ -451,7 +525,11 @@ const renderDocxBufferPreview = async (buffer, title, compact = false) => {
   const cleanedText = (textResult.value || "").trim();
 
   if (cleanedText) {
-    return wrapPreviewHtml(title, `<pre>${escapeHtml(cleanedText)}</pre>`, compact);
+    return wrapPreviewHtml(
+      title,
+      `<div class="word-fallback-wrap"><pre class="word-fallback">${escapeHtml(cleanedText)}</pre></div>`,
+      compact
+    );
   }
 
   throw new Error("WORD_PREVIEW_EMPTY");
@@ -473,7 +551,7 @@ const renderDocPathTextPreview = async (docPath, title, compact = false) => {
 
   return wrapPreviewHtml(
     title,
-    `<pre class="word-fallback">${escapeHtml(cleanedText)}</pre>`,
+    `<div class="word-fallback-wrap"><pre class="word-fallback">${escapeHtml(cleanedText)}</pre></div>`,
     compact
   );
 };
