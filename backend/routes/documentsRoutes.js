@@ -9,6 +9,7 @@ const crypto = require("crypto");
 const mammoth = require("mammoth");
 const WordExtractor = require("word-extractor");
 const XLSX = require("xlsx");
+const JSZip = require("jszip");
 const { execFile } = require("child_process");
 const { promisify } = require("util");
 const { sql, pool, poolConnect } = require("../config/db");
@@ -450,9 +451,36 @@ const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
         .sheet-preview {
           margin-bottom: 28px;
         }
-        .sheet-preview h2 {
+        .sheet-preview h2,
+        .slide-preview h2 {
           font-size: 18px;
           margin: 0 0 14px;
+        }
+        .presentation-preview {
+          display: grid;
+          gap: 18px;
+        }
+        .slide-preview {
+          aspect-ratio: 16 / 9;
+          background: #fff;
+          border: 1px solid #cbd5e1;
+          border-radius: 14px;
+          box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.03);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          min-height: 260px;
+          overflow: auto;
+          padding: ${compact ? "20px" : "32px"};
+        }
+        .slide-preview p {
+          font-size: ${compact ? "15px" : "18px"};
+          line-height: 1.5;
+          margin: 0 0 10px;
+        }
+        .slide-preview .muted {
+          color: #64748b;
+          font-size: 14px;
         }
         pre {
           white-space: pre-wrap;
@@ -529,6 +557,14 @@ const escapeHtml = (text) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
+const decodeXmlText = (text) =>
+  String(text)
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&");
+
 const isSpreadsheetDocument = (doc) => {
   const extension = path.extname(doc.original_name || doc.filename || "").toLowerCase();
   return (
@@ -571,6 +607,47 @@ const renderSpreadsheetPreview = (buffer, title, compact = false) => {
   }
 
   return wrapPreviewHtml(title, sheets, compact);
+};
+
+const renderPresentationPreview = async (buffer, title, compact = false) => {
+  const zip = await JSZip.loadAsync(buffer);
+  const slideFiles = Object.keys(zip.files)
+    .filter((fileName) => /^ppt\/slides\/slide\d+\.xml$/i.test(fileName))
+    .sort((a, b) => {
+      const aNumber = Number(a.match(/slide(\d+)\.xml/i)?.[1] || 0);
+      const bNumber = Number(b.match(/slide(\d+)\.xml/i)?.[1] || 0);
+      return aNumber - bNumber;
+    });
+
+  if (!slideFiles.length) {
+    throw new Error("PRESENTATION_PREVIEW_EMPTY");
+  }
+
+  const slides = await Promise.all(
+    slideFiles.map(async (fileName, index) => {
+      const xml = await zip.file(fileName).async("string");
+      const textRuns = [...xml.matchAll(/<a:t[^>]*>([\s\S]*?)<\/a:t>/g)]
+        .map((match) => decodeXmlText(match[1]).trim())
+        .filter(Boolean);
+
+      const body = textRuns.length
+        ? textRuns.map((text) => `<p>${escapeHtml(text)}</p>`).join("")
+        : `<p class="muted">Бұл слайдта мәтін табылмады.</p>`;
+
+      return `
+        <section class="slide-preview">
+          <h2>Slide ${index + 1}</h2>
+          <div>${body}</div>
+        </section>
+      `;
+    })
+  );
+
+  return wrapPreviewHtml(
+    title,
+    `<div class="presentation-preview">${slides.join("")}</div>`,
+    compact
+  );
 };
 
 const renderDocxBufferPreview = async (buffer, title, compact = false) => {
@@ -902,12 +979,22 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
     }
 
     if (isPresentationDocument(doc)) {
-      tempDirToDelete = await sendConvertedPdfPreview(
-        res,
-        readable.filePath,
-        tempDirToDelete
-      );
-      return;
+      try {
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
+        return;
+      } catch (error) {
+        console.error("PRESENTATION PDF PREVIEW ERROR:", error);
+        if (doc.mime_type === PPTX_MIME_TYPE || path.extname(doc.original_name || "").toLowerCase() === ".pptx") {
+          const previewHtml = await renderPresentationPreview(readable.buffer, doc.title);
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          return res.send(previewHtml);
+        }
+        throw error;
+      }
     }
 
     if (
@@ -1267,12 +1354,22 @@ router.get("/shared/:token", async (req, res) => {
     }
 
     if (isPresentationDocument(doc)) {
-      tempDirToDelete = await sendConvertedPdfPreview(
-        res,
-        readable.filePath,
-        tempDirToDelete
-      );
-      return;
+      try {
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
+        return;
+      } catch (error) {
+        console.error("SHARED PRESENTATION PDF PREVIEW ERROR:", error);
+        if (doc.mime_type === PPTX_MIME_TYPE || path.extname(doc.original_name || "").toLowerCase() === ".pptx") {
+          const previewHtml = await renderPresentationPreview(readable.buffer, doc.title, true);
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          return res.send(previewHtml);
+        }
+        throw error;
+      }
     }
 
     if (
