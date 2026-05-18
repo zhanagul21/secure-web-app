@@ -1285,6 +1285,7 @@ router.post("/share/:id", authMiddleware, async (req, res) => {
     res.json({
       message: "Сілтеме сәтті жасалды",
       shareUrl,
+      token,
       expiresAt,
     });
   } catch (error) {
@@ -1471,6 +1472,52 @@ router.get("/shared/:token/download", async (req, res) => {
   } catch (error) {
     console.error("DOWNLOAD SHARED DOCUMENT ERROR:", error);
     res.status(500).json({ message: "Shared download кезінде қате шықты" });
+  }
+});
+
+router.get("/shared/:token/office/:filename", async (req, res) => {
+  try {
+    await poolConnect;
+
+    const result = await pool
+      .request()
+      .input("token", sql.NVarChar(255), req.params.token)
+      .query(`
+        SELECT TOP 1 d.*, s.expires_at
+        FROM shared_links s
+        INNER JOIN documents d ON d.id = s.document_id
+        WHERE s.token = @token AND d.deleted_at IS NULL
+        ORDER BY s.id DESC
+      `);
+
+    const doc = result.recordset[0];
+
+    if (!doc) {
+      return res.status(404).json({ message: "Сілтеме табылмады" });
+    }
+
+    if (new Date(doc.expires_at) < new Date()) {
+      return res.status(410).json({ message: "Сілтеменің уақыты өтіп кеткен" });
+    }
+
+    const readable = getReadableDocument(doc);
+
+    if (!readable) {
+      return res.status(404).json({ message: "Файл серверде табылмады" });
+    }
+
+    const filename = doc.original_name || doc.filename || req.params.filename;
+    res.setHeader("Content-Type", doc.mime_type || "application/octet-stream");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(filename)}"; filename*=UTF-8''${encodeURIComponent(filename)}`
+    );
+    res.setHeader("Cache-Control", "private, max-age=300");
+    res.send(readable.buffer);
+    return cleanupDir(readable.tempDir);
+  } catch (error) {
+    console.error("OFFICE VIEW DOCUMENT ERROR:", error);
+    return res.status(500).json({ message: "Office preview кезінде қате шықты" });
   }
 });
 

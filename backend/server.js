@@ -145,7 +145,7 @@ app.get("/api/health", async (req, res) => {
     ok: true,
     db: dbDriver,
     documentStorage: dbDriver === "postgres" ? "database" : "filesystem",
-    officePreviewRevision: "2026-05-18-v4",
+    officePreviewRevision: "2026-05-18-v5-office-viewer",
     libreOffice: await getLibreOfficeHealth(),
   });
 });
