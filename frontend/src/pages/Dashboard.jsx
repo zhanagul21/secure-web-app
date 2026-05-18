@@ -97,6 +97,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
               <button onClick={() => setPage("logs")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Әрекет тарихы</button>
               <button onClick={() => setPage("profile")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Профиль</button>
               <button onClick={() => setPage("twofaSettings")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">2FA баптау</button>
+              <button onClick={() => setPage("encryptionLab")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">🔬 Шифрлау лабы</button>
               {user?.role === "admin" && <button onClick={() => setPage("admin")} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Admin</button>}
               <button onClick={logout} className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white">Шығу</button>
             </div>
