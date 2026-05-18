@@ -1,41 +1,14 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { renderAsync } from "docx-preview";
 import API from "../services/api";
-import { apiBaseUrl } from "../services/apiConfig";
 
 const DOCX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const OFFICE_MIME_TYPES = new Set([
-  "application/msword",
-  DOCX_MIME_TYPE,
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.ms-powerpoint",
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-]);
-const OFFICE_EXTENSIONS = new Set([".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]);
-
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
   const mb = bytes / (1024 * 1024);
   if (mb < 1) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
-}
-
-function getFileExtension(name = "") {
-  const dotIndex = name.lastIndexOf(".");
-  return dotIndex >= 0 ? name.slice(dotIndex).toLowerCase() : "";
-}
-
-function isOfficeDocument(doc) {
-  return (
-    OFFICE_MIME_TYPES.has(doc?.mime_type) ||
-    OFFICE_EXTENSIONS.has(getFileExtension(doc?.original_name || doc?.filename || ""))
-  );
-}
-
-function getOfficeEmbedUrl(fileUrl) {
-  return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fileUrl)}`;
 }
 
 function getViewerLabel() {
@@ -54,7 +27,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewMimeType, setPreviewMimeType] = useState("");
-  const [officeEmbedUrl, setOfficeEmbedUrl] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
   const [docxData, setDocxData] = useState(null);
   const [encryptionProof, setEncryptionProof] = useState(null);
@@ -79,7 +51,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       setPreviewUrl("");
     }
     setPreviewMimeType("");
-    setOfficeEmbedUrl("");
     setHtmlContent("");
     setDocxData(null);
     setPreviewType("none");
@@ -103,26 +74,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     setLoggedIn(false);
   };
 
-  const loadOfficeViewerFallback = async (currentDocument) => {
-    const shareRes = await API.post(`/documents/share/${documentId}`, {
-      durationMinutes: 15,
-    });
-    const token =
-      shareRes.data.token ||
-      shareRes.data.shareUrl?.split("/").filter(Boolean).pop();
-
-    if (!token) {
-      throw new Error("Office preview сілтемесі жасалмады.");
-    }
-
-    const filename = encodeURIComponent(
-      currentDocument.original_name || currentDocument.filename || "document"
-    );
-    const rawOfficeUrl = `${apiBaseUrl}/documents/shared/${token}/office/${filename}`;
-    setPreviewType("office");
-    setOfficeEmbedUrl(getOfficeEmbedUrl(rawOfficeUrl));
-  };
-
   const loadPreview = async () => {
     try {
       setLoading(true);
@@ -137,11 +88,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       API.get(`/documents/encryption-proof/${documentId}`)
         .then((proofRes) => setEncryptionProof(proofRes.data))
         .catch(() => setEncryptionProof(null));
-
-      if (isOfficeDocument(currentDocument)) {
-        await loadOfficeViewerFallback(currentDocument);
-        return;
-      }
 
       if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
         const convertedRes = await API.get(`/documents/preview/${documentId}`, {
@@ -202,16 +148,8 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         const text = await res.data.text();
         try {
           const parsed = JSON.parse(text);
-          if (isOfficeDocument(currentDocument)) {
-            await loadOfficeViewerFallback(currentDocument);
-            return;
-          }
           setMessage(parsed.message || "Preview ашылмады.");
         } catch {
-          if (isOfficeDocument(currentDocument)) {
-            await loadOfficeViewerFallback(currentDocument);
-            return;
-          }
           setMessage(text || "Preview ашылмады.");
         }
         return;
@@ -403,17 +341,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           title="Document HTML Preview"
           srcDoc={htmlContent}
           className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
-        />
-      );
-    }
-
-    if (previewType === "office" && officeEmbedUrl) {
-      return (
-        <iframe
-          src={officeEmbedUrl}
-          title="Office Preview"
-          className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
-          allowFullScreen
         />
       );
     }

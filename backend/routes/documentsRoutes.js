@@ -982,9 +982,9 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         return;
       } catch (error) {
         console.error("SPREADSHEET PDF PREVIEW ERROR:", error);
-        return res.status(502).json({
-          message: "Excel preview PDF-ке айналмады. LibreOffice серверде іске қосылуы керек.",
-        });
+        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.send(previewHtml);
       }
     }
 
@@ -1355,9 +1355,9 @@ router.get("/shared/:token", async (req, res) => {
         return;
       } catch (error) {
         console.error("SHARED SPREADSHEET PDF PREVIEW ERROR:", error);
-        return res.status(502).json({
-          message: "Excel preview PDF-ке айналмады. LibreOffice серверде іске қосылуы керек.",
-        });
+        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title, true);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.send(previewHtml);
       }
     }
 
