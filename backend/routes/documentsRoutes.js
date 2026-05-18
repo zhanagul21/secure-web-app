@@ -405,7 +405,7 @@ const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
   <html>
     <head>
       <meta charset="UTF-8" />
-      <title>${title}</title>
+      <title>${escapeHtml(title || "Document preview")}</title>
       <style>
         * { box-sizing: border-box; }
         html {
@@ -565,6 +565,16 @@ const decodeXmlText = (text) =>
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&");
 
+const normalizeOfficeText = (text) =>
+  decodeXmlText(text)
+    .replace(/\s+/g, " ")
+    .trim();
+
+const isReadableOfficeText = (text) =>
+  Boolean(text) &&
+  !/<\/?[A-Za-z][^>]*>/.test(text) &&
+  !/^[A-Za-z]+:[A-Za-z]+(?:\s|$)/.test(text);
+
 const isSpreadsheetDocument = (doc) => {
   const extension = path.extname(doc.original_name || doc.filename || "").toLowerCase();
   return (
@@ -626,9 +636,9 @@ const renderPresentationPreview = async (buffer, title, compact = false) => {
   const slides = await Promise.all(
     slideFiles.map(async (fileName, index) => {
       const xml = await zip.file(fileName).async("string");
-      const textRuns = [...xml.matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)]
-        .map((match) => decodeXmlText(match[1]).trim())
-        .filter(Boolean);
+      const textRuns = [...xml.matchAll(/<a:t\b[^>]*>([\s\S]*?)<\/a:t>/g)]
+        .map((match) => normalizeOfficeText(match[1]))
+        .filter(isReadableOfficeText);
 
       const body = textRuns.length
         ? textRuns.map((text) => `<p>${escapeHtml(text)}</p>`).join("")
