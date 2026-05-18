@@ -38,6 +38,15 @@ function getOfficeEmbedUrl(fileUrl) {
   return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fileUrl)}`;
 }
 
+function getViewerLabel() {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    return user.email || user.full_name || localStorage.getItem("tempUserEmail") || "verified user";
+  } catch {
+    return localStorage.getItem("tempUserEmail") || "verified user";
+  }
+}
+
 function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhere }) {
   const docxPreviewRef = useRef(null);
   const [documentData, setDocumentData] = useState(null);
@@ -55,6 +64,14 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   const [shareLoading, setShareLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [watermarkTime, setWatermarkTime] = useState(() => new Date());
+  const watermarkText = `AuthGuard • ${getViewerLabel()} • ${watermarkTime.toLocaleString("kk-KZ", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })} • DOC-${documentId}`;
 
   const clearPreview = () => {
     if (previewUrl) {
@@ -252,6 +269,11 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   }, [documentId]);
 
   useEffect(() => {
+    const timer = window.setInterval(() => setWatermarkTime(new Date()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     if (previewType !== "docx" || !docxData || !docxPreviewRef.current) {
       return undefined;
     }
@@ -433,6 +455,18 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     );
   };
 
+  const renderWatermarkOverlay = () => (
+    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-[24px] opacity-[0.13]">
+      <div className="grid h-full w-full -rotate-12 grid-cols-2 gap-x-16 gap-y-12 p-10 text-center text-sm font-black uppercase tracking-[0.28em] text-slate-900 md:grid-cols-3">
+        {Array.from({ length: 18 }).map((_, index) => (
+          <span key={index} className="whitespace-nowrap">
+            {watermarkText}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0,#f8fafc_38%,#dbeafe_100%)]">
       <div className="mx-auto max-w-7xl px-4 py-6">
@@ -588,7 +622,10 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                 Құжат жүктелуде...
               </div>
             ) : (
-              renderPreview()
+              <div className="relative">
+                {renderPreview()}
+                {previewType !== "unsupported" && renderWatermarkOverlay()}
+              </div>
             )}
           </div>
         </div>
