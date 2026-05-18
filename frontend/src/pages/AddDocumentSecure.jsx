@@ -5,6 +5,7 @@ const categorySuggestions = [
   "Жеке құжат",
   "Келісімшарт",
   "Есеп",
+  "Excel",
   "Презентация",
   "Сертификат",
   "Фото архив",
@@ -136,6 +137,8 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
       ? "PDF"
       : file.type.includes("word")
       ? "Document"
+      : file.type.includes("spreadsheet") || file.type.includes("excel")
+      ? "Spreadsheet"
       : file.type.includes("presentation")
       ? "Slides"
       : "File"
@@ -263,7 +266,7 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
               >
                 <input
                   type="file"
-                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.ppt,.pptx,.txt"
+                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                   className="hidden"
                   onChange={(event) => onFileChange(event.target.files?.[0])}
                 />

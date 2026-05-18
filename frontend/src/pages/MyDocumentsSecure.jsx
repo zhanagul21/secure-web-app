@@ -19,6 +19,8 @@ function getFileTypeLabel(mimeType, name) {
   if (mimeType?.startsWith("image/")) return "IMAGE";
   if (mimeType === "application/msword") return "DOC";
   if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return "DOCX";
+  if (mimeType === "application/vnd.ms-excel") return "XLS";
+  if (mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return "XLSX";
   if (mimeType === "application/vnd.ms-powerpoint") return "PPT";
   if (mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation") return "PPTX";
   if (mimeType === "text/plain") return "TXT";
@@ -28,6 +30,7 @@ function getFileTypeLabel(mimeType, name) {
 function getFileAccent(mimeType) {
   if (mimeType === "application/pdf") return "from-rose-400 to-orange-300";
   if (mimeType?.startsWith("image/")) return "from-emerald-400 to-teal-300";
+  if (mimeType?.includes("excel") || mimeType?.includes("spreadsheet")) return "from-emerald-500 to-lime-300";
   if (mimeType?.includes("presentation")) return "from-amber-400 to-orange-300";
   if (mimeType?.includes("word")) return "from-sky-500 to-blue-400";
   return "from-slate-500 to-slate-400";
