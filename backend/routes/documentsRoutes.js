@@ -167,7 +167,7 @@ const execLibreOffice = async (args) => {
   for (const executable of getLibreOfficeCandidates()) {
     try {
       return await execFileAsync(executable, args, {
-        timeout: 90000,
+        timeout: 240000,
         env: { ...process.env, HOME: process.env.HOME || os.tmpdir() },
       });
     } catch (error) {
@@ -974,17 +974,17 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
 
     if (isSpreadsheetDocument(doc)) {
       try {
-        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title);
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        return res.send(previewHtml);
-      } catch (error) {
-        console.error("SPREADSHEET HTML PREVIEW ERROR:", error);
         tempDirToDelete = await sendConvertedPdfPreview(
           res,
           readable.filePath,
           tempDirToDelete
         );
         return;
+      } catch (error) {
+        console.error("SPREADSHEET PDF PREVIEW ERROR:", error);
+        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.send(previewHtml);
       }
     }
 
@@ -1349,17 +1349,17 @@ router.get("/shared/:token", async (req, res) => {
 
     if (isSpreadsheetDocument(doc)) {
       try {
-        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title, true);
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        return res.send(previewHtml);
-      } catch (error) {
-        console.error("SHARED SPREADSHEET HTML PREVIEW ERROR:", error);
         tempDirToDelete = await sendConvertedPdfPreview(
           res,
           readable.filePath,
           tempDirToDelete
         );
         return;
+      } catch (error) {
+        console.error("SHARED SPREADSHEET PDF PREVIEW ERROR:", error);
+        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title, true);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.send(previewHtml);
       }
     }
 

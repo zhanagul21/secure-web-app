@@ -22,7 +22,7 @@ export const apiBaseUrl =
   (isLocalBrowser ? LOCAL_API_BASE_URL : PUBLIC_API_BASE_URL);
 
 export const uploadBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
-export const apiTimeoutMs = 45000;
+export const apiTimeoutMs = 180000;
 
 export function getApiErrorMessage(error, fallbackMessage) {
   if (error?.code === "ECONNABORTED") {
