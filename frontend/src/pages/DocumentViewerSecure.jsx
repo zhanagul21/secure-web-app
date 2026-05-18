@@ -35,7 +35,7 @@ function isOfficeDocument(doc) {
 }
 
 function getOfficeEmbedUrl(fileUrl) {
-  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+  return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(fileUrl)}`;
 }
 
 function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhere }) {
@@ -120,6 +120,11 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       API.get(`/documents/encryption-proof/${documentId}`)
         .then((proofRes) => setEncryptionProof(proofRes.data))
         .catch(() => setEncryptionProof(null));
+
+      if (isOfficeDocument(currentDocument)) {
+        await loadOfficeViewerFallback(currentDocument);
+        return;
+      }
 
       if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
         const convertedRes = await API.get(`/documents/preview/${documentId}`, {
