@@ -125,40 +125,6 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
           </div>
         </div>
 
-        <div className="mt-6 rounded-[32px] border border-sky-200 bg-white/95 p-6 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-2xl font-black text-slate-900">Security Dashboard</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Қосымшада қолданылған негізгі қорғаныс механизмдері.
-              </p>
-            </div>
-            <button
-              onClick={() => setPage("twofaSettings")}
-              className="rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white"
-            >
-              2FA басқару
-            </button>
-          </div>
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              ["JWT + Refresh", "Access 15 минут, refresh 7 күн"],
-              ["bcrypt", "Пароль хэш түрінде сақталады"],
-              ["AES-256-GCM", "Құжатта шифрлау дәлелі көрсетіледі"],
-              ["Audit + IP", "Кіру әрекеттері IP-мен жазылады"],
-              ["Rate limit", "Bruteforce әрекеттері шектеледі"],
-              ["CSP", "Frontend security headers қосылған"],
-              ["File signature", "Файл түрі magic bytes арқылы тексеріледі"],
-              ["Logout blacklist", "Шыққан токен қайта қолданылмайды"],
-            ].map(([title, text]) => (
-              <div key={title} className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
-                <div className="font-black text-slate-900">{title}</div>
-                <div className="mt-2 text-sm text-slate-600">{text}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div className="mt-6 grid gap-6 xl:grid-cols-2">
           <div className="rounded-[32px] border border-sky-200 bg-white/90 p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
