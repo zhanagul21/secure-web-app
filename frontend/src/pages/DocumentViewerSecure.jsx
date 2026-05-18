@@ -74,6 +74,22 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         .catch(() => setEncryptionProof(null));
 
       if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
+        const convertedRes = await API.get(`/documents/preview/${documentId}`, {
+          responseType: "blob",
+          validateStatus: () => true,
+        });
+        const convertedContentType = convertedRes.headers["content-type"] || "";
+
+        if (
+          convertedRes.status < 400 &&
+          convertedContentType.includes("application/pdf")
+        ) {
+          setPreviewType("media");
+          setPreviewMimeType(convertedContentType);
+          setPreviewUrl(URL.createObjectURL(convertedRes.data));
+          return;
+        }
+
         const rawDocxRes = await API.get(`/documents/preview/${documentId}?raw=1`, {
           responseType: "arraybuffer",
           validateStatus: () => true,
