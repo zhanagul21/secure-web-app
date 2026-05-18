@@ -982,9 +982,9 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         return;
       } catch (error) {
         console.error("SPREADSHEET PDF PREVIEW ERROR:", error);
-        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title);
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        return res.send(previewHtml);
+        return res.status(502).json({
+          message: "Excel preview PDF-ке айналмады. LibreOffice серверде іске қосылуы керек.",
+        });
       }
     }
 
@@ -998,12 +998,9 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
         return;
       } catch (error) {
         console.error("PRESENTATION PDF PREVIEW ERROR:", error);
-        if (doc.mime_type === PPTX_MIME_TYPE || path.extname(doc.original_name || "").toLowerCase() === ".pptx") {
-          const previewHtml = await renderPresentationPreview(readable.buffer, doc.title);
-          res.setHeader("Content-Type", "text/html; charset=utf-8");
-          return res.send(previewHtml);
-        }
-        throw error;
+        return res.status(502).json({
+          message: "PowerPoint preview PDF-ке айналмады. LibreOffice серверде іске қосылуы керек.",
+        });
       }
     }
 
@@ -1358,9 +1355,9 @@ router.get("/shared/:token", async (req, res) => {
         return;
       } catch (error) {
         console.error("SHARED SPREADSHEET PDF PREVIEW ERROR:", error);
-        const previewHtml = renderSpreadsheetPreview(readable.buffer, doc.title, true);
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        return res.send(previewHtml);
+        return res.status(502).json({
+          message: "Excel preview PDF-ке айналмады. LibreOffice серверде іске қосылуы керек.",
+        });
       }
     }
 
@@ -1374,12 +1371,9 @@ router.get("/shared/:token", async (req, res) => {
         return;
       } catch (error) {
         console.error("SHARED PRESENTATION PDF PREVIEW ERROR:", error);
-        if (doc.mime_type === PPTX_MIME_TYPE || path.extname(doc.original_name || "").toLowerCase() === ".pptx") {
-          const previewHtml = await renderPresentationPreview(readable.buffer, doc.title, true);
-          res.setHeader("Content-Type", "text/html; charset=utf-8");
-          return res.send(previewHtml);
-        }
-        throw error;
+        return res.status(502).json({
+          message: "PowerPoint preview PDF-ке айналмады. LibreOffice серверде іске қосылуы керек.",
+        });
       }
     }
 

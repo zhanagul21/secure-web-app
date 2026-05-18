@@ -86,6 +86,26 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     setLoggedIn(false);
   };
 
+  const loadOfficeViewerFallback = async (currentDocument) => {
+    const shareRes = await API.post(`/documents/share/${documentId}`, {
+      durationMinutes: 15,
+    });
+    const token =
+      shareRes.data.token ||
+      shareRes.data.shareUrl?.split("/").filter(Boolean).pop();
+
+    if (!token) {
+      throw new Error("Office preview сілтемесі жасалмады.");
+    }
+
+    const filename = encodeURIComponent(
+      currentDocument.original_name || currentDocument.filename || "document"
+    );
+    const rawOfficeUrl = `${apiBaseUrl}/documents/shared/${token}/office/${filename}`;
+    setPreviewType("office");
+    setOfficeEmbedUrl(getOfficeEmbedUrl(rawOfficeUrl));
+  };
+
   const loadPreview = async () => {
     try {
       setLoading(true);
@@ -100,27 +120,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       API.get(`/documents/encryption-proof/${documentId}`)
         .then((proofRes) => setEncryptionProof(proofRes.data))
         .catch(() => setEncryptionProof(null));
-
-      if (isOfficeDocument(currentDocument)) {
-        const shareRes = await API.post(`/documents/share/${documentId}`, {
-          durationMinutes: 15,
-        });
-        const token =
-          shareRes.data.token ||
-          shareRes.data.shareUrl?.split("/").filter(Boolean).pop();
-
-        if (!token) {
-          throw new Error("Office preview сілтемесі жасалмады.");
-        }
-
-        const filename = encodeURIComponent(
-          currentDocument.original_name || currentDocument.filename || "document"
-        );
-        const rawOfficeUrl = `${apiBaseUrl}/documents/shared/${token}/office/${filename}`;
-        setPreviewType("office");
-        setOfficeEmbedUrl(getOfficeEmbedUrl(rawOfficeUrl));
-        return;
-      }
 
       if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
         const convertedRes = await API.get(`/documents/preview/${documentId}`, {
@@ -181,8 +180,16 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         const text = await res.data.text();
         try {
           const parsed = JSON.parse(text);
+          if (isOfficeDocument(currentDocument)) {
+            await loadOfficeViewerFallback(currentDocument);
+            return;
+          }
           setMessage(parsed.message || "Preview ашылмады.");
         } catch {
+          if (isOfficeDocument(currentDocument)) {
+            await loadOfficeViewerFallback(currentDocument);
+            return;
+          }
           setMessage(text || "Preview ашылмады.");
         }
         return;
