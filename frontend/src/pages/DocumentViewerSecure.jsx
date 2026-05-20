@@ -152,24 +152,10 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         const text = await res.data.text();
         try {
           const parsed = JSON.parse(text);
-          // PPTX үшін Office Online Viewer арқылы ашу
-          if (
-            currentDocument?.mime_type === PPTX_MIME_TYPE
-          ) {
-            try {
-              const shareRes = await API.post(`/documents/share/${documentId}`, {
-                durationMinutes: 480,
-              });
-              if (shareRes.data.shareUrl) {
-                const downloadUrl = shareRes.data.shareUrl.replace("/shared/", "/api/documents/shared/") + "/download";
-                const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(downloadUrl)}`;
-                setPptxShareUrl(officeUrl);
-                setPreviewType("pptx");
-                return;
-              }
-            } catch {
-              // fallback to message
-            }
+          // PPTX үшін тікелей жүктеп ашу
+          if (currentDocument?.mime_type === PPTX_MIME_TYPE) {
+            setPreviewType("pptx");
+            return;
           }
           setMessage(parsed.message || "Preview ашылмады.");
         } catch {
@@ -379,14 +365,25 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       );
     }
 
-    if (previewType === "pptx" && pptxShareUrl) {
+    if (previewType === "pptx") {
       return (
-        <iframe
-          src={pptxShareUrl}
-          title="PowerPoint Preview"
-          className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
-          allowFullScreen
-        />
+        <div className="flex min-h-[420px] items-center justify-center rounded-[24px] border border-sky-100 bg-sky-50 p-8 text-center">
+          <div>
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-4xl shadow-sm ring-1 ring-sky-100">
+              📊
+            </div>
+            <p className="mt-5 text-xl font-black text-slate-900">PowerPoint презентациясы</p>
+            <p className="mt-2 text-slate-600">
+              Браузерде тікелей ашу мүмкін емес. Файлды жүктеп, PowerPoint немесе Google Slides арқылы ашыңыз.
+            </p>
+            <button
+              onClick={handleDownload}
+              className="mt-6 rounded-2xl bg-slate-800 px-6 py-3 font-bold text-white"
+            >
+              ⬇️ Жүктеп ашу
+            </button>
+          </div>
+        </div>
       );
     }
 
