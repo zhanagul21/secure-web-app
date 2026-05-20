@@ -122,7 +122,7 @@ function AESTab() {
         <div className="text-sm font-semibold uppercase tracking-[0.15em] text-sky-700">Алгоритм</div>
         <div className="mt-2 text-2xl font-black text-slate-900">AES-256-GCM</div>
         <p className="mt-2 text-sm text-slate-600">
-          Мемлекеттік құпия ақпаратты қорғауға сертификатталған симметриялық шифрлау стандарты. 
+          256-биттік кілт пен аутентификацияланған шифрлауды қолданатын қазіргі заманғы симметриялық алгоритм. 
           Web Crypto API арқылы браузердің өзінде орындалады — мәтін сервер арқылы өтпейді.
         </p>
       </div>
@@ -471,11 +471,10 @@ function EncryptionLab({ setPage, setLoggedIn, logoutEverywhere }) {
         </div>
 
         {/* Info banner */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {[
             { icon: "🌐", title: "Web Crypto API", desc: "Браузерге кіріктірілген криптографиялық интерфейс — бөлек кітапхана талап етілмейді" },
             { icon: "🛡️", title: "Client-Side Only", desc: "Деректер тек пайдаланушы браузерінде өңделеді, сервер арқылы өтпейді" },
-            { icon: "⚡", title: "Нақты уақыт", desc: "Шифрлау, хэш және кілт жасау нәтижелері лезде көрінеді" },
           ].map((item) => (
             <div key={item.title} className="rounded-[24px] border border-white/70 bg-white/95 p-4 shadow-sm">
               <div className="text-2xl">{item.icon}</div>
@@ -513,11 +512,7 @@ function EncryptionLab({ setPage, setLoggedIn, logoutEverywhere }) {
           {activeTab === "rsa" && <RSATab />}
         </div>
 
-        {/* Footer note */}
-        <div className="rounded-[24px] border border-sky-100 bg-white/90 px-5 py-4 text-sm text-slate-600 shadow-sm">
-          <span className="font-semibold text-slate-800">Дипломдық жоба:</span> Қазіргі аутентификация және шифрлау әдістерін қолдана отырып, қорғалған веб-қосымша әзірлеу.
-          Бұл модуль жобада қолданылатын криптографиялық алгоритмдерді тікелей демонстрациялайды.
-        </div>
+
       </div>
     </div>
   );

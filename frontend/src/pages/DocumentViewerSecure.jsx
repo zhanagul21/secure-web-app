@@ -1,9 +1,11 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { renderAsync } from "docx-preview";
 import API from "../services/api";
 
 const DOCX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const PPTX_MIME_TYPE =
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
   const mb = bytes / (1024 * 1024);
@@ -35,6 +37,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   const [shareDuration, setShareDuration] = useState(60);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [pptxShareUrl, setPptxShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [watermarkTime, setWatermarkTime] = useState(() => new Date());
   const watermarkText = `AuthGuard • ${getViewerLabel()} • ${watermarkTime.toLocaleString("kk-KZ", {
@@ -54,6 +57,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     setHtmlContent("");
     setDocxData(null);
     setPreviewType("none");
+    setPptxShareUrl("");
     if (docxPreviewRef.current) {
       docxPreviewRef.current.innerHTML = "";
     }
@@ -148,6 +152,25 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         const text = await res.data.text();
         try {
           const parsed = JSON.parse(text);
+          // PPTX үшін Office Online Viewer арқылы ашу
+          if (
+            currentDocument?.mime_type === PPTX_MIME_TYPE
+          ) {
+            try {
+              const shareRes = await API.post(`/documents/share/${documentId}`, {
+                durationMinutes: 480,
+              });
+              if (shareRes.data.shareUrl) {
+                const downloadUrl = shareRes.data.shareUrl.replace("/shared/", "/api/documents/shared/") + "/download";
+                const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(downloadUrl)}`;
+                setPptxShareUrl(officeUrl);
+                setPreviewType("pptx");
+                return;
+              }
+            } catch {
+              // fallback to message
+            }
+          }
           setMessage(parsed.message || "Preview ашылмады.");
         } catch {
           setMessage(text || "Preview ашылмады.");
@@ -353,6 +376,17 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
             className="[&_.docx-wrapper]:!bg-slate-100 [&_.docx-wrapper]:!p-0 [&_.docx]:!mx-auto [&_.docx]:shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
           />
         </div>
+      );
+    }
+
+    if (previewType === "pptx" && pptxShareUrl) {
+      return (
+        <iframe
+          src={pptxShareUrl}
+          title="PowerPoint Preview"
+          className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
+          allowFullScreen
+        />
       );
     }
 
