@@ -39,7 +39,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   const [shareDuration, setShareDuration] = useState(60);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
-  const [pptxShareUrl, setPptxShareUrl] = useState("");
   const [pptxBlob, setPptxBlob] = useState(null);
   const [copied, setCopied] = useState(false);
   const [watermarkTime, setWatermarkTime] = useState(() => new Date());
@@ -60,7 +59,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     setHtmlContent("");
     setDocxData(null);
     setPreviewType("none");
-    setPptxShareUrl("");
     setPptxBlob(null);
     if (docxPreviewRef.current) {
       docxPreviewRef.current.innerHTML = "";

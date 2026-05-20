@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 
 // ─── AES-256 (Web Crypto API) ───────────────────────────────────────────────
 async function aesEncrypt(text, password) {

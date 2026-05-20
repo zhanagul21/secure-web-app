@@ -12,7 +12,7 @@ import TwoFA from "./pages/TwoFA";
 import TwoFASettings from "./pages/TwoFASettings";
 import DocumentViewer from "./pages/DocumentViewerSecure";
 import SharedDocument from "./pages/SharedDocumentSecure";
-import EncryptionLab from "./pages/EncryptionLab";
+import CryptoModule from "./pages/CryptoModule";
 import API from "./services/api";
  
 // ✅ ТҮЗЕТІЛДІ: pathname-ді state-ке салу керек,
@@ -145,6 +145,16 @@ function AuthApp() {
       />
     );
   }
+
+  if (page === "crypto") {
+    return (
+      <CryptoModule
+        setPage={setPage}
+        setLoggedIn={setLoggedIn}
+        logoutEverywhere={logoutEverywhere}
+      />
+    );
+  }
  
   if (page === "admin") {
     return (
@@ -167,16 +177,6 @@ function AuthApp() {
     );
   }
  
-  if (page === "encryptionLab") {
-    return (
-      <EncryptionLab
-        setPage={setPage}
-        setLoggedIn={setLoggedIn}
-        logoutEverywhere={logoutEverywhere}
-      />
-    );
-  }
-
   // Fallback
   return <Login setLoggedIn={setLoggedIn} setPage={setPage} />;
 }

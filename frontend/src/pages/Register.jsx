@@ -12,6 +12,7 @@ function Register({ onClose }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeVerified, setCodeVerified] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   const getPasswordStrength = (value) => {
     const checks = [
@@ -117,6 +118,7 @@ function Register({ onClose }) {
         password: password.trim(),
       });
 
+      setRegistrationComplete(true);
       setMessage(res.data.message || "Тіркелу сәтті аяқталды");
 
       setTimeout(() => {
@@ -126,8 +128,9 @@ function Register({ onClose }) {
         setCode("");
         setPassword("");
         setCodeVerified(false);
+        setRegistrationComplete(false);
         onClose?.();
-      }, 1200);
+      }, 700);
     } catch (error) {
       console.error("REGISTER ERROR:", error);
       setMessage(getApiErrorMessage(error, "Тіркелуді аяқтау кезінде қате"));
@@ -340,10 +343,14 @@ function Register({ onClose }) {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || registrationComplete}
                   className="w-full rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white"
                 >
-                  {loading ? "Аяқталуда..." : "Тіркелуді аяқтау"}
+                  {registrationComplete
+                    ? "Login бетіне өту..."
+                    : loading
+                    ? "Аяқталуда..."
+                    : "Тіркелуді аяқтау"}
                 </button>
               </div>
             </form>
