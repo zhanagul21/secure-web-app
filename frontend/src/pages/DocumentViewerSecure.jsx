@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { renderAsync } from "docx-preview";
+import { init as initPptxPreview } from "pptx-preview";
 import API from "../services/api";
 
 const DOCX_MIME_TYPE =
@@ -24,6 +25,7 @@ function getViewerLabel() {
 
 function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhere }) {
   const docxPreviewRef = useRef(null);
+  const pptxContainerRef = useRef(null);
   const [documentData, setDocumentData] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   const [shareLoading, setShareLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [pptxShareUrl, setPptxShareUrl] = useState("");
+  const [pptxBlob, setPptxBlob] = useState(null);
   const [copied, setCopied] = useState(false);
   const [watermarkTime, setWatermarkTime] = useState(() => new Date());
   const watermarkText = `AuthGuard • ${getViewerLabel()} • ${watermarkTime.toLocaleString("kk-KZ", {
@@ -58,6 +61,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     setDocxData(null);
     setPreviewType("none");
     setPptxShareUrl("");
+    setPptxBlob(null);
     if (docxPreviewRef.current) {
       docxPreviewRef.current.innerHTML = "";
     }
@@ -152,9 +156,24 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         const text = await res.data.text();
         try {
           const parsed = JSON.parse(text);
-          // PPTX үшін тікелей жүктеп ашу
+          // PPTX үшін pptx-preview арқылы браузерде ашу
           if (currentDocument?.mime_type === PPTX_MIME_TYPE) {
-            setPreviewType("pptx");
+            try {
+              const pptxRes = await API.get(`/documents/download/${documentId}`, {
+                responseType: "arraybuffer",
+                validateStatus: () => true,
+              });
+              if (pptxRes.status < 400) {
+                setPreviewType("pptx");
+                setPptxBlob(new Uint8Array(pptxRes.data));
+              } else {
+                setMessage("PowerPoint файлды жүктеу кезінде қате шықты.");
+                setPreviewType("unsupported");
+              }
+            } catch {
+              setMessage("PowerPoint файлды жүктеу кезінде қате шықты.");
+              setPreviewType("unsupported");
+            }
             return;
           }
           setMessage(parsed.message || "Preview ашылмады.");
@@ -219,6 +238,19 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     const timer = window.setInterval(() => setWatermarkTime(new Date()), 30000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (previewType !== "pptx" || !pptxBlob || !pptxContainerRef.current) return;
+    const container = pptxContainerRef.current;
+    container.innerHTML = "";
+    const preview = initPptxPreview(container, {
+      width: container.clientWidth || 900,
+      mode: "scroll",
+    });
+    preview.preview(pptxBlob.buffer).catch(() => {
+      setMessage("PowerPoint preview жүктелмеді. Файлды жүктеп ашыңыз.");
+    });
+  }, [previewType, pptxBlob]);
 
   useEffect(() => {
     if (previewType !== "docx" || !docxData || !docxPreviewRef.current) {
@@ -367,23 +399,11 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
 
     if (previewType === "pptx") {
       return (
-        <div className="flex min-h-[420px] items-center justify-center rounded-[24px] border border-sky-100 bg-sky-50 p-8 text-center">
-          <div>
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-4xl shadow-sm ring-1 ring-sky-100">
-              📊
-            </div>
-            <p className="mt-5 text-xl font-black text-slate-900">PowerPoint презентациясы</p>
-            <p className="mt-2 text-slate-600">
-              Браузерде тікелей ашу мүмкін емес. Файлды жүктеп, PowerPoint немесе Google Slides арқылы ашыңыз.
-            </p>
-            <button
-              onClick={handleDownload}
-              className="mt-6 rounded-2xl bg-slate-800 px-6 py-3 font-bold text-white"
-            >
-              ⬇️ Жүктеп ашу
-            </button>
-          </div>
-        </div>
+        <div
+          ref={pptxContainerRef}
+          className="min-h-[600px] w-full overflow-auto rounded-[24px] border border-sky-100 bg-slate-100"
+          style={{ minHeight: "600px" }}
+        />
       );
     }
 
