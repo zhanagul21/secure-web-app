@@ -236,6 +236,38 @@ const convertDocumentToPdf = async (inputPath) => {
   return { convertedPath, tempDir };
 };
 
+const convertDocToDocx = async (inputPath) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-doc2docx-"));
+  const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-lo-"));
+
+  try {
+    await execLibreOffice([
+      "--headless",
+      "--nologo",
+      "--nofirststartwizard",
+      "--nodefault",
+      "--nolockcheck",
+      `-env:UserInstallation=file://${profileDir.replace(/\\/g, "/")}`,
+      "--convert-to",
+      "docx",
+      "--outdir",
+      tempDir,
+      inputPath,
+    ]);
+  } finally {
+    cleanupDir(profileDir);
+  }
+
+  const baseName = path.basename(inputPath, path.extname(inputPath));
+  const convertedPath = path.join(tempDir, `${baseName}.docx`);
+
+  if (!fs.existsSync(convertedPath)) {
+    throw new Error(".doc файлын .docx-ке айналдыру мүмкін болмады");
+  }
+
+  return { convertedPath, tempDir };
+};
+
 const sendConvertedPdfPreview = async (res, inputPath, currentTempDir) => {
   const { convertedPath, tempDir } = await convertDocumentToPdf(inputPath);
   cleanupDir(currentTempDir);
@@ -1028,17 +1060,28 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
     }
 
     if (doc.mime_type === "application/msword") {
+      // .doc → .docx арқылы mammoth HTML preview
+      let docxTempDir = null;
       try {
-        tempDirToDelete = await sendConvertedPdfPreview(
-          res,
-          readable.filePath,
-          tempDirToDelete
-        );
+        const { convertedPath, tempDir: dt } = await convertDocToDocx(readable.filePath);
+        docxTempDir = dt;
+        const docxBuffer = await fs.promises.readFile(convertedPath);
+        const html = await renderDocxBufferPreview(docxBuffer, doc.title);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.send(html);
         return;
-      } catch (error) {
-        console.error("DOC PDF PREVIEW ERROR:", error);
-        await sendDocHtmlPreview(res, readable.filePath, doc.title);
-        return;
+      } catch (convError) {
+        console.error("DOC->DOCX CONVERT ERROR:", convError);
+        // Fallback: plain text
+        try {
+          await sendDocHtmlPreview(res, readable.filePath, doc.title);
+          return;
+        } catch (textError) {
+          console.error("DOC TEXT PREVIEW ERROR:", textError);
+          return res.status(502).json({ message: "Word .doc файлды preview жасау мүмкін болмады." });
+        }
+      } finally {
+        cleanupDir(docxTempDir);
       }
     }
 
@@ -1401,17 +1444,25 @@ router.get("/shared/:token", async (req, res) => {
     }
 
     if (doc.mime_type === "application/msword") {
+      let docxTempDir2 = null;
       try {
-        tempDirToDelete = await sendConvertedPdfPreview(
-          res,
-          readable.filePath,
-          tempDirToDelete
-        );
+        const { convertedPath, tempDir: dt2 } = await convertDocToDocx(readable.filePath);
+        docxTempDir2 = dt2;
+        const docxBuffer = await fs.promises.readFile(convertedPath);
+        const html = await renderDocxBufferPreview(docxBuffer, doc.title, true);
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.send(html);
         return;
-      } catch (error) {
-        console.error("SHARED DOC PDF PREVIEW ERROR:", error);
-        await sendDocHtmlPreview(res, readable.filePath, doc.title, true);
-        return;
+      } catch (convError) {
+        console.error("SHARED DOC->DOCX ERROR:", convError);
+        try {
+          await sendDocHtmlPreview(res, readable.filePath, doc.title, true);
+          return;
+        } catch {
+          return res.status(502).json({ message: "Word .doc файлды preview жасау мүмкін болмады." });
+        }
+      } finally {
+        cleanupDir(docxTempDir2);
       }
     }
 
