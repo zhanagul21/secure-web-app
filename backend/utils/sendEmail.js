@@ -23,9 +23,23 @@ const smtpLookup =
       }
     : undefined;
 
-const buildTransporter = ({ secure, port }) =>
+const resolveSmtpHost = async () => {
+  if (smtpFamily !== 4) {
+    return smtpHost;
+  }
+
+  try {
+    const addresses = await dns.promises.resolve4(smtpHost);
+    return addresses[0] || smtpHost;
+  } catch (error) {
+    console.error("SMTP DNS IPV4 RESOLVE ERROR:", error);
+    return smtpHost;
+  }
+};
+
+const buildTransporter = ({ host, secure, port }) =>
   nodemailer.createTransport({
-    host: smtpHost,
+    host,
     port,
     lookup: smtpLookup,
     secure,
@@ -43,20 +57,16 @@ const buildTransporter = ({ secure, port }) =>
     },
   });
 
-const transporters = [
+const transporterConfigs = [
   {
     name: "smtp-465",
-    transporter: buildTransporter({
-      secure: true,
-      port: Number.parseInt(process.env.SMTP_SSL_PORT || "465", 10),
-    }),
+    secure: true,
+    port: Number.parseInt(process.env.SMTP_SSL_PORT || "465", 10),
   },
   {
     name: "smtp-587",
-    transporter: buildTransporter({
-      secure: false,
-      port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
-    }),
+    secure: false,
+    port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
   },
 ];
 
@@ -98,7 +108,11 @@ async function sendViaResend(to, subject, html) {
 }
 
 const verifySmtpTransporter = async () => {
-  for (const { name, transporter } of transporters) {
+  const host = await resolveSmtpHost();
+
+  for (const { name, secure, port } of transporterConfigs) {
+    const transporter = buildTransporter({ host, secure, port });
+
     try {
       await transporter.verify();
       console.log(`MAILER READY: ${name}`);
@@ -133,8 +147,11 @@ const verifyEmailTransporter = async () => {
 
 const sendViaSmtp = async (to, subject, html) => {
   let lastError;
+  const host = await resolveSmtpHost();
 
-  for (const { name, transporter } of transporters) {
+  for (const { name, secure, port } of transporterConfigs) {
+    const transporter = buildTransporter({ host, secure, port });
+
     try {
       return await transporter.sendMail({
         from: defaultFrom,
