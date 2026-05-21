@@ -82,6 +82,14 @@ const canUseGmailApi = Boolean(
     gmailApiRefreshToken
 );
 
+const describeSecret = (value) => {
+  if (!value) {
+    return "missing";
+  }
+
+  return `len=${value.length}, start=${value.slice(0, 8)}, end=${value.slice(-24)}`;
+};
+
 const encodeBase64Url = (value) =>
   Buffer.from(value, "utf8")
     .toString("base64")
@@ -211,7 +219,12 @@ const verifySmtpTransporter = async () => {
 
 const verifyEmailTransporter = async () => {
   if (canUseGmailApi) {
-    console.log("MAILER READY: gmail-api");
+    console.log("MAILER READY: gmail-api", {
+      clientId: describeSecret(gmailApiClientId),
+      clientSecret: describeSecret(gmailApiClientSecret),
+      refreshToken: describeSecret(gmailApiRefreshToken),
+      user: smtpUser,
+    });
     return;
   }
 
