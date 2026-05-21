@@ -19,6 +19,7 @@ const pgSql = {
   DateTime: "datetime",
   MAX: "max",
   NVarChar: () => "nvarchar",
+  VarBinary: () => "varbinary",
 };
 
 const translateSqlServerToPostgres = (queryText, inputValues) => {

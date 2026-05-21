@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
+import { getApiErrorMessage } from "../services/apiConfig";
 
 const categorySuggestions = [
   "Жеке құжат",
@@ -108,10 +109,8 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
       resetForm();
       setTimeout(() => setPage("documents"), 700);
     } catch (error) {
-      setMessage(
-        error.response?.data?.message ||
-          "Құжат жүктеу кезінде қате шықты."
-      );
+      console.error("DOCUMENT UPLOAD ERROR:", error);
+      setMessage(getApiErrorMessage(error, "Құжат жүктеу кезінде қате шықты."));
     } finally {
       setLoading(false);
     }

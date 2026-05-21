@@ -834,7 +834,7 @@ router.post("/add", authMiddleware, uploadMiddleware, async (req, res, next) => 
     if (storeFilesInDatabase) {
       addRequest.input(
         "fileData",
-        sql.NVarChar(sql.MAX),
+        sql.VarBinary ? sql.VarBinary(sql.MAX) : sql.NVarChar(sql.MAX),
         await fs.promises.readFile(req.file.path)
       );
     }
