@@ -12,7 +12,6 @@ function Register({ onClose }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeVerified, setCodeVerified] = useState(false);
-  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   const getPasswordStrength = (value) => {
     const checks = [
@@ -47,7 +46,12 @@ function Register({ onClose }) {
         email: email.trim(),
       });
 
-      setMessage(res.data.message || "Код email-ге жіберілді");
+      if (res.data.debugCode) {
+        setCode(res.data.debugCode);
+        setMessage(`${res.data.message} Код: ${res.data.debugCode}`);
+      } else {
+        setMessage(res.data.message || "Код жіберілді");
+      }
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
@@ -113,7 +117,6 @@ function Register({ onClose }) {
         password: password.trim(),
       });
 
-      setRegistrationComplete(true);
       setMessage(res.data.message || "Тіркелу сәтті аяқталды");
 
       setTimeout(() => {
@@ -123,9 +126,8 @@ function Register({ onClose }) {
         setCode("");
         setPassword("");
         setCodeVerified(false);
-        setRegistrationComplete(false);
         onClose?.();
-      }, 700);
+      }, 1200);
     } catch (error) {
       console.error("REGISTER ERROR:", error);
       setMessage(getApiErrorMessage(error, "Тіркелуді аяқтау кезінде қате"));
@@ -338,14 +340,10 @@ function Register({ onClose }) {
 
                 <button
                   type="submit"
-                  disabled={loading || registrationComplete}
+                  disabled={loading}
                   className="w-full rounded-2xl bg-slate-700 px-5 py-3 font-semibold text-white"
                 >
-                  {registrationComplete
-                    ? "Login бетіне өту..."
-                    : loading
-                    ? "Аяқталуда..."
-                    : "Тіркелуді аяқтау"}
+                  {loading ? "Аяқталуда..." : "Тіркелуді аяқтау"}
                 </button>
               </div>
             </form>
