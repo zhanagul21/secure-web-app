@@ -8,6 +8,9 @@ const smtpPass = process.env.GMAIL_APP_PASSWORD;
 const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
 const smtpFamily = Number.parseInt(process.env.SMTP_FAMILY || "4", 10);
 const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
+const gmailApiClientId = process.env.GMAIL_API_CLIENT_ID;
+const gmailApiClientSecret = process.env.GMAIL_API_CLIENT_SECRET;
+const gmailApiRefreshToken = process.env.GMAIL_API_REFRESH_TOKEN;
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
 const resendFrom =
@@ -71,6 +74,86 @@ const transporterConfigs = [
 ];
 
 const canUseSmtp = Boolean(smtpUser && smtpPass);
+const canUseGmailApi = Boolean(
+  smtpUser &&
+    gmailApiClientId &&
+    gmailApiClientSecret &&
+    gmailApiRefreshToken
+);
+
+const encodeBase64Url = (value) =>
+  Buffer.from(value, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+
+const buildMimeMessage = ({ to, subject, html }) => {
+  const from = process.env.MAIL_FROM || `AuthGuard Locker <${smtpUser}>`;
+
+  return [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    html,
+  ].join("\r\n");
+};
+
+async function getGmailApiAccessToken() {
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      client_id: gmailApiClientId,
+      client_secret: gmailApiClientSecret,
+      refresh_token: gmailApiRefreshToken,
+      grant_type: "refresh_token",
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok || !payload.access_token) {
+    const error = new Error(payload?.error_description || payload?.error || "Gmail API token request failed");
+    error.code = payload?.error || `HTTP_${response.status}`;
+    throw error;
+  }
+
+  return payload.access_token;
+}
+
+async function sendViaGmailApi(to, subject, html) {
+  const accessToken = await getGmailApiAccessToken();
+  const raw = encodeBase64Url(buildMimeMessage({ to, subject, html }));
+  const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ raw }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      payload?.error?.message ||
+      payload?.message ||
+      "Gmail API send request failed";
+    const error = new Error(message);
+    error.code = payload?.error?.status || `HTTP_${response.status}`;
+    throw error;
+  }
+
+  return payload;
+}
 
 async function verifyResendTransporter() {
   if (!resendApiKey) {
@@ -126,6 +209,11 @@ const verifySmtpTransporter = async () => {
 };
 
 const verifyEmailTransporter = async () => {
+  if (canUseGmailApi) {
+    console.log("MAILER READY: gmail-api");
+    return;
+  }
+
   if (canUseSmtp) {
     const smtpReady = await verifySmtpTransporter();
 
@@ -169,7 +257,17 @@ const sendViaSmtp = async (to, subject, html) => {
 };
 
 const sendMail = async (to, subject, html) => {
+  let gmailApiError;
   let smtpError;
+
+  if (canUseGmailApi) {
+    try {
+      return await sendViaGmailApi(to, subject, html);
+    } catch (error) {
+      gmailApiError = error;
+      console.error("SEND MAIL ERROR (gmail-api):", error);
+    }
+  }
 
   if (canUseSmtp) {
     try {
@@ -184,6 +282,10 @@ const sendMail = async (to, subject, html) => {
     try {
       return await sendViaResend(to, subject, html);
     } catch (error) {
+      if (gmailApiError) {
+        error.message = `${error.message}; Gmail API failed: ${gmailApiError.message}`;
+      }
+
       if (smtpError) {
         error.message = `${error.message}; Gmail SMTP fallback failed: ${smtpError.message}`;
       }
@@ -192,7 +294,7 @@ const sendMail = async (to, subject, html) => {
     }
   }
 
-  throw smtpError || new Error("Email transport is unavailable");
+  throw gmailApiError || smtpError || new Error("Email transport is unavailable");
 };
 
 module.exports = {
