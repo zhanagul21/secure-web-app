@@ -10,6 +10,10 @@ const smtpFamily = Number.parseInt(process.env.SMTP_FAMILY || "4", 10);
 const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
+const resendFrom =
+  process.env.RESEND_FROM_EMAIL ||
+  process.env.MAIL_FROM ||
+  "AuthGuard Locker <onboarding@resend.dev>";
 const smtpLookup =
   smtpFamily === 4 || smtpFamily === 6
     ? (hostname, options, callback) => {
@@ -68,7 +72,7 @@ async function sendViaResend(to, subject, html) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: process.env.MAIL_FROM || process.env.RESEND_FROM_EMAIL || smtpUser,
+      from: resendFrom,
       to: [to],
       subject,
       html,
