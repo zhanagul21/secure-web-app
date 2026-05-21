@@ -236,37 +236,6 @@ const convertDocumentToPdf = async (inputPath) => {
   return { convertedPath, tempDir };
 };
 
-const convertDocToDocx = async (inputPath) => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-doc2docx-"));
-  const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "authguard-lo-"));
-
-  try {
-    await execLibreOffice([
-      "--headless",
-      "--nologo",
-      "--nofirststartwizard",
-      "--nodefault",
-      "--nolockcheck",
-      `-env:UserInstallation=file://${profileDir.replace(/\\/g, "/")}`,
-      "--convert-to",
-      "docx",
-      "--outdir",
-      tempDir,
-      inputPath,
-    ]);
-  } finally {
-    cleanupDir(profileDir);
-  }
-
-  const baseName = path.basename(inputPath, path.extname(inputPath));
-  const convertedPath = path.join(tempDir, `${baseName}.docx`);
-
-  if (!fs.existsSync(convertedPath)) {
-    throw new Error(".doc файлын .docx-ке айналдыру мүмкін болмады");
-  }
-
-  return { convertedPath, tempDir };
-};
 
 const sendConvertedPdfPreview = async (res, inputPath, currentTempDir) => {
   const { convertedPath, tempDir } = await convertDocumentToPdf(inputPath);

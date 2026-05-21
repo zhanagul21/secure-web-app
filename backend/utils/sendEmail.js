@@ -109,31 +109,41 @@ const verifyEmailTransporter = async () => {
 };
 
 const sendMail = async (to, subject, html) => {
+  // Gmail SMTP алдымен, Resend тек fallback
+  if (canUseSmtp) {
+    let lastError;
+    for (const { name, transporter } of transporters) {
+      try {
+        return await transporter.sendMail({
+          from: defaultFrom,
+          to,
+          subject,
+          html,
+        });
+      } catch (error) {
+        lastError = error;
+        console.error(`SEND MAIL ERROR (${name}):`, error.message);
+      }
+    }
+    // Gmail жұмыс істемесе Resend-ке өт
+    if (resendApiKey) {
+      console.log("Gmail failed, trying Resend...");
+      return sendViaResend(to, subject, html);
+    }
+    throw lastError || new Error("Email transport is unavailable");
+  }
+
   if (resendApiKey) {
     return sendViaResend(to, subject, html);
   }
 
-  if (!canUseSmtp) {
-    throw new Error("Email transport is unavailable");
+  throw new Error("Email transport is unavailable");
+};
+
+const _unusedSendMail = async (to, subject, html) => {
+  if (false) {
+
   }
-
-  let lastError;
-
-  for (const { name, transporter } of transporters) {
-    try {
-      return await transporter.sendMail({
-        from: defaultFrom,
-        to,
-        subject,
-        html,
-      });
-    } catch (error) {
-      lastError = error;
-      console.error(`SEND MAIL ERROR (${name}):`, error);
-    }
-  }
-
-  throw lastError || new Error("Email transport is unavailable");
 };
 
 module.exports = {
