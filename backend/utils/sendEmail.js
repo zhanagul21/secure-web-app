@@ -87,36 +87,37 @@ async function sendViaResend(to, subject, html) {
   return payload;
 }
 
-const verifyEmailTransporter = async () => {
-  if (await verifyResendTransporter()) {
-    return;
-  }
-
-  if (!canUseSmtp) {
-    console.error("MAILER VERIFY ERROR: no RESEND_API_KEY and no SMTP credentials configured");
-    return;
-  }
-
+const verifySmtpTransporter = async () => {
   for (const { name, transporter } of transporters) {
     try {
       await transporter.verify();
       console.log(`MAILER READY: ${name}`);
-      return;
+      return true;
     } catch (error) {
       console.error(`MAILER VERIFY ERROR (${name}):`, error);
     }
   }
+
+  return false;
 };
 
-const sendMail = async (to, subject, html) => {
-  if (resendApiKey) {
-    return sendViaResend(to, subject, html);
+const verifyEmailTransporter = async () => {
+  const hasResend = await verifyResendTransporter();
+
+  if (canUseSmtp) {
+    const smtpReady = await verifySmtpTransporter();
+
+    if (smtpReady) {
+      return;
+    }
   }
 
-  if (!canUseSmtp) {
-    throw new Error("Email transport is unavailable");
+  if (!hasResend && !canUseSmtp) {
+    console.error("MAILER VERIFY ERROR: no RESEND_API_KEY and no SMTP credentials configured");
   }
+};
 
+const sendViaSmtp = async (to, subject, html) => {
   let lastError;
 
   for (const { name, transporter } of transporters) {
@@ -134,6 +135,25 @@ const sendMail = async (to, subject, html) => {
   }
 
   throw lastError || new Error("Email transport is unavailable");
+};
+
+const sendMail = async (to, subject, html) => {
+  let resendError;
+
+  if (resendApiKey) {
+    try {
+      return await sendViaResend(to, subject, html);
+    } catch (error) {
+      resendError = error;
+      console.error("SEND MAIL ERROR (resend-api):", error);
+    }
+  }
+
+  if (!canUseSmtp) {
+    throw resendError || new Error("Email transport is unavailable");
+  }
+
+  return sendViaSmtp(to, subject, html);
 };
 
 module.exports = {
