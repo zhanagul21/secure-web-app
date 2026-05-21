@@ -39,7 +39,7 @@ const XLSX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const PPTX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-const allowedFileTypes = new Map([
+const verifiableFileTypes = new Map([
   [".pdf", ["application/pdf"]],
   [".png", ["image/png"]],
   [".jpg", ["image/jpeg"]],
@@ -75,23 +75,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: maxUploadSizeBytes },
-  fileFilter: (req, file, cb) => {
-    const normalizedOriginalName = Buffer.from(file.originalname, "latin1").toString(
-      "utf8"
-    );
-    const extension = path.extname(normalizedOriginalName).toLowerCase();
-    const mimeTypes = allowedFileTypes.get(extension);
-
-    if (!mimeTypes) {
-      return cb(new Error("Бұл файл түріне рұқсат жоқ"));
-    }
-
-    if (file.mimetype && !mimeTypes.includes(file.mimetype)) {
-      return cb(new Error("Файл кеңейтімі мен MIME түрі сәйкес емес"));
-    }
-
-    return cb(null, true);
-  },
+  fileFilter: (req, file, cb) => cb(null, true),
 });
 
 const uploadMiddleware = (req, res, next) => {
@@ -378,6 +362,10 @@ const validateUploadedFileSignature = async (file) => {
     "utf8"
   );
   const extension = path.extname(normalizedOriginalName).toLowerCase();
+
+  if (!verifiableFileTypes.has(extension)) {
+    return;
+  }
 
   const startsWith = (...bytes) =>
     bytes.every((byte, index) => buffer[index] === byte);

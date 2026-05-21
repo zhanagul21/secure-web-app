@@ -30,7 +30,7 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const previewUrl = useMemo(() => {
-    if (!file || !file.type.startsWith("image/")) return null;
+    if (!file || !(file.type.startsWith("image/") || file.type.startsWith("video/"))) return null;
     return URL.createObjectURL(file);
   }, [file]);
 
@@ -132,6 +132,10 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
   const fileTypeLabel = file?.type
     ? file.type.startsWith("image/")
       ? "Image"
+      : file.type.startsWith("video/")
+      ? "Video"
+      : file.type.startsWith("audio/")
+      ? "Audio"
       : file.type === "application/pdf"
       ? "PDF"
       : file.type.includes("word")
@@ -265,7 +269,6 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
               >
                 <input
                   type="file"
-                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                   className="hidden"
                   onChange={(event) => onFileChange(event.target.files?.[0])}
                 />
@@ -381,15 +384,21 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                 Live preview
               </h2>
               <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-100 bg-[linear-gradient(180deg,#f8fafc,#eef6ff)] p-5">
-                {previewUrl ? (
+                {previewUrl && file?.type.startsWith("image/") ? (
                   <img
                     src={previewUrl}
                     alt="preview"
                     className="h-[320px] w-full rounded-2xl bg-white object-contain"
                   />
+                ) : previewUrl && file?.type.startsWith("video/") ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    className="h-[320px] w-full rounded-2xl bg-slate-950 object-contain"
+                  />
                 ) : (
                   <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-sky-200 bg-white text-center text-slate-500">
-                    Сурет файлын таңдасаңыз, preview осы жерде көрінеді.
+                    Сурет немесе видео таңдасаңыз, preview осы жерде көрінеді. Басқа файлдар жүктеліп сақталады.
                   </div>
                 )}
               </div>
