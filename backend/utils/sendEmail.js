@@ -45,6 +45,13 @@ const buildTransporter = ({ secure, port }) =>
 
 const transporters = [
   {
+    name: "smtp-465",
+    transporter: buildTransporter({
+      secure: true,
+      port: Number.parseInt(process.env.SMTP_SSL_PORT || "465", 10),
+    }),
+  },
+  {
     name: "smtp-587",
     transporter: buildTransporter({
       secure: false,
@@ -105,18 +112,18 @@ const verifySmtpTransporter = async () => {
 };
 
 const verifyEmailTransporter = async () => {
-  const hasResend = await verifyResendTransporter();
-
-  if (hasResend) {
-    return;
-  }
-
   if (canUseSmtp) {
     const smtpReady = await verifySmtpTransporter();
 
     if (smtpReady) {
       return;
     }
+  }
+
+  const hasResend = await verifyResendTransporter();
+
+  if (hasResend) {
+    return;
   }
 
   if (!hasResend && !canUseSmtp) {
@@ -145,15 +152,30 @@ const sendViaSmtp = async (to, subject, html) => {
 };
 
 const sendMail = async (to, subject, html) => {
+  let smtpError;
+
+  if (canUseSmtp) {
+    try {
+      return await sendViaSmtp(to, subject, html);
+    } catch (error) {
+      smtpError = error;
+      console.error("SEND MAIL ERROR (gmail-smtp):", error);
+    }
+  }
+
   if (resendApiKey) {
-    return sendViaResend(to, subject, html);
+    try {
+      return await sendViaResend(to, subject, html);
+    } catch (error) {
+      if (smtpError) {
+        error.message = `${error.message}; Gmail SMTP fallback failed: ${smtpError.message}`;
+      }
+
+      throw error;
+    }
   }
 
-  if (!canUseSmtp) {
-    throw new Error("Email transport is unavailable");
-  }
-
-  return sendViaSmtp(to, subject, html);
+  throw smtpError || new Error("Email transport is unavailable");
 };
 
 module.exports = {
