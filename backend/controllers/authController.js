@@ -265,17 +265,10 @@ const sendCode = async (req, res) => {
         delivery: delivery.ok ? "email" : "fallback",
       });
     } catch (mailError) {
-      if (isEmailSandboxError(mailError)) {
-        return res.json({
-          message:
-            "Email сервисі тест режимінде. Демо үшін растау коды экранда көрсетілді.",
-          email: normalizedEmail,
-          delivery: "screen",
-          debugCode: code,
-        });
-      }
-
-      throw mailError;
+      console.error("MAIL ERROR DETAIL:", mailError?.code, mailError?.message);
+      return res.status(500).json({
+        message: "Email жіберілмеді: " + (mailError?.message || "Белгісіз қате"),
+      });
     }
   } catch (error) {
     console.error("SEND CODE ERROR:", error);
@@ -866,16 +859,10 @@ const forgotPassword = async (req, res) => {
         delivery: delivery.ok ? "email" : "fallback",
       });
     } catch (mailError) {
-      if (isEmailSandboxError(mailError)) {
-        return res.json({
-          message:
-            "Email сервисі тест режимінде. Демо үшін қалпына келтіру коды экранда көрсетілді.",
-          delivery: "screen",
-          debugCode: code,
-        });
-      }
-
-      throw mailError;
+      console.error("FORGOT MAIL ERROR:", mailError?.code, mailError?.message);
+      return res.status(500).json({
+        message: "Email жіберілмеді: " + (mailError?.message || "Белгісіз қате"),
+      });
     }
   } catch (error) {
     console.error("FORGOT PASSWORD ERROR:", error);

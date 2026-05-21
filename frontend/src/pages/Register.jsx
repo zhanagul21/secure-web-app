@@ -47,12 +47,7 @@ function Register({ onClose }) {
         email: email.trim(),
       });
 
-      if (res.data.debugCode) {
-        setCode(res.data.debugCode);
-        setMessage(`${res.data.message} Код: ${res.data.debugCode}`);
-      } else {
-        setMessage(res.data.message || "Код жіберілді");
-      }
+      setMessage(res.data.message || "Код email-ге жіберілді");
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
