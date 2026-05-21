@@ -107,6 +107,10 @@ const verifySmtpTransporter = async () => {
 const verifyEmailTransporter = async () => {
   const hasResend = await verifyResendTransporter();
 
+  if (hasResend) {
+    return;
+  }
+
   if (canUseSmtp) {
     const smtpReady = await verifySmtpTransporter();
 
@@ -141,19 +145,12 @@ const sendViaSmtp = async (to, subject, html) => {
 };
 
 const sendMail = async (to, subject, html) => {
-  let resendError;
-
   if (resendApiKey) {
-    try {
-      return await sendViaResend(to, subject, html);
-    } catch (error) {
-      resendError = error;
-      console.error("SEND MAIL ERROR (resend-api):", error);
-    }
+    return sendViaResend(to, subject, html);
   }
 
   if (!canUseSmtp) {
-    throw resendError || new Error("Email transport is unavailable");
+    throw new Error("Email transport is unavailable");
   }
 
   return sendViaSmtp(to, subject, html);

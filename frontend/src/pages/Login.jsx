@@ -88,13 +88,7 @@ function Login({ setLoggedIn, setPage }) {
       const res = await API.post("/auth/forgot-password", {
         email: resetEmail.trim(),
       });
-
-      if (res.data.debugCode) {
-        setResetCode(res.data.debugCode);
-        setMessage(`${res.data.message} Код: ${res.data.debugCode}`);
-      } else {
-        setMessage(res.data.message || "Қалпына келтіру коды жіберілді");
-      }
+      setMessage(res.data.message || "Қалпына келтіру коды жіберілді");
     } catch (error) {
       console.error("FORGOT PASSWORD ERROR:", error);
       setMessage(getApiErrorMessage(error, "Құпиясөзді қалпына келтіру қатесі"));
