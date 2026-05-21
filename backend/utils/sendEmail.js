@@ -47,13 +47,6 @@ const transporters = [
       port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
     }),
   },
-  {
-    name: "smtp-465",
-    transporter: buildTransporter({
-      secure: true,
-      port: Number.parseInt(process.env.SMTP_SSL_PORT || "465", 10),
-    }),
-  },
 ];
 
 const canUseSmtp = Boolean(smtpUser && smtpPass);
