@@ -8,9 +8,10 @@ const smtpPass = process.env.GMAIL_APP_PASSWORD;
 const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
 const smtpFamily = Number.parseInt(process.env.SMTP_FAMILY || "4", 10);
 const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
-const gmailApiClientId = process.env.GMAIL_API_CLIENT_ID;
-const gmailApiClientSecret = process.env.GMAIL_API_CLIENT_SECRET;
-const gmailApiRefreshToken = process.env.GMAIL_API_REFRESH_TOKEN;
+const compactSecret = (value) => value?.replace(/\s/g, "");
+const gmailApiClientId = compactSecret(process.env.GMAIL_API_CLIENT_ID);
+const gmailApiClientSecret = compactSecret(process.env.GMAIL_API_CLIENT_SECRET);
+const gmailApiRefreshToken = compactSecret(process.env.GMAIL_API_REFRESH_TOKEN);
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
 const resendFrom =
