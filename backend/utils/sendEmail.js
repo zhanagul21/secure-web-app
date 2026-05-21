@@ -1,4 +1,7 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
+
+dns.setDefaultResultOrder?.("ipv4first");
 
 const smtpUser = process.env.GMAIL_USER;
 const smtpPass = process.env.GMAIL_APP_PASSWORD;
@@ -7,11 +10,20 @@ const smtpFamily = Number.parseInt(process.env.SMTP_FAMILY || "4", 10);
 const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
+const smtpLookup =
+  smtpFamily === 4 || smtpFamily === 6
+    ? (hostname, options, callback) => {
+        const lookupOptions =
+          typeof options === "object" && options !== null ? options : {};
+        dns.lookup(hostname, { ...lookupOptions, family: smtpFamily }, callback);
+      }
+    : undefined;
 
 const buildTransporter = ({ secure, port }) =>
   nodemailer.createTransport({
     host: smtpHost,
     port,
+    lookup: smtpLookup,
     secure,
     auth: {
       user: smtpUser,
