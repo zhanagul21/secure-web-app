@@ -8,9 +8,10 @@ const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
 
-const buildTransporter = ({ secure, port, service }) =>
+const buildTransporter = ({ secure, port }) =>
   nodemailer.createTransport({
-    ...(service ? { service } : { host: smtpHost, port }),
+    host: smtpHost,
+    port,
     secure,
     auth: {
       user: smtpUser,
@@ -39,13 +40,6 @@ const transporters = [
     transporter: buildTransporter({
       secure: true,
       port: Number.parseInt(process.env.SMTP_SSL_PORT || "465", 10),
-    }),
-  },
-  {
-    name: "gmail-service",
-    transporter: buildTransporter({
-      secure: true,
-      service: "gmail",
     }),
   },
 ];
