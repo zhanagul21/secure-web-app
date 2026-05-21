@@ -16,7 +16,7 @@ const buildTransporter = ({ secure, port, service }) =>
       user: smtpUser,
       pass: smtpPass,
     },
-    family: smtpFamily === 4 || smtpFamily === 6 ? smtpFamily : undefined,
+    family: 4,
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 30000,
