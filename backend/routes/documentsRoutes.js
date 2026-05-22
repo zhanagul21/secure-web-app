@@ -79,8 +79,16 @@ const upload = multer({
 });
 
 const uploadMiddleware = (req, res, next) => {
-  upload.single("file")(req, res, (error) => {
+  upload.fields([
+    { name: "file", maxCount: 1 },
+    { name: "files", maxCount: 50 },
+  ])(req, res, (error) => {
     if (!error) {
+      req.uploadedFiles = [
+        ...(req.files?.file || []),
+        ...(req.files?.files || []),
+      ];
+      req.file = req.uploadedFiles[0] || null;
       return next();
     }
 
@@ -298,7 +306,7 @@ const getDocumentMetaByIdForUser = async (documentId, userId) => {
     .input("userId", sql.Int, userId)
     .query(`
       SELECT TOP 1
-        id, user_id, title, category, description, filename, original_name,
+        id, user_id, title, category, description, folder_name, filename, original_name,
         mime_type, file_size, created_at
       FROM documents
       WHERE id = @documentId AND user_id = @userId AND deleted_at IS NULL
@@ -751,7 +759,7 @@ router.get("/my", authMiddleware, async (req, res) => {
       .input("userId", sql.Int, req.user.id)
       .query(`
         SELECT
-          id, user_id, title, category, description, filename, original_name,
+          id, user_id, title, category, description, folder_name, filename, original_name,
           mime_type, file_size, created_at
         FROM documents
         WHERE user_id = @userId AND deleted_at IS NULL
@@ -766,21 +774,26 @@ router.get("/my", authMiddleware, async (req, res) => {
 });
 
 router.post("/add", authMiddleware, uploadMiddleware, async (req, res, next) => {
-  if (!req.file) {
+  const files = req.uploadedFiles || [];
+  if (!files.length) {
     return next();
   }
 
   try {
-    await validateUploadedFileSignature(req.file);
-    await encryptUploadedFile(req.file);
+    for (const file of files) {
+      await validateUploadedFileSignature(file);
+      await encryptUploadedFile(file);
+    }
     return next();
   } catch (error) {
     console.error("ENCRYPT UPLOAD ERROR:", error);
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      try {
-        await fs.promises.unlink(req.file.path);
-      } catch (cleanupError) {
-        console.error("INVALID UPLOAD CLEANUP ERROR:", cleanupError);
+    for (const file of files) {
+      if (file?.path && fs.existsSync(file.path)) {
+        try {
+          await fs.promises.unlink(file.path);
+        } catch (cleanupError) {
+          console.error("INVALID UPLOAD CLEANUP ERROR:", cleanupError);
+        }
       }
     }
 
@@ -789,8 +802,10 @@ router.post("/add", authMiddleware, uploadMiddleware, async (req, res, next) => 
     });
   }
 }, async (req, res) => {
+  const files = req.uploadedFiles || [];
+
   try {
-    const { title, category, description } = req.body;
+    const { title, category, description, folderName } = req.body;
 
     if (!title?.trim() || !category?.trim()) {
       return res
@@ -798,68 +813,90 @@ router.post("/add", authMiddleware, uploadMiddleware, async (req, res, next) => 
         .json({ message: "Құжат атауы мен категория міндетті" });
     }
 
-    if (!req.file) {
+    if (!files.length) {
       return res.status(400).json({ message: "Файл таңдалмаған" });
     }
 
     await poolConnect;
 
-    const normalizedOriginalName = Buffer.from(req.file.originalname, "latin1").toString(
-      "utf8"
-    );
+    const savedDocuments = [];
+    const cleanTitle = title.trim();
+    const cleanFolderName = folderName?.trim() || (files.length > 1 ? cleanTitle : "");
 
-    const addRequest = pool
-      .request()
-      .input("userId", sql.Int, req.user.id)
-      .input("title", sql.NVarChar(255), title.trim())
-      .input("category", sql.NVarChar(255), category.trim())
-      .input("description", sql.NVarChar(sql.MAX), description || "")
-      .input("filename", sql.NVarChar(500), req.file.filename)
-      .input("originalName", sql.NVarChar(500), normalizedOriginalName)
-      .input("mimeType", sql.NVarChar(255), req.file.mimetype)
-      .input("fileSize", sql.Int, req.file.size);
-
-    if (storeFilesInDatabase) {
-      addRequest.input(
-        "fileData",
-        sql.VarBinary ? sql.VarBinary(sql.MAX) : sql.NVarChar(sql.MAX),
-        await fs.promises.readFile(req.file.path)
+    for (const file of files) {
+      const normalizedOriginalName = Buffer.from(file.originalname, "latin1").toString(
+        "utf8"
       );
-    }
+      const fileTitle =
+        files.length === 1
+          ? cleanTitle
+          : `${cleanTitle} - ${normalizedOriginalName.replace(/\.[^/.]+$/, "")}`;
 
-    const result = await addRequest.query(`
+      const addRequest = pool
+        .request()
+        .input("userId", sql.Int, req.user.id)
+        .input("title", sql.NVarChar(255), fileTitle.slice(0, 255))
+        .input("category", sql.NVarChar(255), category.trim())
+        .input("description", sql.NVarChar(sql.MAX), description || "")
+        .input("folderName", sql.NVarChar(255), cleanFolderName)
+        .input("filename", sql.NVarChar(500), file.filename)
+        .input("originalName", sql.NVarChar(500), normalizedOriginalName)
+        .input("mimeType", sql.NVarChar(255), file.mimetype)
+        .input("fileSize", sql.Int, file.size);
+
+      if (storeFilesInDatabase) {
+        addRequest.input(
+          "fileData",
+          sql.VarBinary ? sql.VarBinary(sql.MAX) : sql.NVarChar(sql.MAX),
+          await fs.promises.readFile(file.path)
+        );
+      }
+
+      const result = await addRequest.query(`
         INSERT INTO documents (
-          user_id, title, category, description, filename, original_name, mime_type, file_size
+          user_id, title, category, description, folder_name, filename, original_name, mime_type, file_size
           ${storeFilesInDatabase ? ", file_data" : ""}
         )
         OUTPUT INSERTED.*
         VALUES (
-          @userId, @title, @category, @description, @filename, @originalName, @mimeType, @fileSize
+          @userId, @title, @category, @description, @folderName, @filename, @originalName, @mimeType, @fileSize
           ${storeFilesInDatabase ? ", @fileData" : ""}
         )
       `);
 
-    if (storeFilesInDatabase && fs.existsSync(req.file.path)) {
-      await fs.promises.unlink(req.file.path);
-    }
+      if (storeFilesInDatabase && fs.existsSync(file.path)) {
+        await fs.promises.unlink(file.path);
+      }
 
-    await writeLog(req.user.id, "DOCUMENT_ADD", `Құжат қосылды: ${title.trim()}`);
-
-    res.json({
-      message: "Құжат сәтті жүктелді",
-      document: {
+      savedDocuments.push({
         ...result.recordset[0],
         file_data: undefined,
-      },
+      });
+    }
+
+    await writeLog(
+      req.user.id,
+      "DOCUMENT_ADD",
+      files.length > 1
+        ? `Бір топқа ${files.length} файл қосылды: ${cleanFolderName}`
+        : `Құжат қосылды: ${cleanTitle}`
+    );
+
+    res.json({
+      message: files.length > 1 ? `${files.length} файл сақталды` : "Файл сақталды",
+      document: savedDocuments[0],
+      documents: savedDocuments,
     });
   } catch (error) {
     console.error("ADD DOCUMENT ERROR:", error);
 
-    if (req.file?.path && storeFilesInDatabase && fs.existsSync(req.file.path)) {
-      try {
-        await fs.promises.unlink(req.file.path);
-      } catch (cleanupError) {
-        console.error("UPLOAD CLEANUP ERROR:", cleanupError);
+    for (const file of files) {
+      if (file?.path && storeFilesInDatabase && fs.existsSync(file.path)) {
+        try {
+          await fs.promises.unlink(file.path);
+        } catch (cleanupError) {
+          console.error("UPLOAD CLEANUP ERROR:", cleanupError);
+        }
       }
     }
 
@@ -893,7 +930,7 @@ router.get("/trash", authMiddleware, async (req, res) => {
       .input("userId", sql.Int, req.user.id)
       .query(`
         SELECT
-          id, user_id, title, category, description, filename, original_name,
+          id, user_id, title, category, description, folder_name, filename, original_name,
           mime_type, file_size, created_at, deleted_at
         FROM documents
         WHERE user_id = @userId AND deleted_at IS NOT NULL

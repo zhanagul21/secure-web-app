@@ -67,6 +67,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
   const [viewMode, setViewMode] = useState("grid");
   const [selectedId, setSelectedId] = useState(null);
   const [trashMode, setTrashMode] = useState(false);
+  const [encryptionCheck, setEncryptionCheck] = useState("");
 
   const logout = () => {
     if (logoutEverywhere) {
@@ -184,6 +185,19 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     }
   };
 
+  const checkEncryption = async (id) => {
+    try {
+      const res = await API.get(`/documents/encryption-proof/${id}`);
+      setEncryptionCheck(
+        res.data.encrypted
+          ? "Бұл файл серверде шифрланған күйде сақтаулы. Бұл тек өз құжатыңыз болғандықтан көрсетілді."
+          : "Бұл файл шифрланған күйде сақталмаған сияқты. Қайта жүктеп көріңіз."
+      );
+    } catch (error) {
+      setEncryptionCheck(error.response?.data?.message || "Тексеру кезінде қате шықты.");
+    }
+  };
+
   const categories = useMemo(
     () =>
       [
@@ -205,12 +219,25 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
         doc.title?.toLowerCase().includes(searchText) ||
         doc.description?.toLowerCase().includes(searchText) ||
         doc.category?.toLowerCase().includes(searchText) ||
+        doc.folder_name?.toLowerCase().includes(searchText) ||
         doc.original_name?.toLowerCase().includes(searchText);
       const matchesCategory =
         categoryFilter === "all" || doc.category === categoryFilter;
       return matchesSearch && matchesCategory && matchesType(doc, typeFilter);
     });
   }, [documents, trashDocuments, trashMode, search, categoryFilter, typeFilter]);
+
+  const folderGroups = useMemo(() => {
+    const groups = new Map();
+    documents.forEach((doc) => {
+      if (!doc.folder_name) return;
+      const current = groups.get(doc.folder_name) || { name: doc.folder_name, count: 0, size: 0 };
+      current.count += 1;
+      current.size += Number(doc.file_size || 0);
+      groups.set(doc.folder_name, current);
+    });
+    return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [documents]);
 
   useEffect(() => {
     if (!filteredDocuments.some((doc) => doc.id === selectedId)) {
@@ -223,6 +250,10 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     filteredDocuments[0] ||
     null;
 
+  useEffect(() => {
+    setEncryptionCheck("");
+  }, [selectedDocument?.id]);
+
   const stats = useMemo(() => {
     const totalSize = documents.reduce(
       (sum, doc) => sum + Number(doc.file_size || 0),
@@ -234,12 +265,14 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     const imageCount = documents.filter((doc) =>
       doc.mime_type?.startsWith("image/")
     ).length;
+    const folderCount = new Set(documents.map((doc) => doc.folder_name).filter(Boolean)).size;
 
     return {
       total: documents.length,
       totalSize,
       pdfCount,
       imageCount,
+      folderCount,
     };
   }, [documents]);
 
@@ -324,12 +357,12 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
             </p>
           </div>
           <div className="rounded-[28px] border border-sky-200 bg-[linear-gradient(135deg,#eff6ff,#dbeafe)] p-5 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">Қорғау</p>
-            <p className="mt-3 text-2xl font-black text-slate-900">
-              Қорғалған
+            <p className="text-sm font-medium text-slate-500">Папкалар</p>
+            <p className="mt-3 text-3xl font-black text-slate-900">
+              {stats.folderCount}
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              Қарау немесе жүктеу кезінде ғана ашылады
+              Бірге сақталған файл топтары
             </p>
           </div>
         </div>
@@ -402,6 +435,30 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
           </div>
         )}
 
+        {!trashMode && folderGroups.length > 0 && (
+          <div className="mt-6 rounded-[30px] border border-white/70 bg-white/95 p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-xl font-black text-slate-900">Папкалар</h2>
+              <span className="text-sm text-slate-500">Папканы бассаңыз, ішіндегі файлдар шығады</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {folderGroups.map((folder) => (
+                <button
+                  key={folder.name}
+                  type="button"
+                  onClick={() => setSearch(folder.name)}
+                  className="rounded-[22px] border border-sky-100 bg-sky-50 p-4 text-left transition hover:border-sky-300 hover:bg-sky-100"
+                >
+                  <div className="font-bold text-slate-900">{folder.name}</div>
+                  <div className="mt-2 text-sm text-slate-600">
+                    {folder.count} файл · {formatFileSize(folder.size)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
           <div>
             {filteredDocuments.length === 0 ? (
@@ -445,6 +502,11 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     <p className="mt-2 text-sm font-medium text-sky-700">
                       {doc.category || "Категория жоқ"}
                     </p>
+                    {doc.folder_name && (
+                      <p className="mt-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                        Папка: {doc.folder_name}
+                      </p>
+                    )}
                     <p className="mt-3 min-h-[48px] text-sm leading-6 text-slate-600">
                       {doc.description || "Сипаттама берілмеген."}
                     </p>
@@ -479,8 +541,13 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                           {doc.title}
                         </div>
                         <div className="mt-1 break-all text-sm text-slate-500">
-                          {doc.original_name || "Файл жоқ"}
+                        {doc.original_name || "Файл жоқ"}
+                      </div>
+                      {doc.folder_name && (
+                        <div className="mt-1 text-xs font-semibold text-sky-700">
+                          Папка: {doc.folder_name}
                         </div>
+                      )}
                       </div>
                       <div className="text-sm text-slate-700">
                         {doc.category || "-"}
@@ -520,6 +587,11 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                 <p className="mt-2 text-sm font-semibold uppercase tracking-[0.14em] text-sky-700">
                   {selectedDocument.category || "Категория жоқ"}
                 </p>
+                {selectedDocument.folder_name && (
+                  <p className="mt-3 inline-flex rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-700">
+                    Папка: {selectedDocument.folder_name}
+                  </p>
+                )}
                 <p className="mt-4 text-sm leading-6 text-slate-600">
                   {selectedDocument.description ||
                     "Бұл құжатқа сипаттама толтырылмаған."}
@@ -552,12 +624,16 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
 
                 <div className="mt-6 rounded-[26px] border border-emerald-200 bg-emerald-50 p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-800">
-                    Сақталу күйі
+                    Сақталуын тексеру
                   </p>
                   <p className="mt-3 text-sm leading-6 text-emerald-900">
-                    Бұл файл серверде қорғалып сақталады. Қарағанда немесе
-                    жүктегенде ғана ашылады.
+                    Тексеру тек өзіңіз жүктеген құжатқа ғана ашылады. Басқа қолданушының файлын көре алмайсыз.
                   </p>
+                  {encryptionCheck && (
+                    <div className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-100">
+                      {encryptionCheck}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 grid gap-3">
@@ -596,6 +672,12 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     className={`${trashMode ? "hidden " : ""}rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50`}
                   >
                     Жүктеп алу
+                  </button>
+                  <button
+                    onClick={() => checkEncryption(selectedDocument.id)}
+                    className={`${trashMode ? "hidden " : ""}rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 font-semibold text-emerald-700 transition hover:bg-emerald-100`}
+                  >
+                    Сақталуын тексеру
                   </button>
                   <button
                     onClick={() => deleteDoc(selectedDocument.id)}

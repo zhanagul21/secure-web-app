@@ -226,18 +226,18 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
             <div className="mt-3 text-4xl font-black text-slate-900">{roleStats.regularUsers}</div>
           </div>
           <div className="rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5,#ffffff)] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
-            <div className="text-sm text-emerald-700">Қорғаныс статусы</div>
-            <div className="mt-3 text-2xl font-black text-slate-900">Шифрлау қосулы</div>
-            <div className="mt-2 text-sm text-slate-600">Құжаттар қорғалған түрде сақталады</div>
+            <div className="text-sm text-emerald-700">Жүйе күйі</div>
+            <div className="mt-3 text-2xl font-black text-slate-900">Жұмыс істеп тұр</div>
+            <div className="mt-2 text-sm text-slate-600">Қолданушылар мен құжаттар деректері қолжетімді</div>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
-            { label: "Қолданушы қосу", hint: "Жаңа аккаунт ашу формасына апарады", onClick: () => openSection("create") },
-            { label: "Рөлді admin/user қылып өзгерту", hint: "Тізімнен қолданушыны таңдап, рөлін ауыстырасыз", onClick: () => openSection("users") },
-            { label: "2FA баптауын тазарту", hint: "Қолданушы 2FA-ны қайта қоса алады", onClick: () => openSection("users") },
-            { label: "Қолданушыны жүйеден өшіру", hint: "Тізімнен керек аккаунтты өшіресіз", onClick: () => openSection("users") },
+            { label: "Қолданушы қосу", onClick: () => openSection("create") },
+            { label: "Рөлді өзгерту", onClick: () => openSection("users") },
+            { label: "2FA тазарту", onClick: () => openSection("users") },
+            { label: "Қолданушыны өшіру", onClick: () => openSection("users") },
           ].map((item) => (
             <button
               key={item.label}
@@ -246,7 +246,6 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
               className="rounded-[24px] border border-white/70 bg-white/95 p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_45px_rgba(15,23,42,0.10)]"
             >
               <div className="text-sm font-bold text-slate-800">{item.label}</div>
-              <div className="mt-2 text-xs leading-5 text-slate-500">{item.hint}</div>
             </button>
           ))}
         </div>
@@ -272,9 +271,9 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
         <div className="mt-6 rounded-[32px] border border-rose-100 bg-[linear-gradient(135deg,#fff1f2,#ffffff)] p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-700">Қауіпсіздік бақылауы</p>
-              <h2 className="mt-1 text-2xl font-black text-slate-900">Қауіпті әрекеттерді бақылау</h2>
-              <p className="mt-2 text-slate-600">Бұл бөлім соңғы әрекеттерді қарап, қайсысына назар аудару керегін көрсетеді. Ұпай көп болған сайын әрекет күмәндірек саналады.</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-700">Жүйе ескертулері</p>
+              <h2 className="mt-1 text-2xl font-black text-slate-900">Назар аудару керек әрекеттер</h2>
+              <p className="mt-2 text-slate-600">Мұнда соңғы әрекеттер ішінен күмәнді көрінетіндері бөлек көрсетіледі. Бұл тек көмекші белгі, шешімді admin өзі қабылдайды.</p>
             </div>
             <div className={`rounded-[24px] px-6 py-4 text-center shadow-sm ${
               riskMonitor.status === "Жоғары қауіп"

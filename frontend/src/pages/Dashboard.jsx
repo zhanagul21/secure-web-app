@@ -86,7 +86,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
                 <p className="text-sm font-medium text-sky-700">{getGreeting()}{user?.full_name ? `, ${user.full_name}` : ""}</p>
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">AuthGuard Locker</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700">
-                  Қазіргі аутентификация, 2FA және шифрлау әдістеріне негізделген қорғалған құжат айналымы жүйесі.
+                  Құжаттарыңызды бір жерде сақтап, керек кезде қарап, жүктеп немесе уақытша сілтеме арқылы бөлісе аласыз.
                 </p>
               </div>
             </div>
@@ -120,9 +120,9 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
             <p className="mt-3 text-3xl font-black text-slate-800">{stats.totalDownloads}</p>
           </div>
           <div className="rounded-[28px] border border-sky-200 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
-            <p className="text-sm font-medium text-slate-600">Қауіпсіздік</p>
-            <p className="mt-3 text-2xl font-black text-slate-800">2FA және шифрлау</p>
-            <p className="mt-2 text-sm text-slate-600">Қорғаныс модульдерін осы жерден басқара аласыз</p>
+            <p className="text-sm font-medium text-slate-600">Аккаунт баптауы</p>
+            <p className="mt-3 text-2xl font-black text-slate-800">Профиль және кіру коды</p>
+            <p className="mt-2 text-sm text-slate-600">Құпия сөз бен кіру баптауын осы жерден өзгертесіз</p>
           </div>
         </div>
 

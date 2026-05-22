@@ -125,6 +125,7 @@ const createPostgresAdapter = () => {
         original_name VARCHAR(500),
         mime_type VARCHAR(255),
         file_size INTEGER,
+        folder_name VARCHAR(255),
         file_data BYTEA,
         deleted_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT NOW()
@@ -134,6 +135,11 @@ const createPostgresAdapter = () => {
     await pgPool.query(`
       ALTER TABLE documents
       ADD COLUMN IF NOT EXISTS file_data BYTEA
+    `);
+
+    await pgPool.query(`
+      ALTER TABLE documents
+      ADD COLUMN IF NOT EXISTS folder_name VARCHAR(255)
     `);
 
     await pgPool.query(`
@@ -334,6 +340,7 @@ const createSqlServerAdapter = () => {
           original_name NVARCHAR(500) NULL,
           mime_type NVARCHAR(255) NULL,
           file_size INT NULL,
+          folder_name NVARCHAR(255) NULL,
           file_data VARBINARY(MAX) NULL,
           deleted_at DATETIME NULL,
           created_at DATETIME NOT NULL DEFAULT GETDATE()
@@ -380,6 +387,13 @@ const createSqlServerAdapter = () => {
       IF COL_LENGTH('documents', 'file_data') IS NULL
       BEGIN
         ALTER TABLE documents ADD file_data VARBINARY(MAX) NULL;
+      END
+    `);
+
+    await pool.request().query(`
+      IF COL_LENGTH('documents', 'folder_name') IS NULL
+      BEGIN
+        ALTER TABLE documents ADD folder_name NVARCHAR(255) NULL;
       END
     `);
 

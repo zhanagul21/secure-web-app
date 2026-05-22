@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from "react";
  
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -39,7 +40,7 @@ function App() {
 function AuthApp() {
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
   const [page, setPage] = useState(
-    localStorage.getItem("token") ? "dashboard" : "login"
+    localStorage.getItem("token") ? "dashboard" : "landing"
   );
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
  
@@ -47,7 +48,7 @@ function AuthApp() {
     const token = localStorage.getItem("token");
     setLoggedIn(!!token);
     if (!token) {
-      setPage("login");
+      setPage((current) => (current === "register" ? current : "landing"));
     }
   }, []);
  
@@ -78,6 +79,9 @@ function AuthApp() {
   }
  
   if (!loggedIn) {
+    if (page === "landing") {
+      return <Landing setPage={setPage} />;
+    }
     if (page === "register") {
       return <Register onClose={() => setPage("login")} />;
     }
