@@ -159,6 +159,18 @@ const createPostgresAdapter = () => {
     `);
 
     await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS document_transfers (
+        id SERIAL PRIMARY KEY,
+        document_id INTEGER NOT NULL,
+        sender_id INTEGER NOT NULL,
+        recipient_id INTEGER NOT NULL,
+        note TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(document_id, recipient_id)
+      )
+    `);
+
+    await pgPool.query(`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id SERIAL PRIMARY KEY,
         user_id INTEGER,
@@ -421,6 +433,21 @@ const createSqlServerAdapter = () => {
           expires_at DATETIME NOT NULL,
           created_by INT NULL,
           created_at DATETIME NOT NULL DEFAULT GETDATE()
+        );
+      END
+    `);
+
+    await pool.request().query(`
+      IF OBJECT_ID('document_transfers', 'U') IS NULL
+      BEGIN
+        CREATE TABLE document_transfers (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          document_id INT NOT NULL,
+          sender_id INT NOT NULL,
+          recipient_id INT NOT NULL,
+          note NVARCHAR(MAX) NULL,
+          created_at DATETIME NOT NULL DEFAULT GETDATE(),
+          CONSTRAINT UQ_document_transfers_doc_recipient UNIQUE(document_id, recipient_id)
         );
       END
     `);

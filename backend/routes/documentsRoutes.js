@@ -291,6 +291,32 @@ const getDocumentByIdForUser = async (documentId, userId) => {
     .query(`
       SELECT TOP 1 *
       FROM documents
+      WHERE id = @documentId
+        AND deleted_at IS NULL
+        AND (
+          user_id = @userId
+          OR EXISTS (
+            SELECT 1
+            FROM document_transfers dt
+            WHERE dt.document_id = documents.id
+              AND dt.recipient_id = @userId
+          )
+        )
+    `);
+
+  return result.recordset[0];
+};
+
+const getOwnedDocumentByIdForUser = async (documentId, userId) => {
+  await poolConnect;
+
+  const result = await pool
+    .request()
+    .input("documentId", sql.Int, parseInt(documentId, 10))
+    .input("userId", sql.Int, userId)
+    .query(`
+      SELECT TOP 1 *
+      FROM documents
       WHERE id = @documentId AND user_id = @userId AND deleted_at IS NULL
     `);
 
@@ -309,7 +335,17 @@ const getDocumentMetaByIdForUser = async (documentId, userId) => {
         id, user_id, title, category, description, folder_name, filename, original_name,
         mime_type, file_size, created_at
       FROM documents
-      WHERE id = @documentId AND user_id = @userId AND deleted_at IS NULL
+      WHERE id = @documentId
+        AND deleted_at IS NULL
+        AND (
+          user_id = @userId
+          OR EXISTS (
+            SELECT 1
+            FROM document_transfers dt
+            WHERE dt.document_id = documents.id
+              AND dt.recipient_id = @userId
+          )
+        )
     `);
 
   return result.recordset[0];
@@ -1171,7 +1207,7 @@ router.get("/download/:id", authMiddleware, async (req, res) => {
 
 router.delete("/delete/:id", authMiddleware, async (req, res) => {
   try {
-    const doc = await getDocumentByIdForUser(req.params.id, req.user.id);
+    const doc = await getOwnedDocumentByIdForUser(req.params.id, req.user.id);
 
     if (!doc) {
       return res.status(404).json({ message: "Құжат табылмады" });
@@ -1283,9 +1319,100 @@ router.delete("/permanent/:id", authMiddleware, async (req, res) => {
   }
 });
 
+router.post("/send/:id", authMiddleware, async (req, res) => {
+  try {
+    const doc = await getOwnedDocumentByIdForUser(req.params.id, req.user.id);
+
+    if (!doc) {
+      return res.status(404).json({ message: "Құжат табылмады" });
+    }
+
+    const recipientEmail = String(req.body.recipientEmail || "").trim().toLowerCase();
+    const note = String(req.body.note || "").trim();
+
+    if (!recipientEmail) {
+      return res.status(400).json({ message: "Алушының email-ін жазыңыз" });
+    }
+
+    await poolConnect;
+
+    const recipientResult = await pool
+      .request()
+      .input("email", sql.NVarChar(255), recipientEmail)
+      .query(`
+        SELECT TOP 1 id, email, full_name
+        FROM users
+        WHERE LOWER(email) = LOWER(@email)
+      `);
+
+    const recipient = recipientResult.recordset[0];
+
+    if (!recipient) {
+      return res.status(404).json({ message: "Бұл email-мен тіркелген қолданушы табылмады" });
+    }
+
+    if (recipient.id === req.user.id) {
+      return res.status(400).json({ message: "Құжатты өзіңізге жіберудің қажеті жоқ" });
+    }
+
+    try {
+      await pool
+        .request()
+        .input("documentId", sql.Int, doc.id)
+        .input("senderId", sql.Int, req.user.id)
+        .input("recipientId", sql.Int, recipient.id)
+        .input("note", sql.NVarChar(sql.MAX), note)
+        .query(`
+          INSERT INTO document_transfers (document_id, sender_id, recipient_id, note, created_at)
+          VALUES (@documentId, @senderId, @recipientId, @note, GETDATE())
+        `);
+    } catch (error) {
+      const duplicateMessage = String(error.message || "").toLowerCase();
+      if (!duplicateMessage.includes("unique") && !duplicateMessage.includes("duplicate")) {
+        throw error;
+      }
+    }
+
+    await writeLog(req.user.id, "DOCUMENT_SEND", `Құжат жіберілді: ${doc.title}; Кімге: ${recipient.email}`);
+    await writeLog(recipient.id, "DOCUMENT_RECEIVE", `Сізге құжат жіберілді: ${doc.title}`);
+
+    res.json({ message: `${recipient.email} қолданушысына жіберілді` });
+  } catch (error) {
+    console.error("SEND DOCUMENT ERROR:", error);
+    res.status(500).json({ message: error.message || "Құжат жіберу кезінде қате шықты" });
+  }
+});
+
+router.get("/received", authMiddleware, async (req, res) => {
+  try {
+    await poolConnect;
+
+    const result = await pool
+      .request()
+      .input("userId", sql.Int, req.user.id)
+      .query(`
+        SELECT
+          d.id, d.user_id, d.title, d.category, d.description, d.folder_name,
+          d.filename, d.original_name, d.mime_type, d.file_size, d.created_at,
+          dt.created_at AS sent_at, dt.note,
+          u.email AS sender_email, u.full_name AS sender_name
+        FROM document_transfers dt
+        JOIN documents d ON d.id = dt.document_id
+        JOIN users u ON u.id = dt.sender_id
+        WHERE dt.recipient_id = @userId AND d.deleted_at IS NULL
+        ORDER BY dt.created_at DESC
+      `);
+
+    res.json({ documents: result.recordset });
+  } catch (error) {
+    console.error("RECEIVED DOCUMENTS ERROR:", error);
+    res.status(500).json({ message: "Жіберілген құжаттарды жүктеу кезінде қате шықты" });
+  }
+});
+
 router.post("/share/:id", authMiddleware, async (req, res) => {
   try {
-    const doc = await getDocumentByIdForUser(req.params.id, req.user.id);
+    const doc = await getOwnedDocumentByIdForUser(req.params.id, req.user.id);
 
     if (!doc) {
       return res.status(404).json({ message: "Құжат табылмады" });
