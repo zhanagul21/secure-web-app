@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
+import { translateText } from "../i18n/translations";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -60,6 +62,8 @@ async function deriveAesKey(password, salt) {
 }
 
 function CryptoModule({ setPage, setLoggedIn, logoutEverywhere }) {
+  const { language } = useLanguage();
+  const t = (value) => translateText(value, language);
   const [activeTool, setActiveTool] = useState("aes");
   const [aesMode, setAesMode] = useState("encrypt");
   const [aesPlaintext, setAesPlaintext] = useState("");
@@ -326,17 +330,17 @@ function CryptoModule({ setPage, setLoggedIn, logoutEverywhere }) {
                 {aesMode === "encrypt" ? (
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-700">Шифрланатын мәтін</span>
-                    <textarea value={aesPlaintext} onChange={(event) => setAesPlaintext(event.target.value)} placeholder="Мысалы: Құпия ақпарат..." className="mt-2 min-h-[150px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
+                    <textarea value={aesPlaintext} onChange={(event) => setAesPlaintext(event.target.value)} placeholder={t("Мысалы: Құпия ақпарат...")} className="mt-2 min-h-[150px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
                   </label>
                 ) : (
                   <label className="block">
                     <span className="text-sm font-semibold text-slate-700">Шифрланған мәтін (Base64)</span>
-                    <textarea value={aesCiphertext} onChange={(event) => setAesCiphertext(event.target.value)} placeholder="Base64 шифрланған мәтін..." className="mt-2 min-h-[150px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 font-mono text-sm outline-none focus:border-sky-300" />
+                    <textarea value={aesCiphertext} onChange={(event) => setAesCiphertext(event.target.value)} placeholder={t("Base64 шифрланған мәтін...")} className="mt-2 min-h-[150px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 font-mono text-sm outline-none focus:border-sky-300" />
                   </label>
                 )}
                 <label className="block">
                   <span className="text-sm font-semibold text-slate-700">Шифрлау кілті (пароль)</span>
-                  <input value={aesPassword} onChange={(event) => setAesPassword(event.target.value)} placeholder="Мысалы: MySecretKey123!" className="mt-2 w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
+                  <input value={aesPassword} onChange={(event) => setAesPassword(event.target.value)} placeholder={t("Мысалы: MySecretKey123!")} className="mt-2 w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
                 </label>
                 <button disabled={loading} onClick={aesMode === "encrypt" ? encryptAes : decryptAes} className="w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-70">
                   {aesMode === "encrypt" ? "Шифрлау" : "Дешифрлау"}
@@ -352,7 +356,7 @@ function CryptoModule({ setPage, setLoggedIn, logoutEverywhere }) {
                 </div>
                 {aesMessage && <p className="mt-3 text-sm text-slate-600">{aesMessage}</p>}
                 <pre className="mt-4 min-h-[220px] whitespace-pre-wrap break-all rounded-2xl bg-white p-4 text-sm text-slate-800">
-                  {aesResult || "Нәтиже осы жерде шығады."}
+                  {aesResult || t("Нәтиже осы жерде шығады.")}
                 </pre>
               </div>
             </div>
@@ -363,7 +367,7 @@ function CryptoModule({ setPage, setLoggedIn, logoutEverywhere }) {
           <div className="mt-6 rounded-[32px] border border-white/70 bg-white/95 p-6 shadow-sm">
             <label className="block">
               <span className="text-sm font-semibold text-slate-700">Хэштелетін мәтін</span>
-              <textarea value={hashInput} onChange={(event) => setHashInput(event.target.value)} placeholder="Кез-келген мәтін енгізіңіз..." className="mt-2 min-h-[150px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
+              <textarea value={hashInput} onChange={(event) => setHashInput(event.target.value)} placeholder={t("Кез-келген мәтін енгізіңіз...")} className="mt-2 min-h-[150px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
             </label>
             <button disabled={!hashInput.trim()} onClick={createHash} className="mt-4 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-60">
               SHA-256 хэш жасау
@@ -404,11 +408,11 @@ function CryptoModule({ setPage, setLoggedIn, logoutEverywhere }) {
             <div className="mt-6 grid gap-5 lg:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-semibold text-slate-700">Ашық кілт (Public Key)</span>
-                <textarea value={rsaPublicKey} onChange={(event) => setRsaPublicKey(event.target.value)} placeholder="Public Key осы жерге шығады немесе енгізіледі..." className="mt-2 min-h-[260px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 font-mono text-xs outline-none focus:border-sky-300" />
+                <textarea value={rsaPublicKey} onChange={(event) => setRsaPublicKey(event.target.value)} placeholder={t("Public Key осы жерге шығады немесе енгізіледі...")} className="mt-2 min-h-[260px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 font-mono text-xs outline-none focus:border-sky-300" />
               </label>
               <label className="block">
                 <span className="text-sm font-semibold text-slate-700">Жабық кілт (Private Key)</span>
-                <textarea value={rsaPrivateKey} onChange={(event) => setRsaPrivateKey(event.target.value)} placeholder="Private Key құпия сақталады..." className="mt-2 min-h-[260px] w-full rounded-2xl border border-rose-100 bg-rose-50 p-4 font-mono text-xs outline-none focus:border-rose-300" />
+                <textarea value={rsaPrivateKey} onChange={(event) => setRsaPrivateKey(event.target.value)} placeholder={t("Private Key құпия сақталады...")} className="mt-2 min-h-[260px] w-full rounded-2xl border border-rose-100 bg-rose-50 p-4 font-mono text-xs outline-none focus:border-rose-300" />
               </label>
             </div>
 
@@ -416,7 +420,7 @@ function CryptoModule({ setPage, setLoggedIn, logoutEverywhere }) {
               <div className="space-y-4">
                 <label className="block">
                   <span className="text-sm font-semibold text-slate-700">RSA арқылы шифрланатын қысқа мәтін</span>
-                  <textarea value={rsaPlaintext} onChange={(event) => setRsaPlaintext(event.target.value)} placeholder="Қысқа хабарлама енгізіңіз..." className="mt-2 min-h-[120px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
+                  <textarea value={rsaPlaintext} onChange={(event) => setRsaPlaintext(event.target.value)} placeholder={t("Қысқа хабарлама енгізіңіз...")} className="mt-2 min-h-[120px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 outline-none focus:border-sky-300" />
                 </label>
                 <button disabled={loading} onClick={encryptRsa} className="w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-70">
                   Public Key арқылы шифрлау
@@ -425,7 +429,7 @@ function CryptoModule({ setPage, setLoggedIn, logoutEverywhere }) {
               <div className="space-y-4">
                 <label className="block">
                   <span className="text-sm font-semibold text-slate-700">RSA ciphertext (Base64)</span>
-                  <textarea value={rsaCiphertext} onChange={(event) => setRsaCiphertext(event.target.value)} placeholder="RSA ciphertext..." className="mt-2 min-h-[120px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 font-mono text-sm outline-none focus:border-sky-300" />
+                  <textarea value={rsaCiphertext} onChange={(event) => setRsaCiphertext(event.target.value)} placeholder={t("RSA ciphertext...")} className="mt-2 min-h-[120px] w-full rounded-2xl border border-sky-100 bg-sky-50 p-4 font-mono text-sm outline-none focus:border-sky-300" />
                 </label>
                 <button disabled={loading} onClick={decryptRsa} className="w-full rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white disabled:opacity-70">
                   Private Key арқылы ашу
