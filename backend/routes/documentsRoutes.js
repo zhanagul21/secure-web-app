@@ -1100,6 +1100,13 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
       } catch (pdfError) {
         console.error("DOC PDF PREVIEW ERROR:", pdfError);
 
+        try {
+          await sendDocHtmlPreview(res, readable.filePath, doc.title);
+          return;
+        } catch (textPreviewError) {
+          console.error("DOC TEXT PREVIEW BEFORE DOCX ERROR:", textPreviewError);
+        }
+
         let docxTempDir = null;
         try {
           const { convertedPath, tempDir: dt } = await convertDocToDocx(readable.filePath);
@@ -1595,6 +1602,13 @@ router.get("/shared/:token", async (req, res) => {
         return;
       } catch (pdfError) {
         console.error("SHARED DOC PDF PREVIEW ERROR:", pdfError);
+
+        try {
+          await sendDocHtmlPreview(res, readable.filePath, doc.title, true);
+          return;
+        } catch (textPreviewError) {
+          console.error("SHARED DOC TEXT PREVIEW BEFORE DOCX ERROR:", textPreviewError);
+        }
 
         let docxTempDir2 = null;
         try {

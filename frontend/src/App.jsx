@@ -15,6 +15,9 @@ import DocumentViewer from "./pages/DocumentViewerSecure";
 import SharedDocument from "./pages/SharedDocumentSecure";
 import CryptoModule from "./pages/CryptoModule";
 import API from "./services/api";
+import LanguageSelector from "./components/LanguageSelector";
+import GlobalTranslator from "./i18n/GlobalTranslator";
+import { LanguageProvider } from "./i18n/LanguageContext";
  
 // ✅ ТҮЗЕТІЛДІ: pathname-ді state-ке салу керек,
 // себебі window.location.pathname React render кезінде тұрақсыз
@@ -28,13 +31,14 @@ function getSharedToken() {
  
 function App() {
   const sharedToken = getSharedToken();
- 
-  // Shared link болса — тікелей SharedDocument render ет, басқа логика өтпесін
-  if (sharedToken) {
-    return <SharedDocument token={sharedToken} />;
-  }
- 
-  return <AuthApp />;
+
+  return (
+    <LanguageProvider>
+      <GlobalTranslator />
+      <LanguageSelector />
+      {sharedToken ? <SharedDocument token={sharedToken} /> : <AuthApp />}
+    </LanguageProvider>
+  );
 }
  
 function AuthApp() {
