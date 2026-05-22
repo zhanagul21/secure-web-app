@@ -541,6 +541,45 @@ const wrapPreviewHtml = (title, bodyHtml, compact = false) => `
           overflow: auto;
           padding-bottom: 8px;
         }
+        .legacy-doc-preview {
+          color: #0f172a;
+          font-family: "Times New Roman", Times, serif;
+          min-width: max-content;
+        }
+        .legacy-doc-line {
+          font-size: ${compact ? "12px" : "14px"};
+          margin: 0 0 10px;
+          white-space: pre-wrap;
+        }
+        .legacy-doc-table-wrap {
+          margin: 12px 0 22px;
+          max-width: 100%;
+          overflow: auto;
+        }
+        .legacy-doc-table {
+          border-collapse: collapse;
+          color: #0f172a;
+          font-family: "Times New Roman", Times, serif;
+          font-size: ${compact ? "9px" : "10px"};
+          line-height: 1.25;
+          min-width: max-content;
+          table-layout: auto;
+          width: max-content;
+        }
+        .legacy-doc-table td {
+          border: 1px solid #1f2937;
+          min-width: 28px;
+          padding: 3px 5px;
+          text-align: center;
+          vertical-align: middle;
+          white-space: pre-wrap;
+        }
+        .legacy-doc-table td:first-child,
+        .legacy-doc-table td:nth-child(2),
+        .legacy-doc-table td:nth-child(3),
+        .legacy-doc-table td:nth-child(4) {
+          text-align: left;
+        }
         @media print {
           html, body {
             background: #fff;
@@ -720,6 +759,140 @@ const renderDocxPathPreview = async (docxPath, title, compact = false) => {
   return renderDocxBufferPreview(fileBuffer, title, compact);
 };
 
+const trimTrailingEmptyCells = (cells) => {
+  const nextCells = [...cells];
+  while (nextCells.length && !nextCells[nextCells.length - 1].trim()) {
+    nextCells.pop();
+  }
+  return nextCells;
+};
+
+const LEGACY_DOC_MONTHS = new Set([
+  "январь",
+  "февраль",
+  "март",
+  "апрель",
+  "май",
+  "июнь",
+  "июль",
+  "август",
+  "сентябрь",
+  "октябрь",
+  "ноябрь",
+  "декабрь",
+  "қаңтар",
+  "ақпан",
+  "наурыз",
+  "сәуір",
+  "мамыр",
+  "маусым",
+  "шілде",
+  "тамыз",
+  "қыркүйек",
+  "қазан",
+  "қараша",
+  "желтоқсан",
+]);
+
+const isLegacyDocMonth = (value) =>
+  LEGACY_DOC_MONTHS.has(String(value || "").trim().toLowerCase());
+
+const splitLegacyDocCellsIntoRows = (cells) => {
+  const rowStarts = [];
+
+  for (let index = 0; index < cells.length - 1; index += 1) {
+    const current = String(cells[index] || "").trim();
+    const next = String(cells[index + 1] || "").trim();
+
+    if (current && isLegacyDocMonth(next)) {
+      rowStarts.push(index);
+    }
+  }
+
+  if (!rowStarts.length) {
+    return [cells];
+  }
+
+  const rows = [];
+  const headerCells = trimTrailingEmptyCells(cells.slice(0, rowStarts[0]));
+
+  if (headerCells.some((cell) => cell.trim())) {
+    rows.push(headerCells);
+  }
+
+  rowStarts.forEach((start, index) => {
+    const end = rowStarts[index + 1] || cells.length;
+    const row = trimTrailingEmptyCells(cells.slice(start, end));
+
+    if (row.some((cell) => cell.trim())) {
+      rows.push(row);
+    }
+  });
+
+  return rows;
+};
+
+const renderLegacyDocTable = (rows) => {
+  const body = rows
+    .map((row) => {
+      const cells = trimTrailingEmptyCells(row);
+      const htmlCells = cells
+        .map((cell) => `<td>${cell.trim() ? escapeHtml(cell.trim()) : "&nbsp;"}</td>`)
+        .join("");
+      return `<tr>${htmlCells}</tr>`;
+    })
+    .join("");
+
+  return `
+    <div class="legacy-doc-table-wrap">
+      <table class="legacy-doc-table">
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+};
+
+const renderLegacyDocText = (text) => {
+  const lines = String(text)
+    .replace(/\u00a0/g, " ")
+    .replace(/\r/g, "")
+    .split("\n");
+
+  const blocks = [];
+  let tableRows = [];
+
+  const flushTable = () => {
+    if (!tableRows.length) return;
+    blocks.push(renderLegacyDocTable(tableRows));
+    tableRows = [];
+  };
+
+  for (const line of lines) {
+    const cleanLine = line.replace(/[ \t]+$/g, "");
+    const trimmed = cleanLine.trim();
+
+    if (!trimmed) {
+      flushTable();
+      continue;
+    }
+
+    const cells = cleanLine.split("\t");
+    const meaningfulCells = cells.filter((cell) => cell.trim());
+
+    if (cells.length > 1 && meaningfulCells.length > 0) {
+      tableRows.push(...splitLegacyDocCellsIntoRows(cells));
+      continue;
+    }
+
+    flushTable();
+    blocks.push(`<p class="legacy-doc-line">${escapeHtml(trimmed)}</p>`);
+  }
+
+  flushTable();
+
+  return `<div class="legacy-doc-preview">${blocks.join("")}</div>`;
+};
+
 const renderDocPathTextPreview = async (docPath, title, compact = false) => {
   const extractor = new WordExtractor();
   const document = await extractor.extract(docPath);
@@ -731,7 +904,7 @@ const renderDocPathTextPreview = async (docPath, title, compact = false) => {
 
   return wrapPreviewHtml(
     title,
-    `<div class="word-fallback-wrap"><pre class="word-fallback">${escapeHtml(cleanedText)}</pre></div>`,
+    renderLegacyDocText(cleanedText),
     compact
   );
 };
