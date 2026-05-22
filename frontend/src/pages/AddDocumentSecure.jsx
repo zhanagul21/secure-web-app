@@ -139,13 +139,13 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
       : file.type === "application/pdf"
       ? "PDF"
       : file.type.includes("word")
-      ? "Document"
+      ? "Құжат"
       : file.type.includes("spreadsheet") || file.type.includes("excel")
-      ? "Spreadsheet"
+      ? "Кесте"
       : file.type.includes("presentation")
-      ? "Slides"
-      : "File"
-    : "No file";
+      ? "Слайд"
+      : "Файл"
+    : "Файл жоқ";
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe_0,#eff6ff_35%,#bfdbfe_100%)]">
@@ -157,11 +157,11 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                 AuthGuard Locker
               </p>
               <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-                Қауіпсіз жүктеу аймағы
+                Файл жүктеу
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-                Жүктелген файл серверде бірден шифрланады. Пайдаланушыға preview
-                және download кезінде ғана қолжетімді болады.
+                Файлды таңдаңыз да, атауы мен түрін көрсетіп сақтаңыз. Кейін оны
+                қарап немесе жүктеп ала аласыз.
               </p>
             </div>
 
@@ -199,11 +199,11 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                   Жүктеу формасы
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  Файл метадерегін толтырып, қауіпсіз сақтау аймағына жіберіңіз.
+                  Файл туралы ақпаратты толтырып, сақтауға жіберіңіз.
                 </p>
               </div>
               <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-                AES-256-GCM storage encryption
+                Қорғалған сақтау қосулы
               </div>
             </div>
 
@@ -288,7 +288,7 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                        Selected file
+                        Таңдалған файл
                       </p>
                       <p className="mt-2 break-all text-lg font-bold text-slate-900">
                         {file.name}
@@ -337,7 +337,7 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                 >
                   {loading
                     ? `Жүктеліп жатыр... ${uploadProgress}%`
-                    : "Құжатты шифрлап жүктеу"}
+                    : "Файлды сақтау"}
                 </button>
                 <button
                   type="button"
@@ -353,27 +353,26 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
           <div className="space-y-6">
             <div className="rounded-[32px] border border-white/70 bg-white/95 p-8 shadow-sm">
               <h2 className="text-2xl font-black text-slate-900">
-                Қауіпсіздік статусы
+                Сақталу күйі
               </h2>
               <div className="mt-6 space-y-4">
                 <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
-                  <p className="font-semibold text-emerald-800">Шифрлау</p>
+                  <p className="font-semibold text-emerald-800">Қорғау</p>
                   <p className="mt-2 text-sm leading-6 text-emerald-900">
                     Файл серверде ашық түрде емес, шифрланған түрде сақталады.
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-sky-200 bg-sky-50 p-5">
-                  <p className="font-semibold text-sky-800">Дешифрлау</p>
+                  <p className="font-semibold text-sky-800">Ашу</p>
                   <p className="mt-2 text-sm leading-6 text-sky-900">
-                    Preview, download және shared link кезінде ғана уақытша
-                    дешифрланады.
+                    Қарау, жүктеу немесе сілтеме арқылы ашу кезінде ғана уақытша
+                    көрсетіледі.
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                  <p className="font-semibold text-slate-800">Upload limits</p>
+                  <p className="font-semibold text-slate-800">Жүктеу көлемі</p>
                   <p className="mt-2 text-sm leading-6 text-slate-700">
-                    Үлкен файлдар үшін progress indicator көрінеді, сондықтан
-                    user жүктелу статусын жоғалтпайды.
+                    Үлкен файл жүктелсе, барысы пайызбен көрсетіледі.
                   </p>
                 </div>
               </div>
@@ -381,13 +380,13 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
 
             <div className="rounded-[32px] border border-white/70 bg-white/95 p-8 shadow-sm">
               <h2 className="text-2xl font-black text-slate-900">
-                Live preview
+                Алдын ала көру
               </h2>
               <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-100 bg-[linear-gradient(180deg,#f8fafc,#eef6ff)] p-5">
                 {previewUrl && file?.type.startsWith("image/") ? (
                   <img
                     src={previewUrl}
-                    alt="preview"
+                    alt="Алдын ала көру"
                     className="h-[320px] w-full rounded-2xl bg-white object-contain"
                   />
                 ) : previewUrl && file?.type.startsWith("video/") ? (
@@ -398,7 +397,7 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                   />
                 ) : (
                   <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-sky-200 bg-white text-center text-slate-500">
-                    Сурет немесе видео таңдасаңыз, preview осы жерде көрінеді. Басқа файлдар жүктеліп сақталады.
+                    Сурет немесе видео таңдасаңыз, осы жерде көрінеді. Басқа файлдар жай ғана сақталады.
                   </div>
                 )}
               </div>

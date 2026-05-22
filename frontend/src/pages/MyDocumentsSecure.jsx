@@ -261,11 +261,10 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                 AuthGuard Locker
               </p>
               <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-                Қорғалған құжаттар хабы
+                Менің құжаттарым
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-                Файлдар серверде шифрланған күйде сақталады. Мұнда оларды
-                іздеп, топтап, қауіпсіз preview және download жасай аласыз.
+                Мұнда сақталған файлдарыңызды көріп, іздеп, жүктей аласыз.
               </p>
             </div>
 
@@ -325,12 +324,12 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
             </p>
           </div>
           <div className="rounded-[28px] border border-sky-200 bg-[linear-gradient(135deg,#eff6ff,#dbeafe)] p-5 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">Шифрлау</p>
+            <p className="text-sm font-medium text-slate-500">Қорғау</p>
             <p className="mt-3 text-2xl font-black text-slate-900">
-              AES қорғалған
+              Қорғалған
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              Preview және download кезінде ғана дешифрланады
+              Қарау немесе жүктеу кезінде ғана ашылады
             </p>
           </div>
         </div>
@@ -377,8 +376,8 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
 
               <div className="flex rounded-2xl border border-slate-200 bg-white p-1">
                 {[
-                  { id: "grid", label: "Grid" },
-                  { id: "list", label: "List" },
+                  { id: "grid", label: "Тор" },
+                  { id: "list", label: "Тізім" },
                 ].map((mode) => (
                   <button
                     key={mode.id}
@@ -411,8 +410,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                   Құжат табылмады
                 </h2>
                 <p className="mt-3 text-slate-600">
-                  Фильтрлерді өзгертіп көріңіз немесе жаңа қорғалған құжат
-                  жүктеңіз.
+                  Іздеу шартын өзгертіп көріңіз немесе жаңа файл жүктеңіз.
                 </p>
               </div>
             ) : viewMode === "grid" ? (
@@ -554,11 +552,11 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
 
                 <div className="mt-6 rounded-[26px] border border-emerald-200 bg-emerald-50 p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-800">
-                    Қауіпсіздік статусы
+                    Сақталу күйі
                   </p>
                   <p className="mt-3 text-sm leading-6 text-emerald-900">
-                    Бұл құжат серверде шифрланған күйде сақталады. Ашу және
-                    жүктеу кезінде ғана уақытша дешифрланады.
+                    Бұл файл серверде қорғалып сақталады. Қарағанда немесе
+                    жүктегенде ғана ашылады.
                   </p>
                 </div>
 
@@ -586,7 +584,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     }}
                     className={`${trashMode ? "hidden " : ""}rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800`}
                   >
-                    Қауіпсіз preview ашу
+                    Ашу
                   </button>
                   <button
                     onClick={() =>
@@ -597,7 +595,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     }
                     className={`${trashMode ? "hidden " : ""}rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50`}
                   >
-                    Дешифрлап жүктеу
+                    Жүктеп алу
                   </button>
                   <button
                     onClick={() => deleteDoc(selectedDocument.id)}
