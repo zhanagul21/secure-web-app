@@ -1090,28 +1090,49 @@ router.get("/preview/:id", authMiddleware, async (req, res) => {
     }
 
     if (doc.mime_type === "application/msword") {
-      // .doc → .docx арқылы mammoth HTML preview
-      let docxTempDir = null;
       try {
-        const { convertedPath, tempDir: dt } = await convertDocToDocx(readable.filePath);
-        docxTempDir = dt;
-        const docxBuffer = await fs.promises.readFile(convertedPath);
-        const html = await renderDocxBufferPreview(docxBuffer, doc.title);
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        res.send(html);
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
         return;
-      } catch (convError) {
-        console.error("DOC->DOCX CONVERT ERROR:", convError);
-        // Fallback: plain text
+      } catch (pdfError) {
+        console.error("DOC PDF PREVIEW ERROR:", pdfError);
+
+        let docxTempDir = null;
         try {
-          await sendDocHtmlPreview(res, readable.filePath, doc.title);
+          const { convertedPath, tempDir: dt } = await convertDocToDocx(readable.filePath);
+          docxTempDir = dt;
+          try {
+            tempDirToDelete = await sendConvertedPdfPreview(
+              res,
+              convertedPath,
+              tempDirToDelete
+            );
+            return;
+          } catch (docxPdfError) {
+            console.error("DOCX PDF PREVIEW AFTER DOC CONVERT ERROR:", docxPdfError);
+          }
+
+          const docxBuffer = await fs.promises.readFile(convertedPath);
+          const html = await renderDocxBufferPreview(docxBuffer, doc.title);
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          res.send(html);
           return;
-        } catch (textError) {
-          console.error("DOC TEXT PREVIEW ERROR:", textError);
-          return res.status(502).json({ message: "Word .doc файлды preview жасау мүмкін болмады." });
+        } catch (docxError) {
+          console.error("DOC->DOCX CONVERT ERROR:", docxError);
+
+          try {
+            await sendDocHtmlPreview(res, readable.filePath, doc.title);
+            return;
+          } catch (textError) {
+            console.error("DOC TEXT PREVIEW ERROR:", textError);
+            return res.status(502).json({ message: "Word .doc preview could not be generated." });
+          }
+        } finally {
+          cleanupDir(docxTempDir);
         }
-      } finally {
-        cleanupDir(docxTempDir);
       }
     }
 
@@ -1565,25 +1586,48 @@ router.get("/shared/:token", async (req, res) => {
     }
 
     if (doc.mime_type === "application/msword") {
-      let docxTempDir2 = null;
       try {
-        const { convertedPath, tempDir: dt2 } = await convertDocToDocx(readable.filePath);
-        docxTempDir2 = dt2;
-        const docxBuffer = await fs.promises.readFile(convertedPath);
-        const html = await renderDocxBufferPreview(docxBuffer, doc.title, true);
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        res.send(html);
+        tempDirToDelete = await sendConvertedPdfPreview(
+          res,
+          readable.filePath,
+          tempDirToDelete
+        );
         return;
-      } catch (convError) {
-        console.error("SHARED DOC->DOCX ERROR:", convError);
+      } catch (pdfError) {
+        console.error("SHARED DOC PDF PREVIEW ERROR:", pdfError);
+
+        let docxTempDir2 = null;
         try {
-          await sendDocHtmlPreview(res, readable.filePath, doc.title, true);
+          const { convertedPath, tempDir: dt2 } = await convertDocToDocx(readable.filePath);
+          docxTempDir2 = dt2;
+          try {
+            tempDirToDelete = await sendConvertedPdfPreview(
+              res,
+              convertedPath,
+              tempDirToDelete
+            );
+            return;
+          } catch (docxPdfError) {
+            console.error("SHARED DOCX PDF PREVIEW AFTER DOC CONVERT ERROR:", docxPdfError);
+          }
+
+          const docxBuffer = await fs.promises.readFile(convertedPath);
+          const html = await renderDocxBufferPreview(docxBuffer, doc.title, true);
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          res.send(html);
           return;
-        } catch {
-          return res.status(502).json({ message: "Word .doc файлды preview жасау мүмкін болмады." });
+        } catch (docxError) {
+          console.error("SHARED DOC->DOCX ERROR:", docxError);
+
+          try {
+            await sendDocHtmlPreview(res, readable.filePath, doc.title, true);
+            return;
+          } catch {
+            return res.status(502).json({ message: "Word .doc preview could not be generated." });
+          }
+        } finally {
+          cleanupDir(docxTempDir2);
         }
-      } finally {
-        cleanupDir(docxTempDir2);
       }
     }
 
