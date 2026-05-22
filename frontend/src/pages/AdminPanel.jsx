@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import API from "../services/api";
 
 function getRiskSignal(log) {
@@ -33,7 +33,7 @@ function getRiskSignal(log) {
     reasons.push("өшіру әрекеті");
   }
 
-  const level = score >= 60 ? "Жоғары" : score >= 30 ? "Орташа" : "Төмен";
+  const level = score >= 60 ? "Жоғары" : score >= 30 ? "Орташа" : "Тұрақты";
   return { level, score, reasons: reasons.length ? reasons : ["қалыпты әрекет"] };
 }
 
@@ -48,6 +48,9 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState("user");
+  const createUserRef = useRef(null);
+  const usersRef = useRef(null);
+  const searchRef = useRef(null);
   const currentUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "{}");
@@ -139,6 +142,18 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
     }
   };
 
+  const openSection = (section, filter = "all") => {
+    if (section === "create") {
+      createUserRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.setTimeout(() => document.getElementById("admin-new-full-name")?.focus(), 350);
+      return;
+    }
+
+    setRoleFilter(filter);
+    usersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => searchRef.current?.focus(), 350);
+  };
+
   useEffect(() => {
     refreshAdminData();
   }, []);
@@ -162,8 +177,9 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
     const high = signals.filter((item) => item.risk.level === "Жоғары").length;
     const medium = signals.filter((item) => item.risk.level === "Орташа").length;
     const topScore = Math.max(0, ...signals.map((item) => item.risk.score));
+    const stable = signals.length - high - medium;
     const status = high > 0 ? "Жоғары қауіп" : medium > 0 ? "Бақылау керек" : "Тұрақты";
-    return { signals, high, medium, topScore, status };
+    return { signals, high, medium, stable, topScore, status };
   }, [latestLogs]);
 
   const formatBytes = (value) => {
@@ -218,14 +234,20 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
-            "Қолданушы қосу",
-            "Рөлді admin/user қылып өзгерту",
-            "2FA баптауын тазарту",
-            "Қолданушыны жүйеден өшіру",
+            { label: "Қолданушы қосу", hint: "Жаңа аккаунт ашу формасына апарады", onClick: () => openSection("create") },
+            { label: "Рөлді admin/user қылып өзгерту", hint: "Тізімнен қолданушыны таңдап, рөлін ауыстырасыз", onClick: () => openSection("users") },
+            { label: "2FA баптауын тазарту", hint: "Қолданушы 2FA-ны қайта қоса алады", onClick: () => openSection("users") },
+            { label: "Қолданушыны жүйеден өшіру", hint: "Тізімнен керек аккаунтты өшіресіз", onClick: () => openSection("users") },
           ].map((item) => (
-            <div key={item} className="rounded-[24px] border border-white/70 bg-white/95 p-5 text-sm font-semibold text-slate-700 shadow-sm">
-              {item}
-            </div>
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.onClick}
+              className="rounded-[24px] border border-white/70 bg-white/95 p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_18px_45px_rgba(15,23,42,0.10)]"
+            >
+              <div className="text-sm font-bold text-slate-800">{item.label}</div>
+              <div className="mt-2 text-xs leading-5 text-slate-500">{item.hint}</div>
+            </button>
           ))}
         </div>
 
@@ -243,7 +265,7 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
           <div className="rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-sm">
             <div className="text-sm text-slate-500">Уақытша сілтемелер</div>
             <div className="mt-3 text-3xl font-black text-slate-900">{appStats?.active_links || 0}</div>
-            <div className="mt-2 text-sm text-slate-600">Белсенді secure links</div>
+            <div className="mt-2 text-sm text-slate-600">Қазір ашық тұрған сілтемелер</div>
           </div>
         </div>
 
@@ -252,7 +274,7 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-rose-700">Қауіпсіздік бақылауы</p>
               <h2 className="mt-1 text-2xl font-black text-slate-900">Қауіпті әрекеттерді бақылау</h2>
-              <p className="mt-2 text-slate-600">Жүйе құжат жүктеу, уақытша сілтеме жасау, өшіру және аккаунт қауіпсіздігіне қатысты күмәнді әрекеттерді автоматты белгілейді.</p>
+              <p className="mt-2 text-slate-600">Бұл бөлім соңғы әрекеттерді қарап, қайсысына назар аудару керегін көрсетеді. Ұпай көп болған сайын әрекет күмәндірек саналады.</p>
             </div>
             <div className={`rounded-[24px] px-6 py-4 text-center shadow-sm ${
               riskMonitor.status === "Жоғары қауіп"
@@ -271,15 +293,22 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
             <div className="rounded-[24px] bg-white p-5 ring-1 ring-rose-100">
               <div className="text-sm text-slate-500">Жоғары қауіп</div>
               <div className="mt-2 text-3xl font-black text-rose-600">{riskMonitor.high}</div>
+              <div className="mt-2 text-sm leading-5 text-slate-600">60 ұпайдан жоғары. Мысалы: файл жүктеу мен өшіру сияқты бірнеше маңызды әрекет қатар болса.</div>
             </div>
             <div className="rounded-[24px] bg-white p-5 ring-1 ring-amber-100">
               <div className="text-sm text-slate-500">Орташа қауіп</div>
               <div className="mt-2 text-3xl font-black text-amber-600">{riskMonitor.medium}</div>
+              <div className="mt-2 text-sm leading-5 text-slate-600">30-59 ұпай. Мысалы: уақытша сілтеме жасау, файл жүктеу немесе сәтсіз әрекет.</div>
             </div>
             <div className="rounded-[24px] bg-white p-5 ring-1 ring-emerald-100">
-              <div className="text-sm text-slate-500">Тексерілген оқиға</div>
-              <div className="mt-2 text-3xl font-black text-emerald-600">{riskMonitor.signals.length}</div>
+              <div className="text-sm text-slate-500">Тұрақты әрекет</div>
+              <div className="mt-2 text-3xl font-black text-emerald-600">{riskMonitor.stable}</div>
+              <div className="mt-2 text-sm leading-5 text-slate-600">30 ұпайдан төмен. Қалыпты ашу, қарау немесе жай жүйелік әрекет.</div>
             </div>
+          </div>
+
+          <div className="mt-4 rounded-[24px] border border-white bg-white/90 p-5 text-sm leading-6 text-slate-700 shadow-sm">
+            <span className="font-bold text-slate-900">Қалай анықталады:</span> файл жүктеу +40, уақытша сілтеме жасау +35, сәтсіз немесе қате әрекет +30, пароль/2FA әрекеті +20, өшіру әрекеті +25. Бұл автоматты белгі ғана, соңғы шешімді admin өзі қабылдайды.
           </div>
 
           <div className="mt-5 grid gap-3 lg:grid-cols-2">
@@ -305,11 +334,11 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <form onSubmit={createUser} className="rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-sm">
+          <form ref={createUserRef} onSubmit={createUser} className="scroll-mt-6 rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-sm">
             <h2 className="text-2xl font-black text-slate-900">Қолданушы қосу</h2>
             <p className="mt-2 text-slate-600">Жаңа user немесе admin аккаунтын осы жерден жасай аласыз.</p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <input value={newFullName} onChange={(event) => setNewFullName(event.target.value)} placeholder="Аты-жөні" className="rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none" />
+              <input id="admin-new-full-name" value={newFullName} onChange={(event) => setNewFullName(event.target.value)} placeholder="Аты-жөні" className="rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none" />
               <input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} placeholder="Email" className="rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none" />
               <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Пароль" className="rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none" />
               <select value={newRole} onChange={(event) => setNewRole(event.target.value)} className="rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none">
@@ -337,11 +366,11 @@ function AdminPanel({ setPage, setLoggedIn, logoutEverywhere }) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-sm">
+        <div ref={usersRef} className="mt-6 scroll-mt-6 rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-2">
               <label className="mb-2 block font-medium text-slate-700">Іздеу</label>
-              <input type="text" placeholder="ID, аты-жөні немесе email бойынша іздеу" className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input ref={searchRef} type="text" placeholder="ID, аты-жөні немесе email бойынша іздеу" className="w-full rounded-2xl border border-sky-100 bg-sky-50 p-3 text-slate-900 outline-none" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div>
               <label className="mb-2 block font-medium text-slate-700">Рөл</label>
