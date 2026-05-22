@@ -690,7 +690,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     Сақталуын тексеру
                   </p>
                   <p className="mt-3 text-sm leading-6 text-emerald-900">
-                    Тексеру тек өзіңіз жүктеген құжатқа ғана ашылады. Басқа қолданушының файлын көре алмайсыз.
+                    Бұл тексеру өзіңіз жүктеген немесе сізге жіберілген құжатқа ғана ашылады.
                   </p>
                   {encryptionCheck && (
                     <div className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-100">
