@@ -2,64 +2,44 @@ const nodemailer = require("nodemailer");
 
 const smtpUser = process.env.GMAIL_USER;
 const smtpPass = process.env.GMAIL_APP_PASSWORD;
-const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-const smtpFamily = Number.parseInt(process.env.SMTP_FAMILY || "4", 10);
 const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
 
-const buildTransporter = ({ secure, port, service }) =>
+// Gmail OAuth2
+const gmailClientId = process.env.GMAIL_API_CLIENT_ID;
+const gmailClientSecret = process.env.GMAIL_API_CLIENT_SECRET;
+const gmailRefreshToken = process.env.GMAIL_API_REFRESH_TOKEN;
+const canUseOAuth2 = Boolean(gmailClientId && gmailClientSecret && gmailRefreshToken && smtpUser);
+
+const buildOAuth2Transporter = () =>
   nodemailer.createTransport({
-    ...(service ? { service } : { host: smtpHost, port }),
-    secure,
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: smtpUser,
+      clientId: gmailClientId,
+      clientSecret: gmailClientSecret,
+      refreshToken: gmailRefreshToken,
+    },
+  });
+
+const buildSmtpTransporter = () =>
+  nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: {
       user: smtpUser,
       pass: smtpPass,
     },
-    family: smtpFamily === 4 || smtpFamily === 6 ? smtpFamily : undefined,
+    family: 4,
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 30000,
-    requireTLS: !secure,
-    tls: {
-      servername: smtpHost,
-    },
   });
 
-const transporters = [
-  {
-    name: "smtp-587",
-    transporter: buildTransporter({
-      secure: false,
-      port: Number.parseInt(process.env.SMTP_PORT || "587", 10),
-    }),
-  },
-  {
-    name: "smtp-465",
-    transporter: buildTransporter({
-      secure: true,
-      port: Number.parseInt(process.env.SMTP_SSL_PORT || "465", 10),
-    }),
-  },
-  {
-    name: "gmail-service",
-    transporter: buildTransporter({
-      secure: true,
-      service: "gmail",
-    }),
-  },
-];
-
 const canUseSmtp = Boolean(smtpUser && smtpPass);
-
-async function verifyResendTransporter() {
-  if (!resendApiKey) {
-    return false;
-  }
-
-  console.log("MAILER READY: resend-api");
-  return true;
-}
 
 async function sendViaResend(to, subject, html) {
   const response = await fetch(resendApiUrl, {
@@ -88,52 +68,44 @@ async function sendViaResend(to, subject, html) {
 }
 
 const verifyEmailTransporter = async () => {
-  if (await verifyResendTransporter()) {
+  if (canUseOAuth2) {
+    console.log("MAILER READY: gmail-oauth2");
     return;
   }
-
-  if (!canUseSmtp) {
-    console.error("MAILER VERIFY ERROR: no RESEND_API_KEY and no SMTP credentials configured");
+  if (resendApiKey) {
+    console.log("MAILER READY: resend-api");
     return;
   }
-
-  for (const { name, transporter } of transporters) {
-    try {
-      await transporter.verify();
-      console.log(`MAILER READY: ${name}`);
-      return;
-    } catch (error) {
-      console.error(`MAILER VERIFY ERROR (${name}):`, error);
-    }
+  if (canUseSmtp) {
+    console.log("MAILER READY: gmail-smtp");
+    return;
   }
+  console.error("MAILER VERIFY ERROR: no email transport configured");
 };
 
 const sendMail = async (to, subject, html) => {
+  // 1. Gmail OAuth2 — ең сенімді
+  if (canUseOAuth2) {
+    try {
+      const transporter = buildOAuth2Transporter();
+      return await transporter.sendMail({ from: defaultFrom, to, subject, html });
+    } catch (err) {
+      console.error("GMAIL OAUTH2 ERROR:", err.message);
+    }
+  }
+
+  // 2. Resend
   if (resendApiKey) {
     return sendViaResend(to, subject, html);
   }
 
-  if (!canUseSmtp) {
-    throw new Error("Email transport is unavailable");
+  // 3. Gmail SMTP App Password
+  if (canUseSmtp) {
+    const transporter = buildSmtpTransporter();
+    return await transporter.sendMail({ from: defaultFrom, to, subject, html });
   }
 
-  let lastError;
-
-  for (const { name, transporter } of transporters) {
-    try {
-      return await transporter.sendMail({
-        from: defaultFrom,
-        to,
-        subject,
-        html,
-      });
-    } catch (error) {
-      lastError = error;
-      console.error(`SEND MAIL ERROR (${name}):`, error);
-    }
-  }
-
-  throw lastError || new Error("Email transport is unavailable");
+  throw new Error("Email transport is unavailable");
 };
 
 module.exports = {
