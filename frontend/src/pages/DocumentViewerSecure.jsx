@@ -7,6 +7,11 @@ const DOCX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const PPTX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+const DOC_MIME_TYPE = "application/msword";
+
+function isWordDocument(mimeType) {
+  return mimeType === DOC_MIME_TYPE || mimeType === DOCX_MIME_TYPE;
+}
 
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
@@ -351,13 +356,18 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   };
 
   const renderPreview = () => {
+    const wordPreview = isWordDocument(documentData?.mime_type);
+    const pdfFragment = wordPreview
+      ? "#zoom=66&pagemode=none&view=FitH"
+      : "#zoom=page-fit&pagemode=none&view=Fit";
+
     if (previewUrl) {
       if (previewMimeType.includes("application/pdf")) {
         return (
           <iframe
-            src={`${previewUrl}#zoom=page-fit&pagemode=none&view=Fit`}
+            src={`${previewUrl}${pdfFragment}`}
             title="PDF файлын қарау"
-            className="h-[84vh] w-full rounded-[24px] border border-sky-100 bg-white"
+            className="h-[90vh] w-full rounded-[24px] border border-sky-100 bg-white"
           />
         );
       }
@@ -586,7 +596,9 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
             ) : (
               <div className="relative">
                 {renderPreview()}
-                {previewType !== "unsupported" && renderWatermarkOverlay()}
+                {previewType !== "unsupported" &&
+                  !isWordDocument(documentData?.mime_type) &&
+                  renderWatermarkOverlay()}
               </div>
             )}
           </div>
