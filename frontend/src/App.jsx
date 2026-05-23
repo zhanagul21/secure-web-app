@@ -74,7 +74,7 @@ function AuthApp() {
     localStorage.removeItem("tempUserId");
     localStorage.removeItem("temp2faToken");
     setLoggedIn(false);
-    setPage("login");
+    setPage("landing");
     setSelectedDocumentId(null);
   };
  
