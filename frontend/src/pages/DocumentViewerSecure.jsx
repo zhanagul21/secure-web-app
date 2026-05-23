@@ -452,9 +452,15 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     </div>
   );
 
+  const wordDocument = isWordDocument(documentData?.mime_type);
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0,#f8fafc_38%,#dbeafe_100%)]">
-      <div className="mx-auto max-w-7xl px-4 py-6">
+      <div
+        className={`mx-auto px-4 py-6 ${
+          wordDocument ? "max-w-[1800px]" : "max-w-7xl"
+        }`}
+      >
         <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.12)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -501,8 +507,18 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
-          <div className="space-y-6">
+        <div
+          className={
+            wordDocument
+              ? "mt-6 flex flex-col gap-6"
+              : "mt-6 grid gap-6 xl:grid-cols-[0.7fr_1.3fr]"
+          }
+        >
+          <div
+            className={
+              wordDocument ? "order-2 grid gap-6 xl:grid-cols-3" : "space-y-6"
+            }
+          >
             <div className="rounded-[30px] border border-white/70 bg-white/95 p-6 shadow-sm">
               <h2 className="text-xl font-black text-slate-900">
                 Құжат туралы ақпарат
@@ -588,7 +604,11 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
             )}
           </div>
 
-          <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
+          <div
+            className={`rounded-[32px] border border-white/70 bg-white/95 shadow-[0_20px_70px_rgba(15,23,42,0.08)] ${
+              wordDocument ? "order-1 p-4" : "p-5"
+            }`}
+          >
             {loading ? (
               <div className="py-16 text-center text-slate-600">
                 Құжат жүктелуде...
@@ -597,7 +617,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
               <div className="relative">
                 {renderPreview()}
                 {previewType !== "unsupported" &&
-                  !isWordDocument(documentData?.mime_type) &&
+                  !wordDocument &&
                   renderWatermarkOverlay()}
               </div>
             )}
