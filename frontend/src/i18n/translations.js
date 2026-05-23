@@ -70,6 +70,7 @@ const EXACT = {
     en: "View, search, and download your saved files here.",
   },
   "Жаңа құжат": { ru: "Новый документ", en: "New document" },
+  "Себет": { ru: "Корзина", en: "Trash" },
   "Корзина": { ru: "Корзина", en: "Trash" },
   "Барлық файл": { ru: "Все файлы", en: "All files" },
   "Жалпы көлем": { ru: "Общий размер", en: "Total size" },
@@ -645,8 +646,10 @@ Object.assign(EXACT, {
   "8 сағат": { ru: "8 часов", en: "8 hours" },
   "1 күн": { ru: "1 день", en: "1 day" },
 
+  "Себетті жүктеу кезінде қате шықты.": { ru: "Ошибка при загрузке корзины.", en: "Failed to load trash." },
   "Корзинаны жүктеу кезінде қате шықты.": { ru: "Ошибка при загрузке корзины.", en: "Failed to load trash." },
   "Келген құжаттарды жүктеу кезінде қате шықты.": { ru: "Ошибка при загрузке полученных документов.", en: "Failed to load received documents." },
+  "Құжат себетке жіберілді.": { ru: "Документ перемещен в корзину.", en: "Document moved to trash." },
   "Құжат корзинаға жіберілді.": { ru: "Документ перемещен в корзину.", en: "Document moved to trash." },
   "Құжат қалпына келтірілді.": { ru: "Документ восстановлен.", en: "Document restored." },
   "Қалпына келтіру кезінде қате шықты.": { ru: "Ошибка при восстановлении.", en: "Failed to restore." },
@@ -941,6 +944,11 @@ const DYNAMIC = [
     test: /^Маған келген \((\d+)\)$/,
     ru: (match) => `Полученные (${match[1]})`,
     en: (match) => `Received (${match[1]})`,
+  },
+  {
+    test: /^Себет \((\d+)\)$/,
+    ru: (match) => `Корзина (${match[1]})`,
+    en: (match) => `Trash (${match[1]})`,
   },
   {
     test: /^Корзина \((\d+)\)$/,

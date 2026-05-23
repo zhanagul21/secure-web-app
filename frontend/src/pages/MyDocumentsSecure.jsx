@@ -112,7 +112,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     } catch (error) {
       setMessage(
         error.response?.data?.message ||
-          "Корзинаны жүктеу кезінде қате шықты."
+          "Себетті жүктеу кезінде қате шықты."
       );
     }
   };
@@ -140,7 +140,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
       await API.delete(`/documents/delete/${id}`);
       setSelectedId((selected) => (selected === id ? null : selected));
       await Promise.all([getDocuments(), getTrashDocuments()]);
-      setMessage("Құжат корзинаға жіберілді.");
+      setMessage("Құжат себетке жіберілді.");
     } catch (error) {
       setMessage(
         error.response?.data?.message ||
@@ -377,7 +377,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     : "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                 }`}
               >
-                Корзина ({trashDocuments.length})
+                Себет ({trashDocuments.length})
               </button>
               <button
                 onClick={logout}
