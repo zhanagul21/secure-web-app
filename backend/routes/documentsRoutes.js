@@ -392,25 +392,6 @@ const resolveFrontendBaseUrl = (req) => {
   );
 };
 
-const resolveApiBaseUrl = (req) => {
-  const forwardedHost = req.get("x-forwarded-host");
-  const host = (forwardedHost || req.get("host") || "").split(",")[0].trim();
-  const forwardedProto = req.get("x-forwarded-proto");
-  const protocol = (forwardedProto || req.protocol || "http")
-    .split(",")[0]
-    .trim();
-
-  return `${protocol}://${host}/api`;
-};
-
-const getSafeOfficeFilename = (doc) =>
-  String(doc.original_name || doc.filename || "document")
-    .replace(/[\\/]/g, "_")
-    .trim() || "document";
-
-const buildOfficeEmbedUrl = (fileUrl) =>
-  `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
-
 const encryptUploadedFile = async (file) => {
   const storedBuffer = await fs.promises.readFile(file.path);
 
@@ -1673,64 +1654,6 @@ router.post("/share/:id", authMiddleware, async (req, res) => {
     console.error("SHARE DOCUMENT ERROR:", error);
     res.status(500).json({
       message: error.message || "Сілтеме жасау кезінде қате шықты",
-    });
-  }
-});
-
-router.post("/office-link/:id", authMiddleware, async (req, res) => {
-  try {
-    const doc = await getDocumentByIdForUser(req.params.id, req.user.id);
-
-    if (!doc) {
-      return res.status(404).json({ message: "Құжат табылмады" });
-    }
-
-    const isWordFile =
-      doc.mime_type === "application/msword" || doc.mime_type === DOCX_MIME_TYPE;
-
-    if (!isWordFile) {
-      return res.status(400).json({ message: "Office viewer тек Word файлдарына арналған" });
-    }
-
-    const requestedDuration = Number(req.body?.durationMinutes || 15);
-    const durationMinutes = Math.min(
-      60,
-      Math.max(5, Number.isFinite(requestedDuration) ? requestedDuration : 15)
-    );
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
-
-    await poolConnect;
-
-    await pool
-      .request()
-      .input("documentId", sql.Int, doc.id)
-      .input("token", sql.NVarChar(255), token)
-      .input("expiresAt", sql.DateTime, expiresAt)
-      .input("createdBy", sql.Int, req.user.id)
-      .query(`
-        INSERT INTO shared_links (document_id, token, expires_at, created_by)
-        VALUES (@documentId, @token, @expiresAt, @createdBy)
-      `);
-
-    const encodedFilename = encodeURIComponent(getSafeOfficeFilename(doc));
-    const fileUrl = `${resolveApiBaseUrl(req)}/documents/shared/${token}/office/${encodedFilename}`;
-
-    await writeLog(
-      req.user.id,
-      "DOCUMENT_OFFICE_VIEW",
-      `Office viewer ашылды: ${doc.title}`
-    );
-
-    return res.json({
-      fileUrl,
-      officeEmbedUrl: buildOfficeEmbedUrl(fileUrl),
-      expiresAt,
-    });
-  } catch (error) {
-    console.error("OFFICE LINK ERROR:", error);
-    return res.status(500).json({
-      message: error.message || "Office viewer сілтемесін жасау кезінде қате шықты",
     });
   }
 });

@@ -5,14 +5,8 @@ import API from "../services/api";
 
 const DOCX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const DOC_MIME_TYPE = "application/msword";
 const PPTX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-const WORD_MIME_TYPES = new Set([DOC_MIME_TYPE, DOCX_MIME_TYPE]);
-
-function isWordMimeType(mimeType) {
-  return WORD_MIME_TYPES.has(mimeType || "");
-}
 
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
@@ -101,23 +95,6 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       API.get(`/documents/encryption-proof/${documentId}`)
         .then((proofRes) => setEncryptionProof(proofRes.data))
         .catch(() => setEncryptionProof(null));
-
-      if (isWordMimeType(currentDocument?.mime_type)) {
-        try {
-          const officeRes = await API.post(`/documents/office-link/${documentId}`, {
-            durationMinutes: 15,
-          });
-
-          if (officeRes.data?.officeEmbedUrl) {
-            setPreviewType("office");
-            setPreviewMimeType("office");
-            setPreviewUrl(officeRes.data.officeEmbedUrl);
-            return;
-          }
-        } catch (officeError) {
-          console.error("OFFICE VIEWER ERROR:", officeError);
-        }
-      }
 
       if (currentDocument?.mime_type === DOCX_MIME_TYPE) {
         const convertedRes = await API.get(`/documents/preview/${documentId}`, {
@@ -374,24 +351,13 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   };
 
   const renderPreview = () => {
-    if (previewType === "office" && previewUrl) {
-      return (
-        <iframe
-          src={previewUrl}
-          title="Office Word Viewer"
-          allow="fullscreen"
-          className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
-        />
-      );
-    }
-
     if (previewUrl) {
       if (previewMimeType.includes("application/pdf")) {
         return (
           <iframe
-            src={previewUrl}
+            src={`${previewUrl}#zoom=page-fit&pagemode=none&view=Fit`}
             title="PDF файлын қарау"
-            className="h-[82vh] w-full rounded-[24px] border border-sky-100"
+            className="h-[84vh] w-full rounded-[24px] border border-sky-100 bg-white"
           />
         );
       }
@@ -620,9 +586,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
             ) : (
               <div className="relative">
                 {renderPreview()}
-                {previewType !== "unsupported" &&
-                  previewType !== "office" &&
-                  renderWatermarkOverlay()}
+                {previewType !== "unsupported" && renderWatermarkOverlay()}
               </div>
             )}
           </div>
