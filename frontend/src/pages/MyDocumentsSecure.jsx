@@ -1,4 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "../i18n/LanguageContext";
+import { translateText } from "../i18n/translations";
 import API from "../services/api";
 
 function formatFileSize(bytes) {
@@ -58,6 +60,8 @@ function matchesType(doc, typeFilter) {
 }
 
 function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logoutEverywhere }) {
+  const { language } = useLanguage();
+  const t = (value) => translateText(value, language);
   const [documents, setDocuments] = useState([]);
   const [receivedDocuments, setReceivedDocuments] = useState([]);
   const [trashDocuments, setTrashDocuments] = useState([]);
@@ -371,13 +375,14 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                   setMailboxMode("mine");
                   setSelectedId(null);
                 }}
+                data-i18n-ignore
                 className={`rounded-2xl px-4 py-2.5 font-semibold transition ${
                   trashMode
                     ? "bg-rose-600 text-white hover:bg-rose-700"
                     : "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                 }`}
               >
-                Себет ({trashDocuments.length})
+                {t(`Себет (${trashDocuments.length})`)}
               </button>
               <button
                 onClick={logout}
