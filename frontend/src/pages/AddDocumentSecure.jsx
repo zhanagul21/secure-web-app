@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import API from "../services/api";
+import { getApiErrorMessage } from "../services/apiConfig";
 
 const categorySuggestions = [
   "Жеке құжат",
@@ -21,17 +22,20 @@ function formatFileSize(bytes) {
 function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
+  const [folderName, setFolderName] = useState("");
+  const [saveAsFolder, setSaveAsFolder] = useState(false);
   const [description, setDescription] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [message, setMessage] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const previewUrl = useMemo(() => {
-    if (!file || !file.type.startsWith("image/")) return null;
-    return URL.createObjectURL(file);
-  }, [file]);
+    const firstFile = files.find((item) => item.type.startsWith("image/") || item.type.startsWith("video/"));
+    if (!firstFile) return null;
+    return URL.createObjectURL(firstFile);
+  }, [files]);
 
   useEffect(() => {
     return () => {
@@ -57,15 +61,25 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
   const resetForm = () => {
     setTitle("");
     setCategory("");
+    setFolderName("");
+    setSaveAsFolder(false);
     setDescription("");
-    setFile(null);
+    setFiles([]);
     setUploadProgress(0);
   };
 
-  const onFileChange = (selectedFile) => {
-    if (!selectedFile) return;
-    setFile(selectedFile);
-    if (!title) setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
+  const onFileChange = (selectedFiles) => {
+    const nextFiles = Array.from(selectedFiles || []);
+    if (!nextFiles.length) return;
+    setFiles((current) => {
+      const merged = [...current, ...nextFiles];
+      if (!title && merged[0]) setTitle(merged[0].name.replace(/\.[^/.]+$/, ""));
+      if (!folderName && merged.length > 1) {
+        setFolderName(title || "Жаңа папка");
+        setSaveAsFolder(true);
+      }
+      return merged;
+    });
     setMessage("");
   };
 
@@ -73,8 +87,8 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
     event.preventDefault();
     setMessage("");
 
-    if (!title.trim() || !category.trim() || !file) {
-      setMessage("Құжат атауы, категория және файл міндетті.");
+    if (!title.trim() || !category.trim() || files.length === 0) {
+      setMessage("Құжат атауы, категория және кемінде бір файл міндетті.");
       return;
     }
 
@@ -86,7 +100,10 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
       formData.append("title", title.trim());
       formData.append("category", category.trim());
       formData.append("description", description.trim());
-      formData.append("file", file);
+      if (saveAsFolder || files.length > 1) {
+        formData.append("folderName", (folderName || title).trim());
+      }
+      files.forEach((item) => formData.append("files", item));
 
       const res = await API.post("/documents/add", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -103,15 +120,13 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
 
       setMessage(
         res.data.message ||
-          "Құжат жүктелді және серверде шифрланды."
+          "Файл сақталды."
       );
       resetForm();
       setTimeout(() => setPage("documents"), 700);
     } catch (error) {
-      setMessage(
-        error.response?.data?.message ||
-          "Құжат жүктеу кезінде қате шықты."
-      );
+      console.error("DOCUMENT UPLOAD ERROR:", error);
+      setMessage(getApiErrorMessage(error, "Құжат жүктеу кезінде қате шықты."));
     } finally {
       setLoading(false);
     }
@@ -121,7 +136,7 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
     event.preventDefault();
     event.stopPropagation();
     setDragActive(false);
-    onFileChange(event.dataTransfer.files?.[0]);
+    onFileChange(event.dataTransfer.files);
   };
 
   const handleDrag = (event) => {
@@ -130,19 +145,27 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
     setDragActive(event.type === "dragenter" || event.type === "dragover");
   };
 
-  const fileTypeLabel = file?.type
-    ? file.type.startsWith("image/")
-      ? "Image"
-      : file.type === "application/pdf"
+  const firstFile = files[0] || null;
+  const totalSize = files.reduce((sum, item) => sum + item.size, 0);
+  const fileTypeLabel = firstFile?.type
+    ? files.length > 1
+      ? `${files.length} файл`
+      : firstFile.type.startsWith("image/")
+      ? "Сурет"
+      : firstFile.type.startsWith("video/")
+      ? "Видео"
+      : firstFile.type.startsWith("audio/")
+      ? "Аудио"
+      : firstFile.type === "application/pdf"
       ? "PDF"
-      : file.type.includes("word")
-      ? "Document"
-      : file.type.includes("spreadsheet") || file.type.includes("excel")
-      ? "Spreadsheet"
-      : file.type.includes("presentation")
-      ? "Slides"
-      : "File"
-    : "No file";
+      : firstFile.type.includes("word")
+      ? "Құжат"
+      : firstFile.type.includes("spreadsheet") || firstFile.type.includes("excel")
+      ? "Кесте"
+      : firstFile.type.includes("presentation")
+      ? "Слайд"
+      : "Файл"
+    : "Файл жоқ";
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe_0,#eff6ff_35%,#bfdbfe_100%)]">
@@ -154,11 +177,11 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                 AuthGuard Locker
               </p>
               <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-                Қауіпсіз жүктеу аймағы
+                Файл жүктеу
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-                Жүктелген файл серверде бірден шифрланады. Пайдаланушыға preview
-                және download кезінде ғана қолжетімді болады.
+                Файлды таңдаңыз да, атауы мен түрін көрсетіп сақтаңыз. Кейін оны
+                қарап немесе жүктеп ала аласыз.
               </p>
             </div>
 
@@ -196,11 +219,11 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                   Жүктеу формасы
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  Файл метадерегін толтырып, қауіпсіз сақтау аймағына жіберіңіз.
+                  Файл туралы ақпаратты толтырып, сақтауға жіберіңіз.
                 </p>
               </div>
-              <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-                AES-256-GCM storage encryption
+              <div className="rounded-2xl bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-700">
+                Бір немесе бірнеше файл таңдауға болады
               </div>
             </div>
 
@@ -241,6 +264,29 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                 </div>
               </div>
 
+              <div className="rounded-2xl border border-sky-100 bg-white p-4">
+                <label className="flex items-start gap-3 text-sm font-semibold text-slate-800">
+                  <input
+                    type="checkbox"
+                    checked={saveAsFolder || files.length > 1}
+                    onChange={(event) => setSaveAsFolder(event.target.checked)}
+                    className="mt-1"
+                  />
+                  Бір папкаға жинау
+                </label>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Мысалы, “Сабақтар” деп жазсаңыз, таңдалған бірнеше файл сол папка атауымен бірге сақталады.
+                </p>
+                {(saveAsFolder || files.length > 1) && (
+                  <input
+                    value={folderName}
+                    onChange={(event) => setFolderName(event.target.value)}
+                    placeholder="Мысалы: Сабақтар"
+                    className="mt-3 w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-300"
+                  />
+                )}
+              </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Сипаттама
@@ -266,9 +312,9 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
               >
                 <input
                   type="file"
-                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                  multiple
                   className="hidden"
-                  onChange={(event) => onFileChange(event.target.files?.[0])}
+                  onChange={(event) => onFileChange(event.target.files)}
                 />
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-2xl shadow-sm ring-1 ring-sky-100">
                   FILE
@@ -277,30 +323,40 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                   Файлды осы жерге тастаңыз
                 </p>
                 <p className="mt-2 text-sm text-slate-600">
-                  немесе басып файл таңдаңыз
+                  немесе басып бірден бірнеше файл таңдаңыз
                 </p>
               </label>
 
-              {file && (
+              {files.length > 0 && (
                 <div className="rounded-[26px] border border-sky-100 bg-sky-50 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                        Selected file
+                        Таңдалған файлдар
                       </p>
                       <p className="mt-2 break-all text-lg font-bold text-slate-900">
-                        {file.name}
+                        {files.length === 1 ? files[0].name : `${files.length} файл таңдалды`}
                       </p>
                       <p className="mt-2 text-sm text-slate-600">
-                        {fileTypeLabel} · {formatFileSize(file.size)}
+                        {fileTypeLabel} · {formatFileSize(totalSize)}
                       </p>
+                      {files.length > 1 && (
+                        <div className="mt-3 space-y-2">
+                          {files.map((item, index) => (
+                            <div key={`${item.name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 text-sm text-slate-700">
+                              <span className="min-w-0 truncate">{item.name}</span>
+                              <span className="shrink-0 text-slate-500">{formatFileSize(item.size)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <button
                       type="button"
-                      onClick={() => setFile(null)}
+                      onClick={() => setFiles([])}
                       className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
-                      Алып тастау
+                      Барлығын алып тастау
                     </button>
                   </div>
 
@@ -335,7 +391,7 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
                 >
                   {loading
                     ? `Жүктеліп жатыр... ${uploadProgress}%`
-                    : "Құжатты шифрлап жүктеу"}
+                    : "Файлды сақтау"}
                 </button>
                 <button
                   type="button"
@@ -351,27 +407,25 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
           <div className="space-y-6">
             <div className="rounded-[32px] border border-white/70 bg-white/95 p-8 shadow-sm">
               <h2 className="text-2xl font-black text-slate-900">
-                Қауіпсіздік статусы
+                Файл қалай сақталады?
               </h2>
               <div className="mt-6 space-y-4">
                 <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
-                  <p className="font-semibold text-emerald-800">Шифрлау</p>
+                  <p className="font-semibold text-emerald-800">Сақталған файлды тек иесі аша алады</p>
                   <p className="mt-2 text-sm leading-6 text-emerald-900">
-                    Файл серверде ашық түрде емес, шифрланған түрде сақталады.
+                    Жүктегеннен кейін файл серверде оқылмайтын күйде сақталады. Оны тек өз аккаунтыңыздан ашып тексере аласыз.
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-sky-200 bg-sky-50 p-5">
-                  <p className="font-semibold text-sky-800">Дешифрлау</p>
+                  <p className="font-semibold text-sky-800">Бірнеше файлды бірге сақтау</p>
                   <p className="mt-2 text-sm leading-6 text-sky-900">
-                    Preview, download және shared link кезінде ғана уақытша
-                    дешифрланады.
+                    Бірнеше файл таңдасаңыз, олар бір папка атауымен тізімде бірге көрінеді.
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                  <p className="font-semibold text-slate-800">Upload limits</p>
+                  <p className="font-semibold text-slate-800">Жүктеу көлемі</p>
                   <p className="mt-2 text-sm leading-6 text-slate-700">
-                    Үлкен файлдар үшін progress indicator көрінеді, сондықтан
-                    user жүктелу статусын жоғалтпайды.
+                    Үлкен файл жүктелсе, барысы пайызбен көрсетіледі.
                   </p>
                 </div>
               </div>
@@ -379,18 +433,24 @@ function AddDocumentSecure({ setPage, setLoggedIn, logoutEverywhere }) {
 
             <div className="rounded-[32px] border border-white/70 bg-white/95 p-8 shadow-sm">
               <h2 className="text-2xl font-black text-slate-900">
-                Live preview
+                Алдын ала көру
               </h2>
               <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-100 bg-[linear-gradient(180deg,#f8fafc,#eef6ff)] p-5">
-                {previewUrl ? (
+                {previewUrl && firstFile?.type.startsWith("image/") ? (
                   <img
                     src={previewUrl}
-                    alt="preview"
+                    alt="Алдын ала көру"
                     className="h-[320px] w-full rounded-2xl bg-white object-contain"
+                  />
+                ) : previewUrl && firstFile?.type.startsWith("video/") ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    className="h-[320px] w-full rounded-2xl bg-slate-950 object-contain"
                   />
                 ) : (
                   <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-sky-200 bg-white text-center text-slate-500">
-                    Сурет файлын таңдасаңыз, preview осы жерде көрінеді.
+                    Сурет немесе видео таңдасаңыз, осы жерде көрінеді. Басқа файлдар жай ғана сақталады.
                   </div>
                 )}
               </div>

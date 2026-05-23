@@ -7,6 +7,12 @@ const DOCX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const PPTX_MIME_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+const DOC_MIME_TYPE = "application/msword";
+
+function isWordDocument(mimeType) {
+  return mimeType === DOC_MIME_TYPE || mimeType === DOCX_MIME_TYPE;
+}
+
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
   const mb = bytes / (1024 * 1024);
@@ -131,9 +137,9 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           const text = new TextDecoder("utf-8").decode(rawDocxRes.data);
           try {
             const parsed = JSON.parse(text);
-            setMessage(parsed.message || "DOCX preview ашылмады.");
+            setMessage(parsed.message || "DOCX файлын сайт ішінде ашу мүмкін болмады.");
           } catch {
-            setMessage(text || "DOCX preview ашылмады.");
+            setMessage(text || "DOCX файлын сайт ішінде ашу мүмкін болмады.");
           }
           return;
         }
@@ -154,7 +160,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         const text = await res.data.text();
         try {
           const parsed = JSON.parse(text);
-          // PPTX үшін pptx-preview арқылы браузерде ашу
+          // PPTX файлын браузерде ашу
           if (currentDocument?.mime_type === PPTX_MIME_TYPE) {
             try {
               const pptxRes = await API.get(`/documents/download/${documentId}`, {
@@ -165,18 +171,18 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                 setPreviewType("pptx");
                 setPptxBlob(new Uint8Array(pptxRes.data));
               } else {
-                setMessage("PowerPoint файлды жүктеу кезінде қате шықты.");
+                setMessage("PowerPoint файлын жүктеу кезінде қате шықты.");
                 setPreviewType("unsupported");
               }
             } catch {
-              setMessage("PowerPoint файлды жүктеу кезінде қате шықты.");
+              setMessage("PowerPoint файлын жүктеу кезінде қате шықты.");
               setPreviewType("unsupported");
             }
             return;
           }
-          setMessage(parsed.message || "Preview ашылмады.");
+          setMessage(parsed.message || "Файлды ашу мүмкін болмады.");
         } catch {
-          setMessage(text || "Preview ашылмады.");
+          setMessage(text || "Файлды ашу мүмкін болмады.");
         }
         return;
       }
@@ -210,13 +216,11 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       }
 
       setPreviewType("unsupported");
-      setMessage(
-        "Бұл файл түріне сайт ішінде preview жоқ. Бірақ оны жүктеп ашуға болады."
-      );
+      setMessage("Бұл файлды сайт ішінде көрсету мүмкін емес. Оны жүктеп ашуға болады.");
     } catch (error) {
       setPreviewType("error");
       setMessage(
-        error.response?.data?.message || error.message || "Preview қатесі."
+        error.response?.data?.message || error.message || "Файлды ашу кезінде қате шықты."
       );
     } finally {
       setLoading(false);
@@ -246,7 +250,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       mode: "scroll",
     });
     preview.preview(pptxBlob.buffer).catch(() => {
-      setMessage("PowerPoint preview жүктелмеді. Файлды жүктеп ашыңыз.");
+      setMessage("PowerPoint файлын жүктеу кезінде қате шықты.");
     });
   }, [previewType, pptxBlob]);
 
@@ -282,7 +286,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     }).catch((error) => {
       if (!cancelled) {
         setPreviewType("unsupported");
-        setMessage(error?.message || "DOCX preview ашылмады. Файлды жүктеп ашыңыз.");
+        setMessage(error?.message || "DOCX файлын сайт ішінде ашу мүмкін болмады. Файлды жүктеп ашыңыз.");
       }
     });
 
@@ -352,13 +356,18 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
   };
 
   const renderPreview = () => {
+    const wordPreview = isWordDocument(documentData?.mime_type);
+    const pdfFragment = wordPreview
+      ? "#zoom=66&pagemode=none&view=FitH"
+      : "#zoom=page-fit&pagemode=none&view=Fit";
+
     if (previewUrl) {
       if (previewMimeType.includes("application/pdf")) {
         return (
           <iframe
-            src={previewUrl}
-            title="PDF Preview"
-            className="h-[82vh] w-full rounded-[24px] border border-sky-100"
+            src={`${previewUrl}${pdfFragment}`}
+            title="PDF файлын қарау"
+            className="h-[90vh] w-full rounded-[24px] border border-sky-100 bg-white"
           />
         );
       }
@@ -367,7 +376,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         <div className="text-center">
           <img
             src={previewUrl}
-            alt="preview"
+            alt="Алдын ала көру"
             className="mx-auto max-h-[82vh] rounded-[24px] border border-sky-100"
           />
         </div>
@@ -377,7 +386,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     if (previewType === "html" && htmlContent) {
       return (
         <iframe
-          title="Document HTML Preview"
+          title="Құжатты қарау"
           srcDoc={htmlContent}
           className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
         />
@@ -410,17 +419,17 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         <div className="flex min-h-[420px] items-center justify-center rounded-[24px] border border-dashed border-sky-200 bg-sky-50 p-8 text-center">
           <div>
             <p className="text-lg font-semibold text-slate-800">
-              Бұл файл түрі үшін сайт ішінде тікелей preview жоқ
+              Бұл файлды сайт ішінде көрсету мүмкін емес
             </p>
             <p className="mt-2 text-slate-600">
-              Құжат сақталған. Оны дәл қазір жүктеп ашуға болады.
+              Файл сақталған. Оны жүктеп ашуға болады.
             </p>
             <button
               onClick={handleDownload}
               className="mt-5 rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white"
             >
-              Жүктеу
-            </button>
+                Жүктеу
+              </button>
           </div>
         </div>
       );
@@ -443,9 +452,15 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     </div>
   );
 
+  const wordDocument = isWordDocument(documentData?.mime_type);
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0,#f8fafc_38%,#dbeafe_100%)]">
-      <div className="mx-auto max-w-7xl px-4 py-6">
+      <div
+        className={`mx-auto px-4 py-6 ${
+          wordDocument ? "max-w-[1800px]" : "max-w-7xl"
+        }`}
+      >
         <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.12)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -453,10 +468,10 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                 AuthGuard Locker
               </p>
               <h1 className="mt-1 text-2xl font-black text-slate-900">
-                Құжатты қауіпсіз қарау
+                Құжатты қарау
               </h1>
               <p className="mt-2 text-sm text-slate-600">
-                Құжат серверде дешифрланып, қорғалған арнамен көрсетіледі.
+                Құжат серверден уақытша ашылып көрсетіледі.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -492,11 +507,21 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
-          <div className="space-y-6">
+        <div
+          className={
+            wordDocument
+              ? "mt-6 flex flex-col gap-6"
+              : "mt-6 grid gap-6 xl:grid-cols-[0.7fr_1.3fr]"
+          }
+        >
+          <div
+            className={
+              wordDocument ? "order-2 grid gap-6 xl:grid-cols-3" : "space-y-6"
+            }
+          >
             <div className="rounded-[30px] border border-white/70 bg-white/95 p-6 shadow-sm">
               <h2 className="text-xl font-black text-slate-900">
-                Құжат метадерегі
+                Құжат туралы ақпарат
               </h2>
               {documentData ? (
                 <div className="mt-5 space-y-3">
@@ -527,7 +552,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        MIME type
+                        Файл түрі
                       </div>
                       <div className="mt-2 text-sm text-slate-700">
                         {documentData.mime_type || "-"}
@@ -545,34 +570,21 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                 </div>
               ) : (
                 <div className="mt-5 text-sm text-slate-500">
-                  Метадерек жүктелуде...
+                  Құжат туралы ақпарат жүктелуде...
                 </div>
               )}
             </div>
 
             <div className="rounded-[30px] border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
               <h2 className="text-xl font-black text-emerald-900">
-                Қауіпсіздік статусы
+                Сақталу күйі
               </h2>
               <p className="mt-3 text-sm leading-6 text-emerald-900">
-                Бұл preview сервер жағында уақытша дешифрланып беріледі.
-                Құжаттың негізгі сақталу күйі шифрланған.
+                Файл серверде қорғалған түрде сақталады. Қарау кезінде ғана уақытша ашылады.
               </p>
               {encryptionProof && (
-                <div className="mt-4 space-y-2 text-sm text-emerald-950">
-                  <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
-                    Алгоритм: <b>{encryptionProof.algorithm}</b>
-                  </div>
-                  <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
-                    Marker: <b>{encryptionProof.marker}</b> ({encryptionProof.storedHeaderText})
-                  </div>
-                  <div className="break-all rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
-                    Ciphertext SHA-256: {encryptionProof.ciphertextSha256}
-                  </div>
-                  <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-emerald-100">
-                    Stored: {formatFileSize(encryptionProof.storedSizeBytes)} /
-                    Decrypted: {formatFileSize(encryptionProof.originalSizeBytes)}
-                  </div>
+                <div className="mt-4 rounded-xl bg-white px-3 py-2 text-sm text-emerald-950 ring-1 ring-emerald-100">
+                  Файлдың қорғалған күйде сақталғаны тексерілді.
                 </div>
               )}
             </div>
@@ -585,14 +597,18 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                     onClick={handleDownload}
                     className="mt-4 rounded-2xl bg-slate-800 px-4 py-2.5 font-semibold text-white"
                   >
-                    Файлды жүктеп ашу
-                  </button>
+                Файлды жүктеп ашу
+              </button>
                 )}
               </div>
             )}
           </div>
 
-          <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
+          <div
+            className={`rounded-[32px] border border-white/70 bg-white/95 shadow-[0_20px_70px_rgba(15,23,42,0.08)] ${
+              wordDocument ? "order-1 p-4" : "p-5"
+            }`}
+          >
             {loading ? (
               <div className="py-16 text-center text-slate-600">
                 Құжат жүктелуде...
@@ -600,7 +616,9 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
             ) : (
               <div className="relative">
                 {renderPreview()}
-                {previewType !== "unsupported" && renderWatermarkOverlay()}
+                {previewType !== "unsupported" &&
+                  !wordDocument &&
+                  renderWatermarkOverlay()}
               </div>
             )}
           </div>
@@ -642,8 +660,8 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                   onClick={() => setShareModalOpen(false)}
                   className="w-full rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700"
                 >
-                  Жабу
-                </button>
+                Жабу
+              </button>
                 <button
                   onClick={createShareLink}
                   disabled={shareLoading}

@@ -6,11 +6,11 @@ const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
 
-// Gmail OAuth2
 const gmailClientId = process.env.GMAIL_API_CLIENT_ID;
 const gmailClientSecret = process.env.GMAIL_API_CLIENT_SECRET;
 const gmailRefreshToken = process.env.GMAIL_API_REFRESH_TOKEN;
 const canUseOAuth2 = Boolean(gmailClientId && gmailClientSecret && gmailRefreshToken && smtpUser);
+const canUseSmtp = Boolean(smtpUser && smtpPass);
 
 const buildOAuth2Transporter = () =>
   nodemailer.createTransport({
@@ -29,17 +29,12 @@ const buildSmtpTransporter = () =>
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
+    auth: { user: smtpUser, pass: smtpPass },
     family: 4,
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 30000,
   });
-
-const canUseSmtp = Boolean(smtpUser && smtpPass);
 
 async function sendViaResend(to, subject, html) {
   const response = await fetch(resendApiUrl, {
@@ -55,60 +50,33 @@ async function sendViaResend(to, subject, html) {
       html,
     }),
   });
-
   const payload = await response.json().catch(() => ({}));
-
   if (!response.ok) {
     const error = new Error(payload?.message || payload?.error || "Resend email request failed");
     error.code = payload?.name || `HTTP_${response.status}`;
     throw error;
   }
-
   return payload;
 }
 
 const verifyEmailTransporter = async () => {
-  if (canUseOAuth2) {
-    console.log("MAILER READY: gmail-oauth2");
-    return;
-  }
-  if (resendApiKey) {
-    console.log("MAILER READY: resend-api");
-    return;
-  }
-  if (canUseSmtp) {
-    console.log("MAILER READY: gmail-smtp");
-    return;
-  }
+  if (canUseOAuth2) { console.log("MAILER READY: gmail-oauth2"); return; }
+  if (resendApiKey) { console.log("MAILER READY: resend-api"); return; }
+  if (canUseSmtp) { console.log("MAILER READY: gmail-smtp"); return; }
   console.error("MAILER VERIFY ERROR: no email transport configured");
 };
 
 const sendMail = async (to, subject, html) => {
-  // 1. Gmail OAuth2 — ең сенімді
   if (canUseOAuth2) {
     try {
-      const transporter = buildOAuth2Transporter();
-      return await transporter.sendMail({ from: defaultFrom, to, subject, html });
+      return await buildOAuth2Transporter().sendMail({ from: defaultFrom, to, subject, html });
     } catch (err) {
       console.error("GMAIL OAUTH2 ERROR:", err.message);
     }
   }
-
-  // 2. Resend
-  if (resendApiKey) {
-    return sendViaResend(to, subject, html);
-  }
-
-  // 3. Gmail SMTP App Password
-  if (canUseSmtp) {
-    const transporter = buildSmtpTransporter();
-    return await transporter.sendMail({ from: defaultFrom, to, subject, html });
-  }
-
+  if (resendApiKey) return sendViaResend(to, subject, html);
+  if (canUseSmtp) return await buildSmtpTransporter().sendMail({ from: defaultFrom, to, subject, html });
   throw new Error("Email transport is unavailable");
 };
 
-module.exports = {
-  sendMail,
-  verifyEmailTransporter,
-};
+module.exports = { sendMail, verifyEmailTransporter };

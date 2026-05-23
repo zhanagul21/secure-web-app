@@ -164,11 +164,10 @@ function SharedDocumentSecure({ token }) {
                 AuthGuard Locker
               </p>
               <h1 className="text-2xl font-bold text-slate-900">
-                Ортақ қорғалған құжат
+                Ортақ құжат
               </h1>
               <p className="mt-2 text-slate-600">
-                Құжат уақытша сілтеме арқылы ашылды және қауіпсіз түрде
-                көрсетіледі.
+                Құжат уақытша сілтеме арқылы ашылды. Уақыты біткенше көре аласыз.
               </p>
             </div>
 
@@ -198,13 +197,13 @@ function SharedDocumentSecure({ token }) {
           <div className="rounded-[32px] border border-white/70 bg-white/95 p-4 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
             <div className="mb-4 flex items-center justify-between gap-4">
               <p className="text-sm font-semibold text-emerald-700">
-                Статус: дешифрланған preview
+                Құжат ашылды
               </p>
               <button
                 onClick={downloadShared}
                 className="rounded-2xl bg-slate-800 px-5 py-3 font-semibold text-white"
               >
-                Жүктеу
+                Жүктеп алу
               </button>
             </div>
             {renderPreview()}

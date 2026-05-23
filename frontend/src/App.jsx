@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from "react";
  
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -14,6 +15,9 @@ import DocumentViewer from "./pages/DocumentViewerSecure";
 import SharedDocument from "./pages/SharedDocumentSecure";
 import CryptoModule from "./pages/CryptoModule";
 import API from "./services/api";
+import LanguageSelector from "./components/LanguageSelector";
+import GlobalTranslator from "./i18n/GlobalTranslator";
+import { LanguageProvider } from "./i18n/LanguageContext";
  
 // ✅ ТҮЗЕТІЛДІ: pathname-ді state-ке салу керек,
 // себебі window.location.pathname React render кезінде тұрақсыз
@@ -27,19 +31,20 @@ function getSharedToken() {
  
 function App() {
   const sharedToken = getSharedToken();
- 
-  // Shared link болса — тікелей SharedDocument render ет, басқа логика өтпесін
-  if (sharedToken) {
-    return <SharedDocument token={sharedToken} />;
-  }
- 
-  return <AuthApp />;
+
+  return (
+    <LanguageProvider>
+      <GlobalTranslator />
+      <LanguageSelector />
+      {sharedToken ? <SharedDocument token={sharedToken} /> : <AuthApp />}
+    </LanguageProvider>
+  );
 }
  
 function AuthApp() {
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
   const [page, setPage] = useState(
-    localStorage.getItem("token") ? "dashboard" : "login"
+    localStorage.getItem("token") ? "dashboard" : "landing"
   );
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
  
@@ -47,7 +52,7 @@ function AuthApp() {
     const token = localStorage.getItem("token");
     setLoggedIn(!!token);
     if (!token) {
-      setPage("login");
+      setPage((current) => (current === "register" ? current : "landing"));
     }
   }, []);
  
@@ -78,6 +83,9 @@ function AuthApp() {
   }
  
   if (!loggedIn) {
+    if (page === "landing") {
+      return <Landing setPage={setPage} />;
+    }
     if (page === "register") {
       return <Register onClose={() => setPage("login")} />;
     }

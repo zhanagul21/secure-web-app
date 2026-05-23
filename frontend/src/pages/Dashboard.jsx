@@ -5,6 +5,7 @@ import logo from "../assets/logo.png";
 function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhere }) {
   const [user, setUser] = useState(null);
   const [documents, setDocuments] = useState([]);
+  const [receivedDocuments, setReceivedDocuments] = useState([]);
   const [logs, setLogs] = useState([]);
   const [message, setMessage] = useState("");
 
@@ -41,6 +42,15 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
     }
   };
 
+  const getReceivedDocuments = async () => {
+    try {
+      const res = await API.get("/documents/received");
+      setReceivedDocuments(res.data.documents || []);
+    } catch {
+      setReceivedDocuments([]);
+    }
+  };
+
   const getLogs = async () => {
     try {
       const res = await API.get("/logs/my");
@@ -53,6 +63,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
   useEffect(() => {
     getProfile();
     getDocuments();
+    getReceivedDocuments();
     getLogs();
   }, []);
 
@@ -61,10 +72,11 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
 
   const stats = useMemo(() => ({
     totalDocuments: documents.length,
+    receivedCount: receivedDocuments.length,
     totalViews: logs.filter((log) => log.action_type === "DOCUMENT_VIEW").length,
     totalDownloads: logs.filter((log) => log.action_type === "DOCUMENT_DOWNLOAD").length,
     totalDeletes: logs.filter((log) => log.action_type === "DOCUMENT_DELETE").length,
-  }), [documents, logs]);
+  }), [documents, receivedDocuments, logs]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -86,7 +98,7 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
                 <p className="text-sm font-medium text-sky-700">{getGreeting()}{user?.full_name ? `, ${user.full_name}` : ""}</p>
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">AuthGuard Locker</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700">
-                  Қазіргі аутентификация, 2FA және шифрлау әдістеріне негізделген қорғалған құжат айналымы жүйесі.
+                  Құжаттарыңызды бір жерде сақтап, керек кезде қарап, жүктеп немесе уақытша сілтеме арқылы бөлісе аласыз.
                 </p>
               </div>
             </div>
@@ -120,9 +132,9 @@ function Dashboard({ setLoggedIn, setPage, setSelectedDocumentId, logoutEverywhe
             <p className="mt-3 text-3xl font-black text-slate-800">{stats.totalDownloads}</p>
           </div>
           <div className="rounded-[28px] border border-sky-200 bg-white/95 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
-            <p className="text-sm font-medium text-slate-600">Қауіпсіздік</p>
-            <p className="mt-3 text-2xl font-black text-slate-800">2FA және шифрлау</p>
-            <p className="mt-2 text-sm text-slate-600">Қорғаныс модульдерін осы жерден басқара аласыз</p>
+            <p className="text-sm font-medium text-slate-600">Маған келген құжаттар</p>
+            <p className="mt-3 text-3xl font-black text-slate-800">{stats.receivedCount}</p>
+            <p className="mt-2 text-sm text-slate-600">Басқа қолданушылар жіберген файлдар</p>
           </div>
         </div>
 

@@ -59,6 +59,7 @@ function matchesType(doc, typeFilter) {
 
 function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logoutEverywhere }) {
   const [documents, setDocuments] = useState([]);
+  const [receivedDocuments, setReceivedDocuments] = useState([]);
   const [trashDocuments, setTrashDocuments] = useState([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -67,6 +68,10 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
   const [viewMode, setViewMode] = useState("grid");
   const [selectedId, setSelectedId] = useState(null);
   const [trashMode, setTrashMode] = useState(false);
+  const [encryptionCheck, setEncryptionCheck] = useState("");
+  const [mailboxMode, setMailboxMode] = useState("mine");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [sendNote, setSendNote] = useState("");
 
   const logout = () => {
     if (logoutEverywhere) {
@@ -107,14 +112,25 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     } catch (error) {
       setMessage(
         error.response?.data?.message ||
-          "Корзинаны жүктеу кезінде қате шықты."
+          "Себетті жүктеу кезінде қате шықты."
       );
+    }
+  };
+
+  const getReceivedDocuments = async () => {
+    try {
+      const res = await API.get("/documents/received");
+      setReceivedDocuments(res.data.documents || []);
+      setMessage("");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Келген құжаттарды жүктеу кезінде қате шықты.");
     }
   };
 
   useEffect(() => {
     getDocuments();
     getTrashDocuments();
+    getReceivedDocuments();
   }, []);
 
   const deleteDoc = async (id) => {
@@ -124,7 +140,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
       await API.delete(`/documents/delete/${id}`);
       setSelectedId((selected) => (selected === id ? null : selected));
       await Promise.all([getDocuments(), getTrashDocuments()]);
-      setMessage("Құжат корзинаға жіберілді.");
+      setMessage("Құжат себетке жіберілді.");
     } catch (error) {
       setMessage(
         error.response?.data?.message ||
@@ -184,33 +200,83 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     }
   };
 
+  const checkEncryption = async (id) => {
+    try {
+      const res = await API.get(`/documents/encryption-proof/${id}`);
+      setEncryptionCheck(
+        res.data.encrypted
+          ? "Бұл файл серверде шифрланған күйде сақтаулы. Бұл тек өз құжатыңыз болғандықтан көрсетілді."
+          : "Бұл файл шифрланған күйде сақталмаған сияқты. Қайта жүктеп көріңіз."
+      );
+    } catch (error) {
+      setEncryptionCheck(error.response?.data?.message || "Тексеру кезінде қате шықты.");
+    }
+  };
+
+  const sendDocument = async () => {
+    if (!selectedDocument || selectedDocument.is_received) return;
+    if (!recipientEmail.trim()) {
+      setMessage("Құжат жіберу үшін алушының email-ін жазыңыз.");
+      return;
+    }
+
+    try {
+      const res = await API.post(`/documents/send/${selectedDocument.id}`, {
+        recipientEmail: recipientEmail.trim(),
+        note: sendNote.trim(),
+      });
+      setMessage(res.data.message || "Құжат жіберілді.");
+      setRecipientEmail("");
+      setSendNote("");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Құжат жіберу кезінде қате шықты.");
+    }
+  };
+
   const categories = useMemo(
     () =>
       [
         ...new Set(
-          (trashMode ? trashDocuments : documents)
+          (trashMode ? trashDocuments : mailboxMode === "received" ? receivedDocuments : documents)
             .map((doc) => doc.category)
             .filter(Boolean)
         ),
       ].sort((a, b) => a.localeCompare(b)),
-    [documents, trashDocuments, trashMode]
+    [documents, receivedDocuments, trashDocuments, trashMode, mailboxMode]
   );
 
   const filteredDocuments = useMemo(() => {
     const searchText = search.toLowerCase();
-    const sourceDocuments = trashMode ? trashDocuments : documents;
+    const sourceDocuments = trashMode
+      ? trashDocuments
+      : mailboxMode === "received"
+      ? receivedDocuments.map((doc) => ({ ...doc, is_received: true }))
+      : documents;
 
     return sourceDocuments.filter((doc) => {
       const matchesSearch =
         doc.title?.toLowerCase().includes(searchText) ||
         doc.description?.toLowerCase().includes(searchText) ||
         doc.category?.toLowerCase().includes(searchText) ||
+        doc.folder_name?.toLowerCase().includes(searchText) ||
         doc.original_name?.toLowerCase().includes(searchText);
       const matchesCategory =
         categoryFilter === "all" || doc.category === categoryFilter;
       return matchesSearch && matchesCategory && matchesType(doc, typeFilter);
     });
-  }, [documents, trashDocuments, trashMode, search, categoryFilter, typeFilter]);
+  }, [documents, receivedDocuments, trashDocuments, trashMode, mailboxMode, search, categoryFilter, typeFilter]);
+
+  const folderGroups = useMemo(() => {
+    const groups = new Map();
+    documents.forEach((doc) => {
+      if (!doc.folder_name) return;
+      const current = groups.get(doc.folder_name) || { name: doc.folder_name, count: 0, size: 0 };
+      current.count += 1;
+      current.size += Number(doc.file_size || 0);
+      groups.set(doc.folder_name, current);
+    });
+    return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [documents]);
 
   useEffect(() => {
     if (!filteredDocuments.some((doc) => doc.id === selectedId)) {
@@ -223,6 +289,10 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     filteredDocuments[0] ||
     null;
 
+  useEffect(() => {
+    setEncryptionCheck("");
+  }, [selectedDocument?.id]);
+
   const stats = useMemo(() => {
     const totalSize = documents.reduce(
       (sum, doc) => sum + Number(doc.file_size || 0),
@@ -234,12 +304,14 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
     const imageCount = documents.filter((doc) =>
       doc.mime_type?.startsWith("image/")
     ).length;
+    const folderCount = new Set(documents.map((doc) => doc.folder_name).filter(Boolean)).size;
 
     return {
       total: documents.length,
       totalSize,
       pdfCount,
       imageCount,
+      folderCount,
     };
   }, [documents]);
 
@@ -261,11 +333,12 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                 AuthGuard Locker
               </p>
               <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-                Қорғалған құжаттар хабы
+                {mailboxMode === "received" ? "Маған келген құжаттар" : "Менің құжаттарым"}
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
-                Файлдар серверде шифрланған күйде сақталады. Мұнда оларды
-                іздеп, топтап, қауіпсіз preview және download жасай аласыз.
+                {mailboxMode === "received"
+                  ? "Басқа қолданушылар сізге жіберген құжаттар осы жерде көрінеді."
+                  : "Мұнда сақталған файлдарыңызды көріп, іздеп, жүктей аласыз."}
               </p>
             </div>
 
@@ -284,7 +357,18 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
               </button>
               <button
                 onClick={() => {
+                  setMailboxMode((current) => (current === "mine" ? "received" : "mine"));
+                  setTrashMode(false);
+                  setSelectedId(null);
+                }}
+                className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 font-semibold text-sky-700 transition hover:bg-sky-100"
+              >
+                {mailboxMode === "received" ? "Өз құжаттарым" : `Маған келген (${receivedDocuments.length})`}
+              </button>
+              <button
+                onClick={() => {
                   setTrashMode((current) => !current);
+                  setMailboxMode("mine");
                   setSelectedId(null);
                 }}
                 className={`rounded-2xl px-4 py-2.5 font-semibold transition ${
@@ -293,7 +377,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     : "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
                 }`}
               >
-                Корзина ({trashDocuments.length})
+                Себет ({trashDocuments.length})
               </button>
               <button
                 onClick={logout}
@@ -325,12 +409,12 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
             </p>
           </div>
           <div className="rounded-[28px] border border-sky-200 bg-[linear-gradient(135deg,#eff6ff,#dbeafe)] p-5 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">Шифрлау</p>
-            <p className="mt-3 text-2xl font-black text-slate-900">
-              AES қорғалған
+            <p className="text-sm font-medium text-slate-500">Папкалар</p>
+            <p className="mt-3 text-3xl font-black text-slate-900">
+              {stats.folderCount}
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              Preview және download кезінде ғана дешифрланады
+              Бірге сақталған файл топтары
             </p>
           </div>
         </div>
@@ -377,8 +461,8 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
 
               <div className="flex rounded-2xl border border-slate-200 bg-white p-1">
                 {[
-                  { id: "grid", label: "Grid" },
-                  { id: "list", label: "List" },
+                  { id: "grid", label: "Тор" },
+                  { id: "list", label: "Тізім" },
                 ].map((mode) => (
                   <button
                     key={mode.id}
@@ -403,6 +487,30 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
           </div>
         )}
 
+        {!trashMode && mailboxMode === "mine" && folderGroups.length > 0 && (
+          <div className="mt-6 rounded-[30px] border border-white/70 bg-white/95 p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-xl font-black text-slate-900">Папкалар</h2>
+              <span className="text-sm text-slate-500">Папканы бассаңыз, ішіндегі файлдар шығады</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {folderGroups.map((folder) => (
+                <button
+                  key={folder.name}
+                  type="button"
+                  onClick={() => setSearch(folder.name)}
+                  className="rounded-[22px] border border-sky-100 bg-sky-50 p-4 text-left transition hover:border-sky-300 hover:bg-sky-100"
+                >
+                  <div className="font-bold text-slate-900">{folder.name}</div>
+                  <div className="mt-2 text-sm text-slate-600">
+                    {folder.count} файл · {formatFileSize(folder.size)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
           <div>
             {filteredDocuments.length === 0 ? (
@@ -411,8 +519,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                   Құжат табылмады
                 </h2>
                 <p className="mt-3 text-slate-600">
-                  Фильтрлерді өзгертіп көріңіз немесе жаңа қорғалған құжат
-                  жүктеңіз.
+                  Іздеу шартын өзгертіп көріңіз немесе жаңа файл жүктеңіз.
                 </p>
               </div>
             ) : viewMode === "grid" ? (
@@ -447,6 +554,11 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     <p className="mt-2 text-sm font-medium text-sky-700">
                       {doc.category || "Категория жоқ"}
                     </p>
+                    {doc.folder_name && (
+                      <p className="mt-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                        Папка: {doc.folder_name}
+                      </p>
+                    )}
                     <p className="mt-3 min-h-[48px] text-sm leading-6 text-slate-600">
                       {doc.description || "Сипаттама берілмеген."}
                     </p>
@@ -481,8 +593,13 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                           {doc.title}
                         </div>
                         <div className="mt-1 break-all text-sm text-slate-500">
-                          {doc.original_name || "Файл жоқ"}
+                        {doc.original_name || "Файл жоқ"}
+                      </div>
+                      {doc.folder_name && (
+                        <div className="mt-1 text-xs font-semibold text-sky-700">
+                          Папка: {doc.folder_name}
                         </div>
+                      )}
                       </div>
                       <div className="text-sm text-slate-700">
                         {doc.category || "-"}
@@ -522,10 +639,26 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                 <p className="mt-2 text-sm font-semibold uppercase tracking-[0.14em] text-sky-700">
                   {selectedDocument.category || "Категория жоқ"}
                 </p>
+                {selectedDocument.folder_name && (
+                  <p className="mt-3 inline-flex rounded-full bg-sky-100 px-3 py-1 text-sm font-semibold text-sky-700">
+                    Папка: {selectedDocument.folder_name}
+                  </p>
+                )}
                 <p className="mt-4 text-sm leading-6 text-slate-600">
                   {selectedDocument.description ||
                     "Бұл құжатқа сипаттама толтырылмаған."}
                 </p>
+                {selectedDocument.is_received && (
+                  <div className="mt-4 rounded-[22px] border border-sky-100 bg-sky-50 p-4 text-sm text-slate-700">
+                    <div className="font-semibold text-sky-800">Сізге жіберілген құжат</div>
+                    <div className="mt-2">
+                      Жіберген: {selectedDocument.sender_name || selectedDocument.sender_email || "-"}
+                    </div>
+                    {selectedDocument.note && (
+                      <div className="mt-2">Хабарлама: {selectedDocument.note}</div>
+                    )}
+                  </div>
+                )}
 
                 <div className="mt-6 space-y-3 rounded-[26px] border border-slate-100 bg-slate-50 p-5">
                   <div className="flex items-center justify-between gap-4 text-sm">
@@ -554,13 +687,47 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
 
                 <div className="mt-6 rounded-[26px] border border-emerald-200 bg-emerald-50 p-5">
                   <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-800">
-                    Қауіпсіздік статусы
+                    Сақталуын тексеру
                   </p>
                   <p className="mt-3 text-sm leading-6 text-emerald-900">
-                    Бұл құжат серверде шифрланған күйде сақталады. Ашу және
-                    жүктеу кезінде ғана уақытша дешифрланады.
+                    Бұл тексеру өзіңіз жүктеген немесе сізге жіберілген құжатқа ғана ашылады.
                   </p>
+                  {encryptionCheck && (
+                    <div className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-100">
+                      {encryptionCheck}
+                    </div>
+                  )}
                 </div>
+
+                {!selectedDocument.is_received && !trashMode && (
+                  <div className="mt-6 rounded-[26px] border border-sky-100 bg-sky-50 p-5">
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-sky-800">
+                      Басқа қолданушыға жіберу
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Құжатты тек жүйеде тіркелген email-ге жібере аласыз. Алушы оны өз аккаунтынан ашады.
+                    </p>
+                    <input
+                      type="email"
+                      value={recipientEmail}
+                      onChange={(event) => setRecipientEmail(event.target.value)}
+                      placeholder="Алушының email-і"
+                      className="mt-4 w-full rounded-2xl border border-sky-100 bg-white px-4 py-3 text-slate-900 outline-none"
+                    />
+                    <textarea
+                      value={sendNote}
+                      onChange={(event) => setSendNote(event.target.value)}
+                      placeholder="Қысқа хабарлама (міндетті емес)"
+                      className="mt-3 min-h-[90px] w-full rounded-2xl border border-sky-100 bg-white px-4 py-3 text-slate-900 outline-none"
+                    />
+                    <button
+                      onClick={sendDocument}
+                      className="mt-3 rounded-2xl bg-sky-700 px-5 py-3 font-semibold text-white transition hover:bg-sky-800"
+                    >
+                      Құжатты жіберу
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-6 grid gap-3">
                   {trashMode && (
@@ -586,7 +753,7 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     }}
                     className={`${trashMode ? "hidden " : ""}rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800`}
                   >
-                    Қауіпсіз preview ашу
+                    Ашу
                   </button>
                   <button
                     onClick={() =>
@@ -597,11 +764,17 @@ function MyDocumentsSecure({ setPage, setLoggedIn, setSelectedDocumentId, logout
                     }
                     className={`${trashMode ? "hidden " : ""}rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50`}
                   >
-                    Дешифрлап жүктеу
+                    Жүктеп алу
+                  </button>
+                  <button
+                    onClick={() => checkEncryption(selectedDocument.id)}
+                    className={`${trashMode ? "hidden " : ""}rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 font-semibold text-emerald-700 transition hover:bg-emerald-100`}
+                  >
+                    Сақталуын тексеру
                   </button>
                   <button
                     onClick={() => deleteDoc(selectedDocument.id)}
-                    className={`${trashMode ? "hidden " : ""}rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 font-semibold text-rose-700 transition hover:bg-rose-100`}
+                    className={`${trashMode || selectedDocument.is_received ? "hidden " : ""}rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 font-semibold text-rose-700 transition hover:bg-rose-100`}
                   >
                     Құжатты өшіру
                   </button>

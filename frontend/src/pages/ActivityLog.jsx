@@ -98,10 +98,10 @@ function ActivityLog({ setPage, setLoggedIn, logoutEverywhere }) {
         {message && <div className="mt-6 rounded-2xl border border-rose-100 bg-white p-4 text-slate-700 shadow-sm">{message}</div>}
 
         <div className="mt-6 rounded-[24px] border border-sky-100 bg-white/95 p-5 text-slate-700 shadow-sm">
-          <div className="font-bold text-slate-900">IP audit қайда көрінеді?</div>
+          <div className="font-bold text-slate-900">IP мекенжайы қай жерде көрсетіледі?</div>
           <p className="mt-1">
-            Кіру, қате пароль, 2FA және пароль жаңарту логтарында IP мен браузер бөлек көрсетіледі.
-            Іздеу жолына IP адресін жазсаңыз, сол әрекеттер бірден табылады.
+            Әр әрекеттің астында қолданушы кірген IP мекенжайы және браузері көрсетіледі.
+            Белгілі бір IP бойынша табу үшін оны іздеу жолына жазыңыз.
           </p>
         </div>
 

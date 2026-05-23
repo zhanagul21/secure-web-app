@@ -100,15 +100,6 @@ async function sendMailWithFallback({ to, subject, html, code, successMessage })
   }
 }
 
-function isEmailSandboxError(error) {
-  const text = `${error?.code || ""} ${error?.message || ""}`.toLowerCase();
-  return (
-    text.includes("validation_error") ||
-    text.includes("testing emails") ||
-    text.includes("verify a domain")
-  );
-}
-
 function signToken(user) {
   return jwt.sign(
     {
@@ -265,16 +256,6 @@ const sendCode = async (req, res) => {
         delivery: delivery.ok ? "email" : "fallback",
       });
     } catch (mailError) {
-      if (isEmailSandboxError(mailError)) {
-        return res.json({
-          message:
-            "Email сервисі тест режимінде. Демо үшін растау коды экранда көрсетілді.",
-          email: normalizedEmail,
-          delivery: "screen",
-          debugCode: code,
-        });
-      }
-
       throw mailError;
     }
   } catch (error) {
@@ -866,15 +847,6 @@ const forgotPassword = async (req, res) => {
         delivery: delivery.ok ? "email" : "fallback",
       });
     } catch (mailError) {
-      if (isEmailSandboxError(mailError)) {
-        return res.json({
-          message:
-            "Email сервисі тест режимінде. Демо үшін қалпына келтіру коды экранда көрсетілді.",
-          delivery: "screen",
-          debugCode: code,
-        });
-      }
-
       throw mailError;
     }
   } catch (error) {

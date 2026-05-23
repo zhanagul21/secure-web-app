@@ -48,6 +48,9 @@ PGSSLMODE=require
 JWT_SECRET=...
 GMAIL_USER=...
 GMAIL_APP_PASSWORD=...
+GMAIL_API_CLIENT_ID=...
+GMAIL_API_CLIENT_SECRET=...
+GMAIL_API_REFRESH_TOKEN=...
 ENCRYPTION_KEY=...
 FRONTEND_URL=http://localhost:5173,https://secure-web-app-teal.vercel.app
 UPLOADS_DIR=./uploads
@@ -91,8 +94,13 @@ If using Render:
 JWT_SECRET
 GMAIL_USER
 GMAIL_APP_PASSWORD
+GMAIL_API_CLIENT_ID
+GMAIL_API_CLIENT_SECRET
+GMAIL_API_REFRESH_TOKEN
 ENCRYPTION_KEY
 ```
+
+Gmail App Password uses SMTP. If your host blocks SMTP ports, set the three `GMAIL_API_*` variables too so the backend can send verification email through the Gmail HTTPS API.
 
 9. Wait until `/api/health` returns JSON with `"ok": true`.
 10. After deployment, copy the backend URL, for example:
