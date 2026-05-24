@@ -4,7 +4,6 @@ import { useLanguage } from "../i18n/LanguageContext";
 const COPY = {
   kk: {
     eyebrow: "Қорғалған құжат платформасы",
-    title: "Қорғалған құжат айналым жүйесі",
     subtitle:
       "AuthGuard Locker файлдарды шифрлап сақтауға, қауіпсіз бөлісуге және әр әрекетті бақылауға көмектеседі.",
     description:
@@ -12,7 +11,7 @@ const COPY = {
     signIn: "Кіру",
     register: "Тіркелу",
     preview: "Жүйе көрінісі",
-    documentName: "Дипломдық жоба",
+    documentName: "Қорғалған құжат",
     fileName: "verified-document.docx",
     secureStatus: "Қорғалған",
     recentAction: "Соңғы әрекет",
@@ -55,7 +54,6 @@ const COPY = {
   },
   ru: {
     eyebrow: "Платформа защищенных документов",
-    title: "Система защищенного документооборота",
     subtitle:
       "AuthGuard Locker помогает шифровать файлы, безопасно делиться доступом и отслеживать каждое действие.",
     description:
@@ -63,7 +61,7 @@ const COPY = {
     signIn: "Войти",
     register: "Регистрация",
     preview: "Вид системы",
-    documentName: "Дипломный проект",
+    documentName: "Защищенный документ",
     fileName: "verified-document.docx",
     secureStatus: "Защищено",
     recentAction: "Последнее действие",
@@ -106,7 +104,6 @@ const COPY = {
   },
   en: {
     eyebrow: "Secure document platform",
-    title: "Protected document management system",
     subtitle:
       "AuthGuard Locker helps encrypt files, share access safely, and track every important action.",
     description:
@@ -114,7 +111,7 @@ const COPY = {
     signIn: "Sign in",
     register: "Register",
     preview: "System preview",
-    documentName: "Diploma project",
+    documentName: "Protected document",
     fileName: "verified-document.docx",
     secureStatus: "Protected",
     recentAction: "Recent activity",
@@ -164,19 +161,19 @@ function Landing({ setPage }) {
   return (
     <main
       data-i18n-ignore
-      className="min-h-screen bg-[radial-gradient(circle_at_12%_0%,#c7d2fe_0,#e0f2fe_26%,#f8fbff_52%,#ffffff_100%)] px-4 pb-28 pt-6 text-slate-900"
+      className="min-h-screen bg-[radial-gradient(circle_at_12%_0%,#c7d2fe_0,#e0f2fe_26%,#f8fbff_52%,#ffffff_100%)] px-3 pb-20 pt-4 text-slate-900"
     >
-      <section className="mx-auto max-w-7xl overflow-hidden rounded-[32px] border border-white/80 bg-white/95 shadow-[0_28px_100px_rgba(15,23,42,0.16)]">
+      <section className="mx-auto max-w-[1120px] overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_22px_70px_rgba(15,23,42,0.14)]">
         <div className="h-1.5 bg-[linear-gradient(90deg,#0f172a,#0284c7,#10b981,#f59e0b,#f43f5e)]" />
 
-        <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:p-10 xl:p-12">
+        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[0.86fr_1.14fr] lg:p-6 xl:p-7">
           <div className="flex flex-col justify-center">
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[24px] bg-sky-50 ring-1 ring-sky-200">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-sky-50 ring-1 ring-sky-200">
                 <img
                   src={logo}
                   alt="AuthGuard Locker"
-                  className="h-12 w-auto object-contain"
+                  className="h-10 w-auto object-contain"
                 />
               </div>
               <div>
@@ -189,38 +186,35 @@ function Landing({ setPage }) {
               </div>
             </div>
 
-            <h1 className="mt-8 max-w-2xl text-4xl font-black leading-[1.03] text-slate-950 sm:text-5xl xl:text-6xl">
-              {copy.title}
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg font-semibold leading-8 text-slate-700 sm:text-xl">
+            <p className="mt-6 max-w-2xl text-2xl font-black leading-[1.14] text-slate-950 sm:text-3xl xl:text-[34px]">
               {copy.subtitle}
             </p>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+            <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-slate-600">
               {copy.description}
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() => setPage("login")}
-                className="rounded-2xl bg-slate-950 px-7 py-3.5 font-bold text-white shadow-[0_14px_30px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:bg-slate-800"
+                className="rounded-2xl bg-slate-950 px-7 py-2.5 font-bold text-white shadow-[0_14px_30px_rgba(15,23,42,0.22)] transition hover:-translate-y-0.5 hover:bg-slate-800"
               >
                 {copy.signIn}
               </button>
               <button
                 type="button"
                 onClick={() => setPage("register")}
-                className="rounded-2xl border border-sky-200 bg-sky-50 px-7 py-3.5 font-bold text-sky-800 transition hover:-translate-y-0.5 hover:bg-sky-100"
+                className="rounded-2xl border border-sky-200 bg-sky-50 px-7 py-2.5 font-bold text-sky-800 transition hover:-translate-y-0.5 hover:bg-sky-100"
               >
                 {copy.register}
               </button>
             </div>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {copy.stats.map((item) => (
                 <div
                   key={item.value}
-                  className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4"
+                  className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2.5"
                 >
                   <p className="text-lg font-black text-slate-950">
                     {item.value}
@@ -234,8 +228,8 @@ function Landing({ setPage }) {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1fr_0.76fr]">
-            <div className="rounded-[28px] border border-slate-200 bg-slate-950 p-4 text-white shadow-[0_22px_70px_rgba(15,23,42,0.24)] sm:p-5">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <div className="rounded-[26px] border border-slate-200 bg-slate-950 p-3 text-white shadow-[0_20px_60px_rgba(15,23,42,0.22)]">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-200">
                     {copy.preview}
@@ -249,13 +243,13 @@ function Landing({ setPage }) {
                 </div>
               </div>
 
-              <div className="mt-5 rounded-[24px] bg-white p-4 text-slate-900">
+              <div className="mt-4 rounded-[22px] bg-white p-3 text-slate-900">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700">
                       DOCX
                     </p>
-                    <h2 className="mt-2 text-xl font-black">
+                    <h2 className="mt-1.5 text-lg font-black">
                       {copy.documentName}
                     </h2>
                     <p className="mt-1 text-sm text-slate-500">
@@ -267,14 +261,14 @@ function Landing({ setPage }) {
                   </span>
                 </div>
 
-                <div className="mt-5 space-y-3">
+                <div className="mt-3 space-y-2">
                   {copy.steps.map((item, index) => (
                     <div
                       key={item}
-                      className="flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-3"
+                      className="flex items-center gap-3 rounded-2xl bg-slate-50 px-3 py-2"
                     >
                       <span
-                        className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-black text-white ${
+                        className={`flex h-7 w-7 items-center justify-center rounded-xl text-xs font-black text-white ${
                           index === 0
                             ? "bg-sky-600"
                             : index === 1
@@ -286,7 +280,7 @@ function Landing({ setPage }) {
                       >
                         {index + 1}
                       </span>
-                      <span className="text-sm font-bold text-slate-700">
+                      <span className="text-xs font-bold text-slate-700 sm:text-sm">
                         {item}
                       </span>
                     </div>
@@ -294,7 +288,7 @@ function Landing({ setPage }) {
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[22px] border border-white/10 bg-white/8 p-4">
+              <div className="mt-3 rounded-[20px] border border-white/10 bg-white/8 p-3">
                 <p className="text-sm font-bold text-white">
                   {copy.recentAction}
                 </p>
@@ -304,8 +298,8 @@ function Landing({ setPage }) {
               </div>
             </div>
 
-            <aside className="grid gap-4">
-              <div className="rounded-[24px] border border-emerald-100 bg-emerald-50 p-5">
+            <aside className="grid auto-rows-min gap-3">
+              <div className="rounded-[24px] border border-emerald-100 bg-emerald-50 p-4">
                 <p className="text-sm font-black uppercase tracking-[0.16em] text-emerald-700">
                   {copy.workflowTitle}
                 </p>
@@ -313,7 +307,7 @@ function Landing({ setPage }) {
                   {copy.workflowSubtitle}
                 </p>
               </div>
-              <div className="rounded-[24px] border border-amber-100 bg-amber-50 p-5">
+              <div className="rounded-[24px] border border-amber-100 bg-amber-50 p-4">
                 <p className="text-sm font-black uppercase tracking-[0.16em] text-amber-700">
                   Files
                 </p>
@@ -328,7 +322,7 @@ function Landing({ setPage }) {
                   ))}
                 </div>
               </div>
-              <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-5">
+              <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-4">
                 <p className="text-sm font-black uppercase tracking-[0.16em] text-sky-700">
                   {copy.whyTitle}
                 </p>
