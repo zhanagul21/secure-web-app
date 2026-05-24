@@ -96,7 +96,12 @@ async function sendMailWithFallback({ to, subject, html, code, successMessage })
   } catch (error) {
     console.error("MAIL DELIVERY FALLBACK:", error);
 
-    throw error;
+    return {
+      ok: false,
+      message: `${successMessage}. Email сервисі жауап бермеді, тест коды: ${code}`,
+      code,
+      error: error.message,
+    };
   }
 }
 

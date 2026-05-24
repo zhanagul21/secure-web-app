@@ -22,6 +22,10 @@ const buildOAuth2Transporter = () =>
       clientSecret: gmailClientSecret,
       refreshToken: gmailRefreshToken,
     },
+    family: 4,
+    connectionTimeout: 6000,
+    greetingTimeout: 6000,
+    socketTimeout: 10000,
   });
 
 const buildSmtpTransporter = () =>
@@ -31,9 +35,9 @@ const buildSmtpTransporter = () =>
     secure: false,
     auth: { user: smtpUser, pass: smtpPass },
     family: 4,
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 30000,
+    connectionTimeout: 6000,
+    greetingTimeout: 6000,
+    socketTimeout: 10000,
   });
 
 async function sendViaResend(to, subject, html) {
