@@ -11,7 +11,7 @@ const COPY = {
     signIn: "Кіру",
     register: "Тіркелу",
     preview: "Жүйе көрінісі",
-    documentName: "Қорғалған құжат",
+    documentName: "Құжат үлгісі",
     fileName: "verified-document.docx",
     secureStatus: "Қорғалған",
     recentAction: "Соңғы әрекет",
@@ -19,9 +19,6 @@ const COPY = {
     workflowTitle: "Құжат жолы",
     workflowSubtitle: "Жүктеу, тексеру және бөлісу бір экраннан басқарылады.",
     whyTitle: "Неге ыңғайлы?",
-    footerTitle: "Жүйеге кіріп, құжаттарыңызды қорғауды бастаңыз",
-    footerText:
-      "Аккаунт ашқаннан кейін жеке құжаттар, журнал, 2FA және ортақ сілтемелер қолжетімді болады.",
     stats: [
       { value: "AES-256", label: "Файл шифрлауы" },
       { value: "2FA", label: "Қосымша кіру қорғанысы" },
@@ -61,7 +58,7 @@ const COPY = {
     signIn: "Войти",
     register: "Регистрация",
     preview: "Вид системы",
-    documentName: "Защищенный документ",
+    documentName: "Пример документа",
     fileName: "verified-document.docx",
     secureStatus: "Защищено",
     recentAction: "Последнее действие",
@@ -69,9 +66,6 @@ const COPY = {
     workflowTitle: "Путь документа",
     workflowSubtitle: "Загрузка, проверка и обмен управляются с одного экрана.",
     whyTitle: "Почему удобно?",
-    footerTitle: "Войдите и начните защищать документы",
-    footerText:
-      "После входа доступны личные документы, журнал, 2FA и общие ссылки.",
     stats: [
       { value: "AES-256", label: "Шифрование файлов" },
       { value: "2FA", label: "Дополнительная защита входа" },
@@ -111,7 +105,7 @@ const COPY = {
     signIn: "Sign in",
     register: "Register",
     preview: "System preview",
-    documentName: "Protected document",
+    documentName: "Document sample",
     fileName: "verified-document.docx",
     secureStatus: "Protected",
     recentAction: "Recent activity",
@@ -119,9 +113,6 @@ const COPY = {
     workflowTitle: "Document path",
     workflowSubtitle: "Upload, verification, and sharing are managed from one screen.",
     whyTitle: "Why it helps",
-    footerTitle: "Sign in and start protecting your documents",
-    footerText:
-      "After signing in, you can use private documents, logs, 2FA, and shared links.",
     stats: [
       { value: "AES-256", label: "File encryption" },
       { value: "2FA", label: "Extra sign-in protection" },
@@ -161,12 +152,12 @@ function Landing({ setPage }) {
   return (
     <main
       data-i18n-ignore
-      className="min-h-screen bg-[radial-gradient(circle_at_12%_0%,#c7d2fe_0,#e0f2fe_26%,#f8fbff_52%,#ffffff_100%)] px-3 pb-20 pt-4 text-slate-900"
+      className="min-h-screen bg-[radial-gradient(circle_at_12%_0%,#c7d2fe_0,#e0f2fe_26%,#f8fbff_52%,#ffffff_100%)] px-3 pb-2 pt-2 text-slate-900"
     >
-      <section className="mx-auto max-w-[1120px] overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_22px_70px_rgba(15,23,42,0.14)]">
+      <section className="mx-auto max-w-[1080px] overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_22px_70px_rgba(15,23,42,0.14)]">
         <div className="h-1.5 bg-[linear-gradient(90deg,#0f172a,#0284c7,#10b981,#f59e0b,#f43f5e)]" />
 
-        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[0.86fr_1.14fr] lg:p-6 xl:p-7">
+        <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[0.88fr_1.12fr] lg:p-4">
           <div className="flex flex-col justify-center">
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-sky-50 ring-1 ring-sky-200">
@@ -186,14 +177,14 @@ function Landing({ setPage }) {
               </div>
             </div>
 
-            <p className="mt-6 max-w-2xl text-2xl font-black leading-[1.14] text-slate-950 sm:text-3xl xl:text-[34px]">
+            <p className="mt-4 max-w-2xl text-2xl font-black leading-[1.12] text-slate-950 sm:text-3xl xl:text-[31px]">
               {copy.subtitle}
             </p>
-            <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-slate-600">
+            <p className="mt-3 max-w-2xl text-[15px] font-medium leading-6 text-slate-600">
               {copy.description}
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-wrap gap-2.5">
               <button
                 type="button"
                 onClick={() => setPage("login")}
@@ -210,16 +201,16 @@ function Landing({ setPage }) {
               </button>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
               {copy.stats.map((item) => (
                 <div
                   key={item.value}
-                  className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2.5"
+                  className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2"
                 >
                   <p className="text-lg font-black text-slate-950">
                     {item.value}
                   </p>
-                  <p className="mt-1 text-sm font-semibold leading-5 text-slate-600">
+                  <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">
                     {item.label}
                   </p>
                 </div>
@@ -243,7 +234,7 @@ function Landing({ setPage }) {
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[22px] bg-white p-3 text-slate-900">
+              <div className="mt-3 rounded-[22px] bg-white p-3 text-slate-900">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700">
@@ -261,7 +252,7 @@ function Landing({ setPage }) {
                   </span>
                 </div>
 
-                <div className="mt-3 space-y-2">
+                <div className="mt-2.5 space-y-1.5">
                   {copy.steps.map((item, index) => (
                     <div
                       key={item}
@@ -288,30 +279,30 @@ function Landing({ setPage }) {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-[20px] border border-white/10 bg-white/8 p-3">
+              <div className="mt-2.5 rounded-[20px] border border-white/10 bg-white/8 p-3">
                 <p className="text-sm font-bold text-white">
                   {copy.recentAction}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
+                <p className="mt-1.5 text-sm leading-6 text-slate-300">
                   {copy.auditText}
                 </p>
               </div>
             </div>
 
             <aside className="grid auto-rows-min gap-3">
-              <div className="rounded-[24px] border border-emerald-100 bg-emerald-50 p-4">
+              <div className="rounded-[22px] border border-emerald-100 bg-emerald-50 p-3.5">
                 <p className="text-sm font-black uppercase tracking-[0.16em] text-emerald-700">
                   {copy.workflowTitle}
                 </p>
-                <p className="mt-3 text-sm font-semibold leading-6 text-emerald-950">
+                <p className="mt-2 text-sm font-semibold leading-6 text-emerald-950">
                   {copy.workflowSubtitle}
                 </p>
               </div>
-              <div className="rounded-[24px] border border-amber-100 bg-amber-50 p-4">
+              <div className="rounded-[22px] border border-amber-100 bg-amber-50 p-3.5">
                 <p className="text-sm font-black uppercase tracking-[0.16em] text-amber-700">
                   Files
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {copy.quickList.map((item) => (
                     <span
                       key={item}
@@ -322,11 +313,11 @@ function Landing({ setPage }) {
                   ))}
                 </div>
               </div>
-              <div className="rounded-[24px] border border-sky-100 bg-sky-50 p-4">
+              <div className="rounded-[22px] border border-sky-100 bg-sky-50 p-3.5">
                 <p className="text-sm font-black uppercase tracking-[0.16em] text-sky-700">
                   {copy.whyTitle}
                 </p>
-                <div className="mt-4 h-2 rounded-full bg-white">
+                <div className="mt-3 h-2 rounded-full bg-white">
                   <div className="h-full w-4/5 rounded-full bg-[linear-gradient(90deg,#0284c7,#10b981,#f59e0b)]" />
                 </div>
                 <p className="mt-3 text-xs font-bold text-slate-600">
@@ -337,11 +328,11 @@ function Landing({ setPage }) {
           </div>
         </div>
 
-        <div className="grid gap-3 border-y border-slate-100 bg-slate-50/80 p-6 sm:grid-cols-3 sm:p-8">
+        <div className="grid gap-3 border-t border-slate-100 bg-slate-50/80 p-3 sm:grid-cols-3 sm:p-4">
           {copy.features.map((item) => (
             <article
               key={item.label}
-              className="rounded-[22px] border border-white bg-white p-5 shadow-sm"
+              className="rounded-[18px] border border-white bg-white p-3.5 shadow-sm"
             >
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-base font-black text-slate-900">
@@ -351,30 +342,13 @@ function Landing({ setPage }) {
                   {item.value}
                 </span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <p className="mt-2 text-sm leading-6 text-slate-600">
                 {item.text}
               </p>
             </article>
           ))}
         </div>
 
-        <div className="flex flex-col gap-5 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-2xl font-black text-slate-950">
-              {copy.footerTitle}
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              {copy.footerText}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setPage("login")}
-            className="w-full rounded-2xl bg-sky-600 px-6 py-3.5 font-bold text-white shadow-[0_14px_30px_rgba(2,132,199,0.22)] transition hover:-translate-y-0.5 hover:bg-sky-700 sm:w-auto"
-          >
-            {copy.signIn}
-          </button>
-        </div>
       </section>
     </main>
   );
