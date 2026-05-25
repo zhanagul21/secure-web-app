@@ -357,9 +357,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
 
   const renderPreview = () => {
     const wordPreview = isWordDocument(documentData?.mime_type);
-    const pdfFragment = wordPreview
-      ? "#zoom=66&pagemode=none&view=FitH"
-      : "#zoom=page-fit&pagemode=none&view=Fit";
+    const pdfFragment = "#zoom=page-fit&pagemode=none&view=Fit";
 
     if (previewUrl) {
       if (previewMimeType.includes("application/pdf")) {
@@ -367,7 +365,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           <iframe
             src={`${previewUrl}${pdfFragment}`}
             title="PDF файлын қарау"
-            className="h-[90vh] w-full rounded-[24px] border border-sky-100 bg-white"
+            className={wordPreview ? "mx-auto aspect-[210/297] w-full max-w-[680px] rounded-[18px] border border-sky-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]" : "h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"}
           />
         );
       }
@@ -388,17 +386,17 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         <iframe
           title="Құжатты қарау"
           srcDoc={htmlContent}
-          className="h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"
+          className="mx-auto aspect-[210/297] w-full max-w-[680px] rounded-[18px] border border-sky-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
         />
       );
     }
 
     if (previewType === "docx") {
       return (
-        <div className="h-[82vh] w-full overflow-auto rounded-[24px] border border-sky-100 bg-slate-100 p-4">
+        <div className="mx-auto aspect-[210/297] w-full max-w-[680px] overflow-auto rounded-[18px] border border-sky-100 bg-slate-100 p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
           <div
             ref={docxPreviewRef}
-            className="[&_.docx-wrapper]:!bg-slate-100 [&_.docx-wrapper]:!p-0 [&_.docx]:!mx-auto [&_.docx]:shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
+            className="[&_.docx-wrapper]:!bg-slate-100 [&_.docx-wrapper]:!p-0 [&_.docx]:!mx-auto [&_.docx]:!max-w-full [&_.docx]:shadow-none"
           />
         </div>
       );
@@ -458,7 +456,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0,#f8fafc_38%,#dbeafe_100%)]">
       <div
         className={`mx-auto px-4 py-6 ${
-          wordDocument ? "max-w-[1800px]" : "max-w-7xl"
+          wordDocument ? "max-w-[1180px]" : "max-w-7xl"
         }`}
       >
         <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.12)]">
