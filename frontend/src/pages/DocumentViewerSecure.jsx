@@ -365,7 +365,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           <iframe
             src={`${previewUrl}${pdfFragment}`}
             title="PDF файлын қарау"
-            className={wordPreview ? "mx-auto aspect-[210/297] w-full max-w-[680px] rounded-[18px] border border-sky-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]" : "h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"}
+            className={wordPreview ? "mx-auto aspect-[210/297] w-full max-w-[560px] rounded-[18px] border border-sky-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]" : "h-[82vh] w-full rounded-[24px] border border-sky-100 bg-white"}
           />
         );
       }
@@ -386,14 +386,14 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         <iframe
           title="Құжатты қарау"
           srcDoc={htmlContent}
-          className="mx-auto aspect-[210/297] w-full max-w-[680px] rounded-[18px] border border-sky-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
+          className="mx-auto aspect-[210/297] w-full max-w-[560px] rounded-[18px] border border-sky-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)]"
         />
       );
     }
 
     if (previewType === "docx") {
       return (
-        <div className="mx-auto aspect-[210/297] w-full max-w-[680px] overflow-auto rounded-[18px] border border-sky-100 bg-slate-100 p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+        <div className="mx-auto aspect-[210/297] w-full max-w-[560px] overflow-auto rounded-[18px] border border-sky-100 bg-slate-100 p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
           <div
             ref={docxPreviewRef}
             className="[&_.docx-wrapper]:!bg-slate-100 [&_.docx-wrapper]:!p-0 [&_.docx]:!mx-auto [&_.docx]:!max-w-full [&_.docx]:shadow-none"
@@ -456,19 +456,19 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0,#f8fafc_38%,#dbeafe_100%)]">
       <div
         className={`mx-auto px-4 py-6 ${
-          wordDocument ? "max-w-[1180px]" : "max-w-7xl"
+          wordDocument ? "max-w-[1080px]" : "max-w-7xl"
         }`}
       >
-        <div className="rounded-[32px] border border-white/70 bg-white/95 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.12)]">
+        <div className={`rounded-[28px] border border-white/70 bg-white/95 shadow-[0_20px_70px_rgba(15,23,42,0.12)] ${wordDocument ? "p-4" : "p-5"}`}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
                 AuthGuard Locker
               </p>
-              <h1 className="mt-1 text-2xl font-black text-slate-900">
+              <h1 className={`${wordDocument ? "mt-0 text-xl" : "mt-1 text-2xl"} font-black text-slate-900`}>
                 Құжатты қарау
               </h1>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className={`${wordDocument ? "mt-1" : "mt-2"} text-sm text-slate-600`}>
                 Құжат серверден уақытша ашылып көрсетіледі.
               </p>
             </div>
@@ -508,22 +508,22 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
         <div
           className={
             wordDocument
-              ? "mt-6 flex flex-col gap-6"
+              ? "mt-4 grid gap-5 xl:grid-cols-[minmax(0,620px)_340px] xl:items-start xl:justify-center"
               : "mt-6 grid gap-6 xl:grid-cols-[0.7fr_1.3fr]"
           }
         >
           <div
             className={
-              wordDocument ? "order-2 grid gap-6 xl:grid-cols-3" : "space-y-6"
+              wordDocument ? "order-2 grid gap-4 xl:order-2 xl:grid-cols-1" : "space-y-6"
             }
           >
-            <div className="rounded-[30px] border border-white/70 bg-white/95 p-6 shadow-sm">
-              <h2 className="text-xl font-black text-slate-900">
+            <div className={`rounded-[26px] border border-white/70 bg-white/95 shadow-sm ${wordDocument ? "p-4" : "p-6"}`}>
+              <h2 className={`${wordDocument ? "text-lg" : "text-xl"} font-black text-slate-900`}>
                 Құжат туралы ақпарат
               </h2>
               {documentData ? (
-                <div className="mt-5 space-y-3">
-                  <div className="rounded-2xl bg-slate-50 p-4">
+                <div className={`${wordDocument ? "mt-4 space-y-2" : "mt-5 space-y-3"}`}>
+                  <div className={`rounded-2xl bg-slate-50 ${wordDocument ? "p-3" : "p-4"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                       Атауы
                     </div>
@@ -531,7 +531,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                       {documentData.title}
                     </div>
                   </div>
-                  <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className={`rounded-2xl bg-slate-50 ${wordDocument ? "p-3" : "p-4"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                       Категория
                     </div>
@@ -539,7 +539,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                       {documentData.category || "-"}
                     </div>
                   </div>
-                  <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className={`rounded-2xl bg-slate-50 ${wordDocument ? "p-3" : "p-4"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                       Файл
                     </div>
@@ -548,7 +548,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                     </div>
                   </div>
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
-                    <div className="rounded-2xl bg-slate-50 p-4">
+                    <div className={`rounded-2xl bg-slate-50 ${wordDocument ? "p-3" : "p-4"}`}>
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                         Файл түрі
                       </div>
@@ -556,7 +556,7 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
                         {documentData.mime_type || "-"}
                       </div>
                     </div>
-                    <div className="rounded-2xl bg-slate-50 p-4">
+                    <div className={`rounded-2xl bg-slate-50 ${wordDocument ? "p-3" : "p-4"}`}>
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                         Көлем
                       </div>
@@ -573,8 +573,8 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
               )}
             </div>
 
-            <div className="rounded-[30px] border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
-              <h2 className="text-xl font-black text-emerald-900">
+            <div className={`rounded-[26px] border border-emerald-200 bg-emerald-50 shadow-sm ${wordDocument ? "p-4" : "p-6"}`}>
+              <h2 className={`${wordDocument ? "text-lg" : "text-xl"} font-black text-emerald-900`}>
                 Сақталу күйі
               </h2>
               <p className="mt-3 text-sm leading-6 text-emerald-900">
@@ -603,8 +603,8 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
           </div>
 
           <div
-            className={`rounded-[32px] border border-white/70 bg-white/95 shadow-[0_20px_70px_rgba(15,23,42,0.08)] ${
-              wordDocument ? "order-1 p-4" : "p-5"
+            className={`rounded-[28px] border border-white/70 bg-white/95 shadow-[0_20px_70px_rgba(15,23,42,0.08)] ${
+              wordDocument ? "order-1 p-3 xl:order-1" : "p-5"
             }`}
           >
             {loading ? (
