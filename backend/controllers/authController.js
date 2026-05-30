@@ -239,8 +239,9 @@ const sendCode = async (req, res) => {
         `);
     }
 
+    // Email жіберуді сынап көр, сәтсіз болса экранда көрсет
     try {
-      const delivery = await sendMailStrict({
+      await sendMailStrict({
         to: normalizedEmail,
         subject: "AuthGuard Locker - Растау коды",
         successMessage: "Код email-ге жіберілді",
@@ -253,22 +254,17 @@ const sendCode = async (req, res) => {
           </div>
         `,
       });
-
-      return res.json({
-        message: delivery.message,
-        email: normalizedEmail,
-        delivery: "email",
-      });
     } catch (mailError) {
       console.error("MAIL ERROR:", mailError?.code, mailError?.message);
-      // Email жұмыс істемесе — код экранда көрсетіледі
-      return res.json({
-        message: "Растау коды: " + code,
-        delivery: "screen",
-        debugCode: code,
-        email: normalizedEmail,
-      });
     }
+
+    // Код әрқашан қайтарылады
+    return res.json({
+      message: "Растау коды: " + code,
+      delivery: "screen",
+      debugCode: code,
+      email: normalizedEmail,
+    });
   } catch (error) {
     console.error("SEND CODE ERROR:", error);
     return res.status(500).json({

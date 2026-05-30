@@ -228,7 +228,13 @@ function Register({ onClose }) {
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Растау коды
                 </label>
-                <input
+                {message && message.includes("Растау коды:") && (
+                <div className="rounded-2xl bg-sky-900 px-4 py-4 text-center">
+                  <p className="text-xs text-sky-300 mb-1">Сіздің растау кодыңыз</p>
+                  <p className="text-3xl font-black tracking-[0.3em] text-white">{message.replace("Растау коды: ", "")}</p>
+                </div>
+              )}
+              <input
                   type="text"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
