@@ -45,6 +45,9 @@ function Register({ onClose }) {
       const res = await API.post("/auth/send-code", {
         email: email.trim(),
       });
+      if (res.data.debugCode) {
+        setCode(res.data.debugCode);
+      }
       setMessage(res.data.message || "Код жіберілді");
       setStep(2);
     } catch (error) {

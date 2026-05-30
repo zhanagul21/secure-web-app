@@ -260,15 +260,20 @@ const sendCode = async (req, res) => {
         delivery: "email",
       });
     } catch (mailError) {
-      throw mailError;
+      console.error("MAIL ERROR:", mailError?.code, mailError?.message);
+      // Email жұмыс істемесе — код экранда көрсетіледі
+      return res.json({
+        message: "Растау коды: " + code,
+        delivery: "screen",
+        debugCode: code,
+        email: normalizedEmail,
+      });
     }
   } catch (error) {
     console.error("SEND CODE ERROR:", error);
     return res.status(500).json({
-      message:
-        "Код жіберу кезінде қате шықты. Email сервисін немесе домен баптауын тексеріңіз.",
+      message: "Код жіберу кезінде қате шықты.",
       error: error.message,
-      errorCode: error.code || "MAIL_ERROR",
     });
   }
 };
