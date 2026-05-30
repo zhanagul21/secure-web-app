@@ -2,48 +2,39 @@ const nodemailer = require("nodemailer");
 
 const smtpUser = process.env.GMAIL_USER;
 const smtpPass = process.env.GMAIL_APP_PASSWORD;
-const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-const smtpPort = Number(process.env.SMTP_PORT || 465);
-const smtpSecure = String(process.env.SMTP_SECURE ?? "true").toLowerCase() !== "false";
 const defaultFrom = process.env.MAIL_FROM || `"AuthGuard Locker" <${smtpUser}>`;
 const resendApiKey = process.env.RESEND_API_KEY;
-const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
+const brevoApiKey = process.env.BREVO_API_KEY;
 
-const gmailClientId = process.env.GMAIL_API_CLIENT_ID;
-const gmailClientSecret = process.env.GMAIL_API_CLIENT_SECRET;
-const gmailRefreshToken = process.env.GMAIL_API_REFRESH_TOKEN;
-const canUseOAuth2 = Boolean(gmailClientId && gmailClientSecret && gmailRefreshToken && smtpUser);
-const canUseSmtp = Boolean(smtpUser && smtpPass);
-
-const buildOAuth2Transporter = () =>
-  nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: smtpUser,
-      clientId: gmailClientId,
-      clientSecret: gmailClientSecret,
-      refreshToken: gmailRefreshToken,
+// Brevo (SendinBlue) арқылы жіберу - кез-келген emailге жібереді
+async function sendViaBrevo(to, subject, html) {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": brevoApiKey,
+      "Content-Type": "application/json",
     },
-    family: 4,
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 30000,
+    body: JSON.stringify({
+      sender: { name: "AuthGuard Locker", email: process.env.MAIL_FROM || "zanaguldauletova@gmail.com" },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
   });
 
-const buildSmtpTransporter = () =>
-  nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpSecure,
-    auth: { user: smtpUser, pass: smtpPass },
-    family: 4,
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 30000,
-  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = new Error(payload?.message || "Brevo email request failed");
+    error.code = `HTTP_${response.status}`;
+    throw error;
+  }
+
+  return payload;
+}
 
 async function sendViaResend(to, subject, html) {
+  const resendApiUrl = process.env.RESEND_API_URL || "https://api.resend.com/emails";
   const response = await fetch(resendApiUrl, {
     method: "POST",
     headers: {
@@ -67,22 +58,22 @@ async function sendViaResend(to, subject, html) {
 }
 
 const verifyEmailTransporter = async () => {
-  if (canUseOAuth2) { console.log("MAILER READY: gmail-oauth2"); return; }
+  if (brevoApiKey) { console.log("MAILER READY: brevo"); return; }
   if (resendApiKey) { console.log("MAILER READY: resend-api"); return; }
-  if (canUseSmtp) { console.log("MAILER READY: gmail-smtp"); return; }
   console.error("MAILER VERIFY ERROR: no email transport configured");
 };
 
 const sendMail = async (to, subject, html) => {
-  if (resendApiKey) return sendViaResend(to, subject, html);
-  if (canUseOAuth2) {
-    try {
-      return await buildOAuth2Transporter().sendMail({ from: defaultFrom, to, subject, html });
-    } catch (err) {
-      console.error("GMAIL OAUTH2 ERROR:", err.message);
-    }
+  // 1. Brevo — кез-келген emailге жібереді
+  if (brevoApiKey) {
+    return sendViaBrevo(to, subject, html);
   }
-  if (canUseSmtp) return await buildSmtpTransporter().sendMail({ from: defaultFrom, to, subject, html });
+
+  // 2. Resend fallback
+  if (resendApiKey) {
+    return sendViaResend(to, subject, html);
+  }
+
   throw new Error("Email transport is unavailable");
 };
 
