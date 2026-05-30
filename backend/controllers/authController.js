@@ -239,32 +239,36 @@ const sendCode = async (req, res) => {
         `);
     }
 
-    // Email жіберуді сынап көр, сәтсіз болса экранда көрсет
     try {
-      await sendMailStrict({
+      const delivery = await sendMailStrict({
         to: normalizedEmail,
         subject: "AuthGuard Locker - Растау коды",
         successMessage: "Код email-ге жіберілді",
         html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>AuthGuard Locker</h2>
-            <p>Сіздің растау кодыңыз:</p>
-            <h1 style="letter-spacing: 4px; color: #2563eb;">${code}</h1>
-            <p>Бұл код 10 минут ішінде жарамды.</p>
+          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #1e293b;">AuthGuard Locker</h2>
+            <p style="color: #475569;">Сіздің растау кодыңыз:</p>
+            <h1 style="letter-spacing: 8px; color: #2563eb; font-size: 36px;">${code}</h1>
+            <p style="color: #94a3b8;">Бұл код 10 минут ішінде жарамды.</p>
           </div>
         `,
       });
+
+      return res.json({
+        message: "Код " + normalizedEmail + " адресіне жіберілді",
+        email: normalizedEmail,
+        delivery: "email",
+      });
     } catch (mailError) {
       console.error("MAIL ERROR:", mailError?.code, mailError?.message);
+      // Email жұмыс істемесе — экранда көрсет
+      return res.json({
+        message: "Растау коды: " + code,
+        delivery: "screen",
+        debugCode: code,
+        email: normalizedEmail,
+      });
     }
-
-    // Код әрқашан қайтарылады
-    return res.json({
-      message: "Растау коды: " + code,
-      delivery: "screen",
-      debugCode: code,
-      email: normalizedEmail,
-    });
   } catch (error) {
     console.error("SEND CODE ERROR:", error);
     return res.status(500).json({
