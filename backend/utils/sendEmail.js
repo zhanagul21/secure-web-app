@@ -13,7 +13,7 @@ async function sendViaBrevo(to, subject, html) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      sender: { name: "AuthGuard Locker", email: "zanaguldauletova@gmail.com" },
+      sender: { name: "AuthGuard Locker", email: process.env.BREVO_SENDER_EMAIL || "zanaguldauletova@gmail.com" },
       to: [{ email: to }],
       subject,
       htmlContent: html,
