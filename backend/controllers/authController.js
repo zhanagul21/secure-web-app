@@ -242,7 +242,7 @@ const sendCode = async (req, res) => {
     try {
       const delivery = await sendMailStrict({
         to: normalizedEmail,
-        subject: "AuthGuard Locker - Растау коды",
+        subject: "Верификация коды",
         successMessage: "Код email-ге жіберілді",
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto;">

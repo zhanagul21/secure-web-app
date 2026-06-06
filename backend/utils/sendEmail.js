@@ -17,10 +17,14 @@ async function sendViaMailjet(to, subject, html) {
     body: JSON.stringify({
       Messages: [
         {
-          From: { Email: "zanaguldauletova@gmail.com", Name: "AuthGuard Locker" },
+          From: { Email: "zanaguldauletova@gmail.com", Name: "AuthGuard" },
           To: [{ Email: to }],
           Subject: subject,
           HTMLPart: html,
+          Headers: {
+            "X-Mailjet-TrackOpen": "0",
+            "X-Mailjet-TrackClick": "0",
+          },
         },
       ],
     }),
