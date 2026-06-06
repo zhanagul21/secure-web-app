@@ -55,6 +55,7 @@ router.get("/all-users", verifyToken, async (req, res) => {
     const result = await pool.request().query(`
       SELECT id, full_name, email, role, created_at, twofa_enabled
       FROM users
+      WHERE is_verified = true AND password_hash IS NOT NULL AND password_hash != ''
       ORDER BY id DESC
     `);
 
