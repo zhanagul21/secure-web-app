@@ -1,11 +1,13 @@
 databases:
   - name: secure-web-app-db
+    region: oregon
     databaseName: secure_web_app
     user: secure_web_app_user
 
 services:
   - type: web
     name: authguard-backend-7mbc
+    region: oregon
     runtime: docker
     dockerfilePath: backend/Dockerfile
     dockerContext: backend

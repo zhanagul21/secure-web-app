@@ -120,7 +120,9 @@ If Render still shows the service as unhealthy:
 1. Open the Render service logs.
 2. Check whether `DATABASE_URL` exists.
 3. Check whether the database was actually created from the Blueprint.
-4. Confirm `/api/health` opens in the browser.
+4. If logs show `getaddrinfo ENOTFOUND dpg-...`, the backend is using a Render internal database hostname that it cannot see. Confirm the web service and Postgres instance are in the same Render account/workspace and region. This Blueprint pins both to `oregon` for new resources, but existing Render resources cannot change region in place.
+5. If the service and database are already in different regions, either recreate one of them in the same region or set `DATABASE_URL` manually to the database's External Database URL from the Render database Info page.
+6. Confirm `/api/health` opens in the browser.
 
 ## Encryption Check
 

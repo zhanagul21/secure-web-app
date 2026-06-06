@@ -12,6 +12,8 @@ const parseBoolean = (value, fallback) => {
   return value === "true";
 };
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const pgSql = {
   Int: "int",
   BigInt: "bigint",
@@ -61,6 +63,12 @@ const translateSqlServerToPostgres = (queryText, inputValues) => {
 };
 
 const createPostgresAdapter = () => {
+  const maxConnectAttempts = parseInt(process.env.DB_CONNECT_ATTEMPTS || "30", 10);
+  const connectRetryDelayMs = parseInt(
+    process.env.DB_CONNECT_RETRY_DELAY_MS || "5000",
+    10
+  );
+
   const pgPool = new PgPool({
     connectionString: process.env.DATABASE_URL,
     ssl:
@@ -204,9 +212,28 @@ const createPostgresAdapter = () => {
   };
 
   const poolConnect = (async () => {
-    await pgPool.query("SELECT 1");
-    await ensureSchema();
-    console.log("PostgreSQL connected");
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxConnectAttempts; attempt += 1) {
+      try {
+        await pgPool.query("SELECT 1");
+        await ensureSchema();
+        console.log("PostgreSQL connected");
+        return;
+      } catch (error) {
+        lastError = error;
+        console.error(
+          `PostgreSQL connection attempt ${attempt}/${maxConnectAttempts} failed:`,
+          error.message
+        );
+
+        if (attempt < maxConnectAttempts) {
+          await sleep(connectRetryDelayMs);
+        }
+      }
+    }
+
+    throw lastError;
   })();
 
   pgPool.on("error", (err) => {
