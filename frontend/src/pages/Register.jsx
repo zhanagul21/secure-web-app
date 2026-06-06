@@ -48,7 +48,7 @@ function Register({ onClose }) {
       if (res.data.debugCode) {
         setCode(res.data.debugCode);
       }
-      setMessage(res.data.message || "Код жіберілді");
+      setMessage((res.data.message || "Код жіберілді") + " (Spam папкасын да тексеріңіз)");
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
