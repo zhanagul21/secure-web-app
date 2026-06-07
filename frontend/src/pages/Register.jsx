@@ -12,6 +12,7 @@ function Register({ onClose }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeVerified, setCodeVerified] = useState(false);
+  const [fallbackCode, setFallbackCode] = useState("");
 
   const getPasswordStrength = (value) => {
     const checks = [
@@ -41,14 +42,20 @@ function Register({ onClose }) {
 
     try {
       setLoading(true);
+      setFallbackCode("");
 
       const res = await API.post("/auth/send-code", {
         email: email.trim(),
       });
       if (res.data.debugCode) {
         setCode(res.data.debugCode);
+        setFallbackCode(res.data.debugCode);
       }
-      setMessage(res.data.message || "Код email-ге жіберілді");
+      setMessage(
+        res.data.delivery === "screen"
+          ? "Email жіберілмеді. Код экранда көрсетілді."
+          : res.data.message || "Код email-ге жіберілді"
+      );
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
@@ -121,6 +128,7 @@ function Register({ onClose }) {
         setFullName("");
         setEmail("");
         setCode("");
+        setFallbackCode("");
         setPassword("");
         setCodeVerified(false);
         onClose?.();
@@ -228,13 +236,13 @@ function Register({ onClose }) {
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Растау коды
                 </label>
-                {message && message.includes("Растау коды:") && (
+                {fallbackCode && (
                 <div className="rounded-2xl bg-sky-900 px-4 py-4 text-center">
                   <p className="text-xs text-sky-300 mb-1">Сіздің растау кодыңыз</p>
                   <p className="text-3xl font-black tracking-[0.3em] text-white">
-                    {message.replace("Растау коды: ", "").split(" ")[0]}
+                    {fallbackCode}
                   </p>
-                  <p className="text-xs text-sky-400 mt-1">Spam папкасын да тексеріңіз</p>
+                  <p className="text-xs text-sky-400 mt-1">Email келмесе осы кодты енгізіңіз</p>
                 </div>
               )}
               <input

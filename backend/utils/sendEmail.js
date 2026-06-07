@@ -30,7 +30,19 @@ async function sendViaMailjet(to, subject, html) {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || payload?.Messages?.[0]?.Status === "error") {
-    throw new Error(payload?.Messages?.[0]?.Errors?.[0]?.ErrorMessage || "Mailjet failed");
+    const mailjetError =
+      payload?.Messages?.[0]?.Errors?.[0] ||
+      payload?.ErrorMessage ||
+      payload?.ErrorInfo ||
+      payload;
+    const error = new Error(
+      mailjetError?.ErrorMessage ||
+        mailjetError?.message ||
+        `Mailjet failed with HTTP ${response.status}`
+    );
+    error.code = mailjetError?.ErrorCode || `MAILJET_${response.status}`;
+    error.details = mailjetError;
+    throw error;
   }
   return payload;
 }
