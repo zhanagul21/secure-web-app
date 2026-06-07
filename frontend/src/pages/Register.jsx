@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../services/api";
 import { getApiErrorMessage } from "../services/apiConfig";
 import logo from "../assets/logo.png";
@@ -29,6 +29,20 @@ function Register({ onClose }) {
   };
 
   const passwordStrength = getPasswordStrength(password);
+
+  useEffect(() => {
+    if (step !== 3) return;
+
+    setFullName("");
+    setPassword("");
+
+    const clearAutofillTimer = window.setTimeout(() => {
+      setFullName("");
+      setPassword("");
+    }, 300);
+
+    return () => window.clearTimeout(clearAutofillTimer);
+  }, [step]);
 
   const sendCode = async (e) => {
     e.preventDefault();
@@ -177,13 +191,15 @@ function Register({ onClose }) {
           </div>
 
           {step === 1 && (
-            <form onSubmit={sendCode} className="space-y-5">
+            <form onSubmit={sendCode} autoComplete="off" className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Email
                 </label>
                 <input
                   type="email"
+                  name="registration-email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@gmail.com"
@@ -208,13 +224,15 @@ function Register({ onClose }) {
           )}
 
           {step === 2 && (
-            <form onSubmit={verifyCode} className="space-y-5">
+            <form onSubmit={verifyCode} autoComplete="off" className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Email
                 </label>
                 <input
                   type="email"
+                  name="registration-email-readonly"
+                  autoComplete="off"
                   value={email}
                   disabled
                   className="w-full rounded-2xl border border-sky-200 bg-slate-100 px-4 py-3 outline-none"
@@ -227,6 +245,8 @@ function Register({ onClose }) {
                 </label>
               <input
                   type="text"
+                  name="verification-code"
+                  autoComplete="one-time-code"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="6 таңбалы код"
@@ -261,13 +281,16 @@ function Register({ onClose }) {
           )}
 
           {step === 3 && (
-            <form onSubmit={completeRegister} className="space-y-5">
+            <form onSubmit={completeRegister} autoComplete="off" className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Аты-жөні
                 </label>
                 <input
                   type="text"
+                  name="new-account-full-name"
+                  autoComplete="off"
+                  data-lpignore="true"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Аты-жөніңізді енгізіңіз"
@@ -281,6 +304,8 @@ function Register({ onClose }) {
                 </label>
                 <input
                   type="email"
+                  name="new-account-email-readonly"
+                  autoComplete="off"
                   value={email}
                   disabled
                   className="w-full rounded-2xl border border-sky-200 bg-slate-100 px-4 py-3 outline-none"
@@ -293,6 +318,9 @@ function Register({ onClose }) {
                 </label>
                 <input
                   type="password"
+                  name="new-account-password"
+                  autoComplete="new-password"
+                  data-lpignore="true"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Құпия сөз"
