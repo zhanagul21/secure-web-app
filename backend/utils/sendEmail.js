@@ -9,6 +9,14 @@ const mailjetFromName = process.env.MAILJET_FROM_NAME || "AuthGuard";
 const brevoApiKey = process.env.BREVO_API_KEY;
 const resendApiKey = process.env.RESEND_API_KEY;
 
+const htmlToText = (html) =>
+  String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 async function sendViaMailjet(to, subject, html) {
   const credentials = Buffer.from(`${mailjetApiKey}:${mailjetSecretKey}`).toString("base64");
   const response = await fetch("https://api.mailjet.com/v3.1/send", {
@@ -23,6 +31,7 @@ async function sendViaMailjet(to, subject, html) {
           From: { Email: mailjetFromEmail, Name: mailjetFromName },
           To: [{ Email: to }],
           Subject: subject,
+          TextPart: htmlToText(html),
           HTMLPart: html,
         },
       ],
@@ -44,6 +53,12 @@ async function sendViaMailjet(to, subject, html) {
     error.details = mailjetError;
     throw error;
   }
+  console.log(
+    "MAILJET SENT:",
+    payload?.Messages?.[0]?.To?.[0]?.MessageUUID || "accepted",
+    "to",
+    to
+  );
   return payload;
 }
 

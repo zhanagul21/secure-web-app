@@ -50,6 +50,16 @@ function generateSixDigitCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function getEmailTypoMessage(email) {
+  const domain = email.split("@")[1]?.toLowerCase();
+
+  if (domain === "gmail.ru") {
+    return "Email домені қате сияқты: gmail.ru емес, gmail.com болуы керек.";
+  }
+
+  return "";
+}
+
 function getAdminEmails() {
   return (process.env.ADMIN_EMAILS || "")
     .split(",")
@@ -168,6 +178,11 @@ const sendCode = async (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const emailTypoMessage = getEmailTypoMessage(normalizedEmail);
+
+    if (emailTypoMessage) {
+      return res.status(400).json({ message: emailTypoMessage });
+    }
 
     await poolConnect;
 
