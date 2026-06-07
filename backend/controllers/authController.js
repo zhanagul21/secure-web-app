@@ -240,7 +240,7 @@ const sendCode = async (req, res) => {
     }
 
     try {
-      const delivery = await sendMailStrict({
+      await sendMailStrict({
         to: normalizedEmail,
         subject: "Верификация коды",
         successMessage: "Код email-ге жіберілді",

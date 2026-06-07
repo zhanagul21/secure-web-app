@@ -1,5 +1,3 @@
-const nodemailer = require("nodemailer");
-
 const defaultFrom = process.env.MAIL_FROM || process.env.GMAIL_USER;
 const mailjetApiKey = process.env.MAILJET_API_KEY;
 const mailjetSecretKey = process.env.MAILJET_SECRET_KEY;

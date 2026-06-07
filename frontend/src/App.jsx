@@ -19,8 +19,6 @@ import LanguageSelector from "./components/LanguageSelector";
 import GlobalTranslator from "./i18n/GlobalTranslator";
 import { LanguageProvider } from "./i18n/LanguageContext";
  
-// ✅ ТҮЗЕТІЛДІ: pathname-ді state-ке салу керек,
-// себебі window.location.pathname React render кезінде тұрақсыз
 function getSharedToken() {
   const path = window.location.pathname;
   if (path.startsWith("/shared/")) {
