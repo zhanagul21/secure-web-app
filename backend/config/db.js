@@ -26,11 +26,12 @@ const pgSql = {
 
 const translateSqlServerToPostgres = (queryText, inputValues) => {
   let text = queryText.trim();
-  const needsLimitOne = /SELECT\s+TOP\s+1\s+/i.test(text);
+  const topMatch = text.match(/SELECT\s+TOP\s+(\d+)\s+/i);
+  const limit = topMatch ? Number(topMatch[1]) : null;
   const returnsInserted = /OUTPUT\s+INSERTED\.\*/i.test(text);
 
   text = text
-    .replace(/SELECT\s+TOP\s+1\s+/gi, "SELECT ")
+    .replace(/SELECT\s+TOP\s+\d+\s+/gi, "SELECT ")
     .replace(/OUTPUT\s+INSERTED\.\*/gi, "")
     .replace(/GETDATE\(\)/gi, "NOW()");
 
@@ -52,8 +53,8 @@ const translateSqlServerToPostgres = (queryText, inputValues) => {
     text += " RETURNING *";
   }
 
-  if (needsLimitOne && !/\bLIMIT\b/i.test(text)) {
-    text += " LIMIT 1";
+  if (limit && !/\bLIMIT\b/i.test(text)) {
+    text += ` LIMIT ${limit}`;
   }
 
   return {

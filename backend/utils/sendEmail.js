@@ -3,6 +3,11 @@ const nodemailer = require("nodemailer");
 const defaultFrom = process.env.MAIL_FROM || process.env.GMAIL_USER;
 const mailjetApiKey = process.env.MAILJET_API_KEY;
 const mailjetSecretKey = process.env.MAILJET_SECRET_KEY;
+const mailjetFromEmail =
+  process.env.MAILJET_FROM_EMAIL ||
+  process.env.MAIL_FROM ||
+  "zanaguldauletova@gmail.com";
+const mailjetFromName = process.env.MAILJET_FROM_NAME || "AuthGuard";
 const brevoApiKey = process.env.BREVO_API_KEY;
 const resendApiKey = process.env.RESEND_API_KEY;
 
@@ -17,14 +22,10 @@ async function sendViaMailjet(to, subject, html) {
     body: JSON.stringify({
       Messages: [
         {
-          From: { Email: "zanaguldauletova@gmail.com", Name: "AuthGuard" },
+          From: { Email: mailjetFromEmail, Name: mailjetFromName },
           To: [{ Email: to }],
           Subject: subject,
           HTMLPart: html,
-          Headers: {
-            "X-Mailjet-TrackOpen": "0",
-            "X-Mailjet-TrackClick": "0",
-          },
         },
       ],
     }),
