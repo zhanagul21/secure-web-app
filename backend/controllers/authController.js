@@ -261,12 +261,9 @@ const sendCode = async (req, res) => {
       });
     } catch (mailError) {
       console.error("MAIL ERROR:", mailError?.code, mailError?.message);
-      // Email жұмыс істемесе — экранда көрсет
-      return res.json({
-        message: "Растау коды: " + code,
-        delivery: "screen",
-        debugCode: code,
-        email: normalizedEmail,
+      return res.status(502).json({
+        message: "Код email-ге жіберілмеді. Email сервисін тексеріңіз.",
+        errorCode: mailError.code || "MAIL_DELIVERY_FAILED",
       });
     }
   } catch (error) {
