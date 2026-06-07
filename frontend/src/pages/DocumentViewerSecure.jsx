@@ -393,10 +393,10 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
 
     if (previewType === "docx") {
       return (
-        <div className="mx-auto aspect-[210/297] w-full max-w-[560px] overflow-auto rounded-[18px] border border-sky-100 bg-slate-100 p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+        <div className="w-full overflow-auto rounded-[18px] border border-sky-100 bg-slate-100 p-4" style={{ minHeight: "80vh" }}>
           <div
             ref={docxPreviewRef}
-            className="[&_.docx-wrapper]:!bg-slate-100 [&_.docx-wrapper]:!p-0 [&_.docx]:!mx-auto [&_.docx]:!max-w-full [&_.docx]:shadow-none"
+            className="[&_.docx-wrapper]:!bg-white [&_.docx-wrapper]:!padding-0 [&_.docx]:!mx-auto [&_.docx]:!max-w-full [&_.docx]:shadow-[0_4px_20px_rgba(0,0,0,0.1)] [&_.docx]:!mb-4"
           />
         </div>
       );
@@ -406,8 +406,8 @@ function DocumentViewerSecure({ documentId, setPage, setLoggedIn, logoutEverywhe
       return (
         <div
           ref={pptxContainerRef}
-          className="min-h-[600px] w-full overflow-auto rounded-[24px] border border-sky-100 bg-slate-100"
-          style={{ minHeight: "600px" }}
+          className="w-full overflow-auto rounded-[24px] border border-sky-100 bg-slate-100"
+          style={{ minHeight: "80vh" }}
         />
       );
     }

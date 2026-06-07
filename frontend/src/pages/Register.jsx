@@ -48,7 +48,7 @@ function Register({ onClose }) {
       if (res.data.debugCode) {
         setCode(res.data.debugCode);
       }
-      setMessage((res.data.message || "Код жіберілді") + " (Spam папкасын да тексеріңіз)");
+      setMessage(res.data.message || "Код email-ге жіберілді");
       setStep(2);
     } catch (error) {
       console.error("SEND CODE ERROR:", error);
@@ -231,7 +231,10 @@ function Register({ onClose }) {
                 {message && message.includes("Растау коды:") && (
                 <div className="rounded-2xl bg-sky-900 px-4 py-4 text-center">
                   <p className="text-xs text-sky-300 mb-1">Сіздің растау кодыңыз</p>
-                  <p className="text-3xl font-black tracking-[0.3em] text-white">{message.replace("Растау коды: ", "")}</p>
+                  <p className="text-3xl font-black tracking-[0.3em] text-white">
+                    {message.replace("Растау коды: ", "").split(" ")[0]}
+                  </p>
+                  <p className="text-xs text-sky-400 mt-1">Spam папкасын да тексеріңіз</p>
                 </div>
               )}
               <input
